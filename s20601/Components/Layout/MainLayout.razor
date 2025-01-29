@@ -8,11 +8,15 @@
         <AppBar />
     </MudAppBar>
 
+
     <MudMainContent Class="pa-2">
-        @Body
+        <MudContainer>
+            @Body
+        </MudContainer>
     </MudMainContent>
 
-    <MudAppBar Elevation="0" Color="Color.Dark" Fixed="false" Class="align-center">
+    <MudAppBar Dense="true" Elevation="0" Color="Color.Dark" Fixed="false" Class="align-center" Style="position: absolute; bottom: 0;">
         <MudText Typo="Typo.body1">s20601</MudText>
     </MudAppBar>
+
 </MudLayout>
