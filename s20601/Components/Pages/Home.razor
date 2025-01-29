@@ -3,28 +3,28 @@
 <MudContainer>
     <MudGrid>
         <MudItem xs="12">
-            <MudText Typo="Typo.h3">Movie of the day</MudText>
+            <MudText Typo="Typo.h4">Movie of the day</MudText>
         </MudItem>
-    <MudItem xs="6">
-        <MudImage Src="favicon.png"
+        <MudItem lg="6" md="6" xs="12">
+            <MudImage Src="favicon.png"
                   ObjectFit="ObjectFit.None"
                   Alt="Movie poster"
                   Elevation="1"
                   Fluid="true"
-                  Style="height:100%;">
-        </MudImage>
+                      Style="height:100%; width: 100%;">
+            </MudImage>
         </MudItem>
-        <MudItem xs="6">
+        <MudItem lg="6" md="6" xs="12">
             <MudGrid>
                 <MudItem>
-                    <MudText Typo="Typo.h4">
+                    <MudText Typo="Typo.h5">
                         Lorem Ipsum Solor Mit Amit
                         <MudText Typo="Typo.subtitle1">(2019)</MudText>
                     </MudText>
                 </MudItem>
                 <MudFlexBreak />
                 <MudItem>
-                    <MudText Typo="Typo.h5">Genres</MudText>
+                    <MudText Typo="Typo.h6">Genres</MudText>
                     <MudChipSet T="Color">
                         <MudChip>Action</MudChip>
                         <MudChip>Thriller</MudChip>
@@ -33,19 +33,19 @@
                 </MudItem>
                 <MudFlexBreak />
                 <MudItem>
-                    <MudText Typo="Typo.h5">Directors</MudText>
+                    <MudText Typo="Typo.h6">Directors</MudText>
                     <MudLink Href="#">Lorem Ipsum</MudLink>
                 </MudItem>
                 <MudItem>
-                    <MudText Typo="Typo.h5">Writers</MudText>
+                    <MudText Typo="Typo.h6">Writers</MudText>
                     <MudLink Href="#">Lorem Ipsum</MudLink>
                 </MudItem>
                 <MudFlexBreak />
                 <MudItem>
-                    <MudText Typo="Typo.h5">Cast</MudText>
+                    <MudText Typo="Typo.h6">Cast</MudText>
                     <MudGrid>
                         <MudItem>
-                            <MudPaper Class="pa-2 my-2">
+                            <MudPaper Class="pa-2">
                                 <MudLink Href="#">
                                     Lorem Ipsum
                                 </MudLink>
@@ -53,7 +53,7 @@
                             </MudPaper>
                         </MudItem>
                         <MudItem>
-                            <MudPaper Class="pa-2 my-2">
+                            <MudPaper Class="pa-2">
                                 <MudLink Href="#">
                                     Lorem Ipsum
                                 </MudLink>
@@ -61,7 +61,7 @@
                             </MudPaper>
                         </MudItem>
                         <MudItem>
-                            <MudPaper Class="pa-2 my-2">
+                            <MudPaper Class="pa-2">
                                 <MudLink Href="#">
                                     Lorem Ipsum
                                 </MudLink>
@@ -69,7 +69,7 @@
                             </MudPaper>
                         </MudItem>
                         <MudItem>
-                            <MudPaper Class="pa-2 my-2">
+                            <MudPaper Class="pa-2">
                                 <MudLink Href="#">
                                     Lorem Ipsum
                                 </MudLink>
@@ -77,7 +77,7 @@
                             </MudPaper>
                         </MudItem>
                         <MudItem>
-                            <MudPaper Class="pa-2 my-2">
+                            <MudPaper Class="pa-2">
                                 <MudLink Href="#">
                                     Lorem Ipsum
                                 </MudLink>
@@ -86,16 +86,17 @@
                         </MudItem>
                     </MudGrid>
                 </MudItem>
+                <MudFlexBreak />
                 <MudItem>
-                    <MudText Typo="Typo.h5">Community sentiment</MudText>
-                    <MudText Typo="Typo.h6" Color="Color.Success">Positive</MudText>
+                    <MudText Typo="Typo.h6">Community sentiment</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Success">Positive</MudText>
                 </MudItem>
                 <MudItem>
-                    <MudText Typo="Typo.h5">Community rating</MudText>
+                    <MudText Typo="Typo.h6">Community rating</MudText>
                     <MudRating SelectedValue="4" />
                 </MudItem>
                 <MudItem>
-                    <MudText Typo="Typo.h5">Top reviews</MudText>
+                    <MudText Typo="Typo.h6">Top reviews</MudText>
                     <MudChat>
                         <MudAvatar>T</MudAvatar>
                         <MudChatHeader Name="Test" Time="2 hours ago" />
@@ -116,6 +117,274 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Create" Color="Color.Inherit" />
                 </MudItem>
             </MudGrid>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Movies of the week</MudText>
+            <MudCarousel Style="height: 300px" ShowArrows="true" TData="object" ShowBullets="false" AutoCycle="false">  
+                <MudCarouselItem>
+                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudCarouselItem>
+                <MudCarouselItem>
+                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudCarouselItem>
+            </MudCarousel>
+            </MudItem>
+
+
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Trending community collections</MudText>
+            <MudCarousel Style="height: 300px" ShowArrows="true" TData="object" ShowBullets="false" AutoCycle="false">
+                <MudCarouselItem>
+                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudCarouselItem>
+                <MudCarouselItem>
+                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem lg="2">
+                            <MudCard Class="align-center">
+                                <MudImage Src="favicon.png"
+                                          ObjectFit="ObjectFit.ScaleDown"
+                                          Alt="Movie poster"
+                                          Elevation="1"
+                                          Fluid="true"
+                                          Style="height:100%; width: 100%;">
+                                </MudImage>
+                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudCarouselItem>
+            </MudCarousel>
         </MudItem>
     </MudGrid>
 </MudContainer>
