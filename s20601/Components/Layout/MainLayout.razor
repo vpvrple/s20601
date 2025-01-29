@@ -4,11 +4,15 @@
 <MudPopoverProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0" Color="Color.Transparent" Class="d-flex gap-10" Fixed="false">
+    <MudAppBar Elevation="0" Color="Color.Transparent" Class="d-flex" Fixed="false">
         <AppBar />
     </MudAppBar>
 
-    <MudMainContent Style="padding: 10px">
+    <MudMainContent Class="pa-2">
         @Body
     </MudMainContent>
+
+    <MudAppBar Elevation="0" Color="Color.Dark" Fixed="false" Class="align-center">
+        <MudText Typo="Typo.body1">s20601</MudText>
+    </MudAppBar>
 </MudLayout>
