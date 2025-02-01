@@ -1,7 +1,15 @@
 using s20601.Components;
 using MudBlazor.Services;
+using Microsoft.EntityFrameworkCore;
+using s20601.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContextFactory<S20601Context>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("Default") ??
+        throw new InvalidOperationException(
+            "Connection string 'Default' not found.")));
 
 // Add MudBlazor services
 builder.Services

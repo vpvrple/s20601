@@ -1,4 +1,9 @@
 ﻿@page "/"
+@using s20601.Data
+@using Microsoft.EntityFrameworkCore
+@using s20601.Data.Models
+@implements IAsyncDisposable
+@inject IDbContextFactory<s20601.Data.S20601Context> DbFactory
 
 <MudContainer>
     <MudGrid>
@@ -7,18 +12,18 @@
         </MudItem>
         <MudItem lg="6" md="6" xs="12">
             <MudImage Src="favicon.png"
-                      ObjectFit="ObjectFit.None"
-                      Alt="Movie poster"
-                      Elevation="1"
-                      Fluid="true"
-                      Style="height:100%; width: 100%;">
+            ObjectFit="ObjectFit.None"
+            Alt="Movie poster"
+            Elevation="1"
+            Fluid="true"
+            Style="height:100%; width: 100%;">
             </MudImage>
         </MudItem>
         <MudItem lg="6" md="6" xs="12">
             <MudGrid Class="d-flex align-center">
                 <MudItem>
-                    <MudText Typo="Typo.h5">Lorem Ipsum Solor Mit Amit</MudText>
-                    <MudText Typo="Typo.subtitle1">(2019)</MudText>
+                    <MudText Typo="Typo.h5">@movieOfTheDay.Title</MudText>
+                    <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
                 </MudItem>
                 <MudFlexBreak />
                 <MudItem>
@@ -126,11 +131,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -138,11 +143,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -150,11 +155,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -162,11 +167,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -174,11 +179,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -190,11 +195,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -202,11 +207,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -214,11 +219,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -226,11 +231,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -238,11 +243,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -259,11 +264,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -271,11 +276,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -283,11 +288,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -295,11 +300,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -307,11 +312,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -323,11 +328,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -335,11 +340,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -347,11 +352,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -359,11 +364,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -371,11 +376,11 @@
                         <MudItem lg="2">
                             <MudCard Class="align-center">
                                 <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
+                                ObjectFit="ObjectFit.ScaleDown"
+                                Alt="Movie poster"
+                                Elevation="1"
+                                Fluid="true"
+                                Style="height:100%; width: 100%;">
                                 </MudImage>
                                 <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
                             </MudCard>
@@ -386,3 +391,20 @@
         </MudItem>
     </MudGrid>
 </MudContainer>
+
+@code {
+    private S20601Context context = default!;
+
+    private Movie movieOfTheDay = null!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+
+        var random = new Random();
+
+        movieOfTheDay = context.Movies.ElementAtOrDefault(random.Next(0, context.Movies.Count()));
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
