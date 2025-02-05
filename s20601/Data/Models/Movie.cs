@@ -25,6 +25,8 @@ public partial class Movie
 
     public virtual ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
 
+    public virtual MovieOfTheDay? MovieOfTheDay { get; set; }
+
     public virtual ICollection<MovieRate> MovieRates { get; set; } = new List<MovieRate>();
 
     public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = new List<MovieUpdateRequest>();

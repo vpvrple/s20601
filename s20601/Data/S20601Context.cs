@@ -1,10 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using s20601.Data.Models;
 
 namespace s20601.Data;
 
 public partial class S20601Context : DbContext
 {
+    public S20601Context()
+    {
+    }
+
     public S20601Context(DbContextOptions<S20601Context> options)
         : base(options)
     {
@@ -36,6 +42,8 @@ public partial class S20601Context : DbContext
 
     public virtual DbSet<MovieGenre> MovieGenres { get; set; }
 
+    public virtual DbSet<MovieOfTheDay> MovieOfTheDays { get; set; }
+
     public virtual DbSet<MovieRate> MovieRates { get; set; }
 
     public virtual DbSet<MovieUpdateRequest> MovieUpdateRequests { get; set; }
@@ -57,6 +65,9 @@ public partial class S20601Context : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserRelationship> UserRelationships { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Default");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -317,6 +328,23 @@ public partial class S20601Context : DbContext
                 .HasForeignKey(d => d.Movie_Id)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("MovieGenre_Movie");
+        });
+
+        modelBuilder.Entity<MovieOfTheDay>(entity =>
+        {
+            entity.HasKey(e => e.Movie_Id).HasName("MovieOfTheDay_pk");
+
+            entity.ToTable("MovieOfTheDay");
+
+            entity.Property(e => e.Movie_Id)
+                .HasMaxLength(10)
+                .IsUnicode(false);
+            entity.Property(e => e.Date).HasPrecision(2);
+
+            entity.HasOne(d => d.Movie).WithOne(p => p.MovieOfTheDay)
+                .HasForeignKey<MovieOfTheDay>(d => d.Movie_Id)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("MovieOfTheDay_Movie");
         });
 
         modelBuilder.Entity<MovieRate>(entity =>
