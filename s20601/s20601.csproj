@@ -4,6 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>63b65f0b-c666-4c73-aa85-ed2689c79903</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,11 +18,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="MudBlazor" Version="8.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\Models\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
