@@ -2,6 +2,7 @@ using s20601.Components;
 using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
 using s20601.Data;
+using s20601.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,9 @@ builder.Services
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services
+    .AddScoped<IMovieService, MovieService>();
 
 var app = builder.Build();
 
