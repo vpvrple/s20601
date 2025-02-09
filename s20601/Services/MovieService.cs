@@ -15,9 +15,33 @@ public class MovieService : IMovieService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.MovieOfTheDays
-            .Include(x => x.Movie)
             .OrderByDescending(x => x.Date)
-            .FirstAsync();
+            .FirstOrDefaultAsync();
     }
 
+    public async Task<Movie?> GetMovieDataByIdAsync(string id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Movies
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<int> GetMovieRatingByIdAsync(string id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var ratingSum = await context.MovieRates
+            .Where(x => x.Movie_Id == id)
+            .SumAsync(x => x.Rating);
+
+        var rateCount = await context.MovieRates
+            .Where(x => x.Movie_Id == id)
+            .CountAsync();
+
+        if (rateCount == 0)
+            return 0;
+
+        return (int)Math.Round((double)(ratingSum / rateCount));
+    }
 }
