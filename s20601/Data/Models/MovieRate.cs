@@ -5,6 +5,8 @@ namespace s20601.Data.Models;
 
 public partial class MovieRate
 {
+    public int Id { get; set; }
+
     public int IdUser { get; set; }
 
     public byte Rating { get; set; }

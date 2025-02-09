@@ -9,7 +9,7 @@ public partial class MovieCrew
 
     public int IdCrew { get; set; }
 
-    public string? Job { get; set; }
+    public string Job { get; set; } = null!;
 
     public string? CharacterName { get; set; }
 

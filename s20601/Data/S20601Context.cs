@@ -7,10 +7,6 @@ namespace s20601.Data;
 
 public partial class S20601Context : DbContext
 {
-    public S20601Context()
-    {
-    }
-
     public S20601Context(DbContextOptions<S20601Context> options)
         : base(options)
     {
@@ -65,9 +61,6 @@ public partial class S20601Context : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserRelationship> UserRelationships { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:Default");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -310,17 +303,17 @@ public partial class S20601Context : DbContext
 
         modelBuilder.Entity<MovieGenre>(entity =>
         {
-            entity.HasKey(e => e.IdGenre).HasName("MovieGenre_pk");
+            entity.HasKey(e => e.IdMovieGenre).HasName("MovieGenre_pk");
 
             entity.ToTable("MovieGenre");
 
-            entity.Property(e => e.IdGenre).ValueGeneratedNever();
+            entity.Property(e => e.IdMovieGenre).ValueGeneratedNever();
             entity.Property(e => e.Movie_Id)
                 .HasMaxLength(10)
                 .IsUnicode(false);
 
-            entity.HasOne(d => d.IdGenreNavigation).WithOne(p => p.MovieGenre)
-                .HasForeignKey<MovieGenre>(d => d.IdGenre)
+            entity.HasOne(d => d.Genre).WithMany(p => p.MovieGenres)
+                .HasForeignKey(d => d.Genre_Id)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("MovieGenre_Genre");
 
@@ -349,18 +342,20 @@ public partial class S20601Context : DbContext
 
         modelBuilder.Entity<MovieRate>(entity =>
         {
-            entity.HasKey(e => e.IdUser).HasName("MovieRate_pk");
+            entity.HasKey(e => e.Id).HasName("MovieRate_pk");
 
             entity.ToTable("MovieRate");
 
-            entity.Property(e => e.IdUser).ValueGeneratedNever();
+            entity.HasIndex(e => new { e.IdUser, e.Movie_Id }, "UniqueRating").IsUnique();
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Movie_Id)
                 .HasMaxLength(10)
                 .IsUnicode(false);
             entity.Property(e => e.RatedAt).HasPrecision(2);
 
-            entity.HasOne(d => d.IdUserNavigation).WithOne(p => p.MovieRate)
-                .HasForeignKey<MovieRate>(d => d.IdUser)
+            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.MovieRates)
+                .HasForeignKey(d => d.IdUser)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("MovieRate_User");
 

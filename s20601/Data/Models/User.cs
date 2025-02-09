@@ -17,11 +17,11 @@ public partial class User
 
     public int ReputationPoints { get; set; }
 
-    public DateTime LastLogin { get; set; }
+    public DateTime? LastLogin { get; set; }
 
-    public string ProfileDescription { get; set; } = null!;
+    public string? ProfileDescription { get; set; }
 
-    public byte[] ProfileImage { get; set; } = null!;
+    public byte[]? ProfileImage { get; set; }
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
@@ -33,7 +33,7 @@ public partial class User
 
     public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = new List<MovieCollectionUser>();
 
-    public virtual MovieRate? MovieRate { get; set; }
+    public virtual ICollection<MovieRate> MovieRates { get; set; } = new List<MovieRate>();
 
     public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = new List<MovieUpdateRequest>();
 
