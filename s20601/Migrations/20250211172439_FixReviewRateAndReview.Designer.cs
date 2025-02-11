@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using s20601.Data;
 
@@ -11,9 +12,11 @@ using s20601.Data;
 namespace s20601.Migrations
 {
     [DbContext(typeof(S20601Context))]
-    partial class S20601ContextModelSnapshot : ModelSnapshot
+    [Migration("20250211172439_FixReviewRateAndReview")]
+    partial class FixReviewRateAndReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -603,13 +606,10 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.ReviewRate", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("IdUser")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("IdUser")
+                    b.Property<int>("Id")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RatedAt")
@@ -622,11 +622,8 @@ namespace s20601.Migrations
                     b.Property<int>("Review_Id")
                         .HasColumnType("int");
 
-                    b.HasKey("Id")
+                    b.HasKey("IdUser")
                         .HasName("ReviewRate_pk");
-
-                    b.HasIndex("IdUser")
-                        .IsUnique();
 
                     b.HasIndex("Review_Id");
 

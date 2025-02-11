@@ -448,7 +448,9 @@ public partial class S20601Context : DbContext
 
         modelBuilder.Entity<Review>(entity =>
         {
-            entity.HasKey(e => e.IdAuthor).HasName("Review_pk");
+            entity.HasKey(e => e.Id).HasName("Review_pk");
+
+            entity.HasIndex(e => new { e.IdAuthor, e.Movie_Id }, "UniqueReview").IsUnique();
 
             entity.ToTable("Review");
 
@@ -475,7 +477,7 @@ public partial class S20601Context : DbContext
 
         modelBuilder.Entity<ReviewRate>(entity =>
         {
-            entity.HasKey(e => e.IdUser).HasName("ReviewRate_pk");
+            entity.HasKey(e => e.Id).HasName("ReviewRate_pk");
 
             entity.ToTable("ReviewRate");
 
@@ -487,8 +489,8 @@ public partial class S20601Context : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("ReviewRate_User");
 
-            entity.HasOne(d => d.Review_IdAuthorNavigation).WithMany(p => p.ReviewRates)
-                .HasForeignKey(d => d.Review_IdAuthor)
+            entity.HasOne(d => d.Review_IdNavigation).WithMany(p => p.ReviewRates)
+                .HasForeignKey(d => d.Review_Id)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("ReviewRate_Review");
         });

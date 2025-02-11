@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using s20601.Data;
 
@@ -11,9 +12,11 @@ using s20601.Data;
 namespace s20601.Migrations
 {
     [DbContext(typeof(S20601Context))]
-    partial class S20601ContextModelSnapshot : ModelSnapshot
+    [Migration("20250209213641_FixNamingForFKOfReview")]
+    partial class FixNamingForFKOfReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -604,10 +607,7 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.ReviewRate", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("IdUser")
                         .HasColumnType("int");
@@ -619,16 +619,11 @@ namespace s20601.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
-                    b.Property<int>("Review_Id")
-                        .HasColumnType("int");
-
                     b.HasKey("Id")
                         .HasName("ReviewRate_pk");
 
                     b.HasIndex("IdUser")
                         .IsUnique();
-
-                    b.HasIndex("Review_Id");
 
                     b.ToTable("ReviewRate", (string)null);
                 });
@@ -1038,21 +1033,21 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.ReviewRate", b =>
                 {
+                    b.HasOne("s20601.Data.Models.Review", "Review_IdAuthorNavigation")
+                        .WithMany("ReviewRates")
+                        .HasForeignKey("Id")
+                        .IsRequired()
+                        .HasConstraintName("ReviewRate_Review");
+
                     b.HasOne("s20601.Data.Models.User", "IdUserNavigation")
                         .WithOne("ReviewRate")
                         .HasForeignKey("s20601.Data.Models.ReviewRate", "IdUser")
                         .IsRequired()
                         .HasConstraintName("ReviewRate_User");
 
-                    b.HasOne("s20601.Data.Models.Review", "Review_IdNavigation")
-                        .WithMany("ReviewRates")
-                        .HasForeignKey("Review_Id")
-                        .IsRequired()
-                        .HasConstraintName("ReviewRate_Review");
-
                     b.Navigation("IdUserNavigation");
 
-                    b.Navigation("Review_IdNavigation");
+                    b.Navigation("Review_IdAuthorNavigation");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.SocialActivityLog", b =>

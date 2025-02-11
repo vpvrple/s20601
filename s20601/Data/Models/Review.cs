@@ -5,6 +5,7 @@ namespace s20601.Data.Models;
 
 public partial class Review
 {
+    public int Id { get; set; }
     public int IdAuthor { get; set; }
 
     public string Content { get; set; } = null!;
