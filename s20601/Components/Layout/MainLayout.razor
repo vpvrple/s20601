@@ -4,18 +4,17 @@
 <MudPopoverProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0" Color="Color.Transparent" Class="d-flex" Fixed="false">
+    <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="false">
         <AppBar />
     </MudAppBar>
 
-    <MudMainContent Class="pa-2">
+    <MudMainContent Class="pa-2" Style="min-height: 100vh;">
         <MudContainer>
             @Body
         </MudContainer>
-        
     </MudMainContent>
 
-    <MudAppBar Dense="true" Elevation="0" Color="Color.Dark" Fixed="false" Class="align-center" Style="position: static; bottom: 0;">
+    <MudAppBar Dense="true" Elevation="0" Color="Color.Dark" Fixed="false" Class="align-center">
         <MudText Typo="Typo.body1">s20601</MudText>
     </MudAppBar>
 </MudLayout>
