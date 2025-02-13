@@ -32,4 +32,9 @@ public partial class Movie
     public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = new List<MovieUpdateRequest>();
 
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+
+    public override string ToString()
+    {
+        return Title;
+    }
 }

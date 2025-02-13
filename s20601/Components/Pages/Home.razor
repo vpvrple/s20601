@@ -7,465 +7,227 @@
 @inject IDbContextFactory<s20601.Data.S20601Context> DbFactory
 @inject IMovieService MovieSvc
 
-<MudContainer>
-    <MudGrid>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">Movie of the day</MudText>
-        </MudItem>
-        <MudItem lg="6" md="6" xs="12">
-            <MudImage Src="favicon.png"
-            ObjectFit="ObjectFit.None"
-            Alt="Movie poster"
-            Elevation="1"
-            Fluid="true"
-            Style="height:100%; width: 100%;">
-            </MudImage>
-        </MudItem>
-        <MudItem lg="6" md="6" xs="12">
-            <MudGrid Class="d-flex align-center">
-                <MudItem>
-                    @if (movieData is null)
-                    {
-                        <MudText Typo="Typo.h5">Movie of the day was not chosen yet.</MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.h5">
-                            @movieData.Title
-                            <MudText Typo="Typo.subtitle1">(@movieData.StartYear)</MudText>
-                        </MudText>
-                    }
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem>
-                    <MudText Typo="Typo.h6">Community rating</MudText>
-                    <MudRating SelectedValue="@(movieRating)" />
-                </MudItem>
-                <MudItem>
-                    <MudText Typo="Typo.h6">Community sentiment</MudText>
-                    <MudText Typo="Typo.body1" Color="Color.Success">Positive</MudText>
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem>
-                    <MudText Typo="Typo.h6">Directors</MudText>
-                    <MudGrid>
-                        @if (crew is null || crew.Count == 0)
-                        {
-                            <MudItem>
-                                <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
-                            </MudItem>
-                        }
-                        else
-                        {
-                            foreach (var member in crew)
-                            {
-                                if (member.Job == "Writer")
-                                {
-                                    <MudItem>
-                                        <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                                    </MudItem>
-                                }
-                            }
-                        }
-                    </MudGrid>
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem>
-                    <MudText Typo="Typo.h6">Writers</MudText>
-                    <MudGrid>
-                        @if (crew is null || crew.Count == 0)
-                        {
-                            <MudItem>
-                                <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
-                            </MudItem>
-                        }
-                        else
-                        {
-                            foreach (var member in crew)
-                            {
-                                if (member.Job == "Writer")
-                                {
-                                    <MudItem>
-                                        <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                                    </MudItem>
-                                }
-                            }
-                        }
-                    </MudGrid>
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem>
-                    <MudText Typo="Typo.h6">Cast</MudText>
-                    <MudGrid>
-                        @if (crew is null || crew.Count == 0)
-                        {
-                            <MudItem>
-                                <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors for this movie.</MudText>
-                            </MudItem>
-                        }
-                        else
-                        {
-                            foreach (var member in crew)
-                            {
-                                if (member.Job == "Actor")
-                                {
-                                    <MudItem>
-                                        <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                                        <MudText Typo="Typo.subtitle2" Color="Color.Dark">@member.CharacterName</MudText>
-                                    </MudItem>
-                                }
-                            }
-                        }
-                    </MudGrid>
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem>
-                    <MudText Typo="Typo.h6">Genres</MudText>
-
-                    @if (movieGenres is null || movieGenres.Count == 0)
+<MudGrid Style="margin-top: 25px">
+    <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center">
+        <MudText Typo="Typo.h4">Movie of the day</MudText>
+        <MudImage Src="favicon.png"
+        ObjectFit="ObjectFit.None"
+        Alt="Movie poster"
+        Elevation="1"
+        Style="width: 100%; height: auto;" />
+    </MudItem>
+    <MudItem lg="6" md="6" xs="12">
+        <MudGrid Class="d-flex align-center">
+            <MudItem>
+                @if (movieOfTheDay is null)
+                {
+                    <MudText Typo="Typo.h5">Movie of the day was not chosen yet.</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h5">
+                        @movieOfTheDay.Title
+                        <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
+                    </MudText>
+                }
+            </MudItem>
+            <MudFlexBreak />
+            <MudItem>
+                <MudText Typo="Typo.h6">Community rating</MudText>
+                <MudRating SelectedValue="@(movieRating)" />
+            </MudItem>
+            <MudItem>
+                <MudText Typo="Typo.h6">Community sentiment</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Success">Positive</MudText>
+            </MudItem>
+            <MudFlexBreak />
+            <MudItem>
+                <MudText Typo="Typo.h6">Directors</MudText>
+                <MudGrid>
+                    @if (crew is null || crew.Count == 0)
                     {
                         <MudItem>
-                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
+                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
                         </MudItem>
                     }
                     else
                     {
-                        foreach (var genre in movieGenres)
+                        foreach (var member in crew)
                         {
-                            <MudChipSet T="Color">
-                                <MudChip>@genre.Name</MudChip>
-                            </MudChipSet>
+                            if (member.Job == "Writer")
+                            {
+                                <MudItem>
+                                    <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                </MudItem>
+                            }
                         }
                     }
-
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem>
-                    <MudText Typo="Typo.h6">Top reviews</MudText>
-                </MudItem>
-                <MudFlexBreak />
-                <MudItem Style="width: 100%;">
-                    @if (topTwoReviews is null || topTwoReviews.Count == 0)
+                </MudGrid>
+            </MudItem>
+            <MudFlexBreak />
+            <MudItem>
+                <MudText Typo="Typo.h6">Writers</MudText>
+                <MudGrid>
+                    @if (crew is null || crew.Count == 0)
                     {
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No reviews yet</MudText>
+                        <MudItem>
+                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
+                        </MudItem>
                     }
                     else
                     {
-                        foreach (var review in topTwoReviews)
+                        foreach (var member in crew)
                         {
-
-                            <MudChat>
-                                <MudAvatar>
-                                    @review.UserName.FirstOrDefault()
-                                 </MudAvatar>
-                                <MudChatHeader Name="@review.UserName" Time="@review.CreatedAt.ToString()" />
-                                <MudChatBubble Style="width: 100%;">
-                                    @review.Content
-                                </MudChatBubble>
-                                <MudChatFooter>
-                                    <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" />
-                                    @review.LikeRating
-                                    <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" />
-                                    @review.DislikeRating
-                                </MudChatFooter>
-                            </MudChat>
+                            if (member.Job == "Writer")
+                            {
+                                <MudItem>
+                                    <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                </MudItem>
+                            }
                         }
                     }
-                </MudItem>
+                </MudGrid>
+            </MudItem>
+            <MudFlexBreak />
+            <MudItem>
+                <MudText Typo="Typo.h6">Cast</MudText>
+                <MudGrid>
+                    @if (crew is null || crew.Count == 0)
+                    {
+                        <MudItem>
+                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors for this movie.</MudText>
+                        </MudItem>
+                    }
+                    else
+                    {
+                        foreach (var member in crew)
+                        {
+                            if (member.Job == "Actor")
+                            {
+                                <MudItem>
+                                    <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Dark">@member.CharacterName</MudText>
+                                </MudItem>
+                            }
+                        }
+                    }
+                </MudGrid>
+            </MudItem>
+            <MudFlexBreak />
+            <MudItem>
+                <MudText Typo="Typo.h6">Genres</MudText>
                 <MudFlexBreak />
-                <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary">All reviews</MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudItem>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">Movies of the week</MudText>
-            <MudCarousel Style="height: 300px;" ShowArrows="true" TData="object" ShowBullets="false" AutoCycle="false">
-                <MudCarouselItem>
-                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudCarouselItem>
-                <MudCarouselItem>
-                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudCarouselItem>
-            </MudCarousel>
-        </MudItem>
-        <MudItem xs="12">
-            <MudText Typo="Typo.h4">Trending community collections</MudText>
-            <MudCarousel Style="height: 300px;" ShowArrows="true" TData="object" ShowBullets="false" AutoCycle="false">
-                <MudCarouselItem>
-                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudCarouselItem>
-                <MudCarouselItem>
-                    <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                        <MudItem lg="2">
-                            <MudCard Class="align-center">
-                                <MudImage Src="favicon.png"
-                                          ObjectFit="ObjectFit.ScaleDown"
-                                          Alt="Movie poster"
-                                          Elevation="1"
-                                          Fluid="true"
-                                          Style="height:100%; width: 100%;">
-                                </MudImage>
-                                <MudCardContent><MudLink Href="#">Lorem Ipsum</MudLink></MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudCarouselItem>
-            </MudCarousel>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+                @if (movieGenres is null || movieGenres.Count == 0)
+                {
+                    <MudItem>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
+                    </MudItem>
+                }
+                else
+                {
+                    foreach (var genre in movieGenres)
+                    {
+
+                        <MudChipSet T="Color" Class="d-inline-flex">
+                            <MudChip>@genre.Name</MudChip>
+                        </MudChipSet>
+                    }
+                }
+
+            </MudItem>
+            <MudFlexBreak />
+            @* <MudItem>
+                <MudText Typo="Typo.h6">Top reviews</MudText>
+            </MudItem>
+            <MudFlexBreak />
+            <MudItem Style="width: 100%;">
+                @if (topTwoReviews is null || topTwoReviews.Count == 0)
+                {
+                    <MudText Typo="Typo.subtitle1" Color="Color.Dark">No reviews yet</MudText>
+                }
+                else
+                {
+                    foreach (var review in topTwoReviews)
+                    {
+
+                        <MudChat>
+                            <MudAvatar>
+                                @review.UserName.FirstOrDefault()
+                            </MudAvatar>
+                            <MudChatHeader Name="@review.UserName" Time="@review.CreatedAt.ToString()" />
+                            <MudChatBubble Style="width: 100%;">
+                                @review.Content
+                            </MudChatBubble>
+                            <MudChatFooter>
+                                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" />
+                                @review.LikeRating
+                                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" />
+                                @review.DislikeRating
+                            </MudChatFooter>
+                        </MudChat>
+                    }
+                }
+            </MudItem>
+            <MudFlexBreak /> *@
+            <MudItem>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary">See reviews</MudButton>
+            </MudItem>
+
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+<MudGrid Style="margin-top: 25px">
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Past picks</MudText>
+            @if (pastPicks is null)
+            {
+                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+            }
+            else
+            {
+                <MudCarouselWithPagination Items=@pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
+            }
+    </MudItem>
+</MudGrid>
+<MudGrid Style="margin-top: 25px">
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">Trending community collections</MudText>
+        @if (trendingMovieCollections is null)
+        {
+            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        }
+        else
+        {
+            <MudCarouselWithPagination Items=@trendingMovieCollections itemsPerCarousel="5"></MudCarouselWithPagination>
+        }
+    </MudItem>
+</MudGrid>
 
 @code {
-    MovieOfTheDay? movieOfTheDay = null!;
+    Movie? movieOfTheDay = null!;
     int movieRating;
-    Movie movieData = null!;
     List<Genre> movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
-    List<GetMovieReviewWithRating> topTwoReviews = null!;
+    //List<GetMovieReviewWithRating> topTwoReviews = null!;
+
+    List<Movie> pastPicks = null!;
+    List<MovieCollection> trendingMovieCollections = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        movieOfTheDay = await MovieSvc.GetCurrentMovieOfTheDayAsync();
-        var movieOfTheDayId = movieOfTheDay.Movie_Id;
+        movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
+        var movieOfTheDayId = movieOfTheDay.Id;
 
-        movieData = await MovieSvc.GetMovieDataByIdAsync(movieOfTheDayId);
         movieRating = await MovieSvc.GetMovieRatingByIdAsync(movieOfTheDayId);
         movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
         crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
-        topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(movieOfTheDayId, 2);
 
-        //Console.ReadKey();
+        pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
+        
+        // to decide whether it should be on the home page
+        // topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(movieOfTheDayId, 2);
+
+        trendingMovieCollections = await MovieSvc.GetTrendingMovieCollections(10);
     }
 }

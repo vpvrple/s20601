@@ -1,0 +1,39 @@
+﻿@typeparam TItem
+
+<MudCarousel Style="height: 300px;" ShowArrows="true" TData="TItem" ShowBullets="false" AutoCycle="false">
+    @{
+        int totalCarousels = (int)Math.Ceiling((double)(Items.Count / itemsPerCarousel));
+        totalCarousels = Math.Max(totalCarousels, 1);
+    }
+    @for (int i = 0; i < totalCarousels; i++)
+    {
+        int numbersOfElementToSkip = i * itemsPerCarousel;
+        <MudCarouselItem>
+            <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
+                @foreach (var item in Items.Skip(numbersOfElementToSkip).Take(itemsPerCarousel))
+                {
+                    <MudItem lg="2">
+                        <MudCard Class="align-center">
+                            <MudImage Src="favicon.png"
+                                      ObjectFit="ObjectFit.ScaleDown"
+                                      Alt="Movie poster"
+                                      Elevation="1"
+                                      Fluid="true"
+                                      Style="height:100%; width: 100%;">
+                            </MudImage>
+                            <MudCardContent><MudLink Href="#">@item</MudLink></MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudCarouselItem>
+    }
+</MudCarousel>
+
+@code {
+    [Parameter]
+    public List<TItem> Items { get; set; }
+
+    [Parameter]
+    public int itemsPerCarousel { get; set; }
+}

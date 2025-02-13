@@ -16,4 +16,9 @@ public partial class MovieCollection
     public virtual MovieCollectionMovie? MovieCollectionMovie { get; set; }
 
     public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = new List<MovieCollectionUser>();
+
+    public override string ToString()
+    {
+        return Name;
+    }
 }

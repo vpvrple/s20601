@@ -12,15 +12,43 @@ public class MovieService : IMovieService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<MovieOfTheDay?> GetCurrentMovieOfTheDayAsync()
+    public async Task<Movie> GetMovieOfTheDayAsync()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.MovieOfTheDays
-            .OrderByDescending(x => x.Date)
+        return await context.Movies
+            .Include(x => x.MovieOfTheDay)
+            .OrderByDescending(x => x.MovieOfTheDay.Date)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Movie?> GetMovieDataByIdAsync(string id)
+    public async Task<List<Movie>> GetPastMoviesOfTheDay(int n)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var movies = await context.Movies
+            .Include(x => x.MovieOfTheDay)
+            .Where(x => x.Id == x.MovieOfTheDay.Movie_Id)
+            .OrderByDescending(x => x.MovieOfTheDay.Date)
+            .Skip(1)
+            .Take(n)
+            .ToListAsync();
+
+        return movies ?? new List<Movie>();
+    }
+
+    public async Task<List<MovieCollection>> GetTrendingMovieCollections(int n)
+    {
+        // needs to be revisited
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var movieCollections = await context.MovieCollections
+            .Take(n)
+            .ToListAsync();
+
+        return movieCollections ?? new List<MovieCollection>();
+    }
+
+    public async Task<Movie?> GetMovieByIdAsync(string id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Movies
@@ -96,7 +124,6 @@ public class MovieService : IMovieService
                 LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
                 DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 0)
             })
-            .OrderBy(x => x.LikeRating)
             .ToListAsync();
 
         return reviews ?? new List<GetMovieReviewWithRating>();
@@ -118,7 +145,6 @@ public class MovieService : IMovieService
                 LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
                 DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 0)
             })
-            .OrderBy(x => x.LikeRating)
             .Take(n)
             .ToListAsync();
 
