@@ -150,4 +150,33 @@ public class MovieService : IMovieService
 
         return reviews ?? new List<GetMovieReviewWithRating>();
     }
+
+    public async Task<List<GetTopMovieByRating>> GetTopMoviesByRatingAsync(int n)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var top100 = await context.Movies
+            .Join(context.MovieRates,
+            x => x.Id,
+            y => y.Movie_Id,
+            (x, y) => new { 
+                x,y
+            })
+            .GroupBy(joined => joined.x.Id)
+            .Select(movieWithRating => new GetTopMovieByRating
+            {
+                Id = movieWithRating.Key,
+                Title = movieWithRating.Select(x => x.x.Title).First(),
+                Rating = movieWithRating.Average(x => x.y.Rating),
+                RateCount = movieWithRating.Count(),
+                Runtime = movieWithRating.Select(x => x.x.RuntimeMinutes).First(),
+                StartYear = movieWithRating.Select(x => x.x.StartYear).First()
+            })
+            .OrderByDescending(x => x.Rating)
+            .Take(100)
+            .ToListAsync();
+            
+
+        return top100;
+    }
 }

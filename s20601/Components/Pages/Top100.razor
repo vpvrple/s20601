@@ -1,29 +1,53 @@
 ﻿@page "/top100"
+@using Services
+@using s20601.Data.Models.DTOs
+@inject IMovieService MovieSvc
 
 <MudText Style="margin-top: 25px;" Typo="Typo.h4">Top 100 movies of all time</MudText>
 <MudGrid>
-    <MudItem>
-        <MudCard>
-            <MudImage Src="favicon.png"
-                      ObjectFit="ObjectFit.None"
-                      Alt="Movie poster"
-                      Elevation="0"
-                      Height="300"
-                      Width="280" />
-            <MudCardContent>
-                <MudStack>
-                    <MudStack Row="true" Class="justify-center">
-                        <MudRating SelectedValue="2" Size="Size.Small" />
-                        <MudText Typo="Typo.subtitle2">4.3</MudText>
-                        <MudText Typo="Typo.subtitle2">(999)</MudText>
-                    </MudStack>
-                    <MudDivider />
-                    <MudText Typo="Typo.h6">
-                        1. Random movie
-                        <MudText Typo="Typo.subtitle2">(2025) 2h 50m</MudText>
-                    </MudText>
-                </MudStack>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
+    @if (topMoviesByRating is null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        @foreach (var movie in topMoviesByRating)
+        {
+            <MudItem>
+                <MudCard>
+                    <MudImage Src="favicon.png"
+                              ObjectFit="ObjectFit.None"
+                              Alt="Movie poster"
+                              Elevation="0"
+                              Height="300"
+                              Width="280" />
+                    <MudCardContent>
+                        <MudStack>
+                            <MudText Typo="Typo.h6" Align="Align.Center">
+                                @movie.Title
+                                <MudText Typo="Typo.subtitle2">(@movie.StartYear) @(movie.Runtime / 60) hours @(movie.Runtime % 60) minutes</MudText>
+                            </MudText>
+
+                            <MudDivider />
+                            <MudStack Row="true" Class="justify-center">
+                                <MudRating SelectedValue="@((int)Math.Round(movie.Rating))" Size="Size.Small" />
+                                <MudText Typo="Typo.subtitle2">@Math.Round(movie.Rating, 1)</MudText>
+                                <MudText Typo="Typo.subtitle2">(@movie.RateCount)</MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    }
+
 </MudGrid>
+
+@code {
+    List<GetTopMovieByRating> topMoviesByRating = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        topMoviesByRating = await MovieSvc.GetTopMoviesByRatingAsync(100);
+    }
+}
