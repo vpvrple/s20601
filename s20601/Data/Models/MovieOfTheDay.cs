@@ -5,6 +5,7 @@ namespace s20601.Data.Models;
 
 public partial class MovieOfTheDay
 {
+    public int Id { get; set; }
     public string Movie_Id { get; set; } = null!;
 
     public DateTime Date { get; set; }

@@ -303,14 +303,17 @@ public partial class S20601Context : DbContext
 
         modelBuilder.Entity<MovieGenre>(entity =>
         {
-            entity.HasKey(e => e.IdMovieGenre).HasName("MovieGenre_pk");
+            entity.HasKey(e => e.Id).HasName("MovieGenre_pk");
 
             entity.ToTable("MovieGenre");
 
-            entity.Property(e => e.IdMovieGenre).ValueGeneratedNever();
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Movie_Id)
                 .HasMaxLength(10)
                 .IsUnicode(false);
+
+            entity.HasIndex(e => new {e.Movie_Id, e.Genre_Id })
+                .IsUnique(true);
 
             entity.HasOne(d => d.Genre).WithMany(p => p.MovieGenres)
                 .HasForeignKey(d => d.Genre_Id)
@@ -325,7 +328,7 @@ public partial class S20601Context : DbContext
 
         modelBuilder.Entity<MovieOfTheDay>(entity =>
         {
-            entity.HasKey(e => e.Movie_Id).HasName("MovieOfTheDay_pk");
+            entity.HasKey(e => e.Id).HasName("MovieOfTheDay_pk");
 
             entity.ToTable("MovieOfTheDay");
 

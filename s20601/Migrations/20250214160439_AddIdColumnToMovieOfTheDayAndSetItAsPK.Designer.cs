@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using s20601.Data;
 
@@ -11,9 +12,11 @@ using s20601.Data;
 namespace s20601.Migrations
 {
     [DbContext(typeof(S20601Context))]
-    partial class S20601ContextModelSnapshot : ModelSnapshot
+    [Migration("20250214160439_AddIdColumnToMovieOfTheDayAndSetItAsPK")]
+    partial class AddIdColumnToMovieOfTheDayAndSetItAsPK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -391,7 +394,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.MovieGenre", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("IdMovieGenre")
                         .HasColumnType("int");
 
                     b.Property<int>("Genre_Id")
@@ -403,13 +406,12 @@ namespace s20601.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
 
-                    b.HasKey("Id")
+                    b.HasKey("IdMovieGenre")
                         .HasName("MovieGenre_pk");
 
                     b.HasIndex("Genre_Id");
 
-                    b.HasIndex("Movie_Id", "Genre_Id")
-                        .IsUnique();
+                    b.HasIndex("Movie_Id");
 
                     b.ToTable("MovieGenre", (string)null);
                 });
