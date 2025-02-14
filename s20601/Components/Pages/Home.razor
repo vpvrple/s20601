@@ -10,7 +10,7 @@
 <MudText Style="margin-top: 25px;" Typo="Typo.h4">Movie of the day</MudText>
 <MudGrid>
     <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center">
-        
+
         <MudImage Src="favicon.png"
         ObjectFit="ObjectFit.None"
         Alt="Movie poster"
@@ -35,7 +35,7 @@
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Community rating</MudText>
-                <MudRating SelectedValue="@(movieRating)" />
+                <MudRating SelectedValue="@((int)Math.Round(movieRating))" />
             </MudItem>
             <MudItem>
                 <MudText Typo="Typo.h6">Community sentiment</MudText>
@@ -181,14 +181,14 @@
 <MudGrid Style="margin-top: 25px">
     <MudItem xs="12">
         <MudText Typo="Typo.h4">Past picks</MudText>
-            @if (pastPicks is null)
-            {
-                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-            }
-            else
-            {
-                <MudCarouselWithPagination Items=@pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
-            }
+        @if (pastPicks is null)
+        {
+            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        }
+        else
+        {
+            <MudCarouselWithPagination Items=@pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
+        }
     </MudItem>
 </MudGrid>
 <MudGrid>
@@ -207,7 +207,7 @@
 
 @code {
     Movie? movieOfTheDay = null!;
-    int movieRating;
+    double movieRating;
     List<Genre> movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
     //List<GetMovieReviewWithRating> topTwoReviews = null!;
@@ -225,7 +225,7 @@
         crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
 
         pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
-        
+
         // to decide whether it should be on the home page
         // topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(movieOfTheDayId, 2);
 

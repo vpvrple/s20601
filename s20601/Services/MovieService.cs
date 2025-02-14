@@ -56,7 +56,7 @@ public class MovieService : IMovieService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<int> GetMovieRatingByIdAsync(string id)
+    public async Task<double> GetMovieRatingByIdAsync(string id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -71,7 +71,7 @@ public class MovieService : IMovieService
         if (rateCount == 0)
             return 0;
 
-        return (int)Math.Round((double)(ratingSum / rateCount));
+        return Math.Round((double)(ratingSum / rateCount));
     }
 
     public async Task<List<Genre>> GetMovieGenresByIdAsync(string id)
