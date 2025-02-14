@@ -173,7 +173,7 @@ public class MovieService : IMovieService
                 StartYear = movieWithRating.Select(x => x.x.StartYear).First()
             })
             .OrderByDescending(x => x.Rating)
-            .Take(100)
+            .Take(n)
             .ToListAsync();
             
 

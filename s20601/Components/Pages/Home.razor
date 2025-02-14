@@ -26,10 +26,10 @@
                 }
                 else
                 {
-                    <MudText Typo="Typo.h5">
+                    <MudLink Href="@($"movie/{movieOfTheDay.Id}")"Typo="Typo.h5">
                         @movieOfTheDay.Title
                         <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
-                    </MudText>
+                    </MudLink>
                 }
             </MudItem>
             <MudFlexBreak />
