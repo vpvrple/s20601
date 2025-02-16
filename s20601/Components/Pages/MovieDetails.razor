@@ -1,58 +1,30 @@
-﻿@page "/"
-@using Microsoft.EntityFrameworkCore
-@using s20601.Data
+﻿@page "/movie/{MovieId}"
+@using Services
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
-@using s20601.Services
-@inject IDbContextFactory<s20601.Data.S20601Context> DbFactory
 @inject IMovieService MovieSvc
 
-<MudText Class="py-6" Typo="Typo.h4">Movie of the day</MudText>
-<MudGrid>
-    <MudItem lg="6" md="6" sm="12" xs="12" Style="position: relative;">
+<MudGrid Style="margin-top: 25px;">
+    <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center">
         <MudImage Src="favicon.png"
         ObjectFit="ObjectFit.None"
         Alt="Movie poster"
         Elevation="1"
-                  Style="width: 100%; height: auto;"/>
-        <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark" Color="Color.Secondary"/>
+        Style="width: 100%; height: auto;" />
     </MudItem>
     <MudItem lg="6" md="6" xs="12">
         <MudGrid Class="align-center">
-            <MudItem>
-                @if (movieOfTheDay is null)
+            <MudItem xs="12">
+                @if (movie is null)
                 {
-                    <MudText Typo="Typo.h5">Movie of the day was not chosen yet.</MudText>
+                    <MudText Typo="Typo.h5">We don't have information about this movie yet.'</MudText>
                 }
                 else
                 {
-                        <MudLink Href="@($"movie/{movieOfTheDay.Id}")" Typo="Typo.h5">
-                            @movieOfTheDay.Title
-                            
-                            <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
-                        </MudLink>
-                    
-                }
-                
-            </MudItem>
-            <MudFlexBreak/>
-            <MudItem>
-                <MudText Typo="Typo.h6">Genres</MudText>
-                @if (movieGenres is null || movieGenres.Count == 0)
-                {
-                    <MudItem>
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
-                    </MudItem>
-                }
-                else
-                {
-                    foreach (var genre in movieGenres)
-                    {
-
-                        <MudChipSet T="Color" Class="d-inline-flex">
-                            <MudChip>@genre.Name</MudChip>
-                        </MudChipSet>
-                    }
+                    <MudText Typo="Typo.h5">
+                        @movie.Title
+                        <MudText Typo="Typo.subtitle1">(@movie.StartYear)</MudText>
+                    </MudText>
                 }
             </MudItem>
             <MudFlexBreak />
@@ -138,57 +110,82 @@
                     }
                 </MudGrid>
             </MudItem>
+            <MudFlexBreak />
+            <MudItem>
+                <MudText Typo="Typo.h6">Genres</MudText>
+                <MudFlexBreak />
+                @if (movieGenres is null || movieGenres.Count == 0)
+                {
+                    <MudItem>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
+                    </MudItem>
+                }
+                else
+                {
+                    foreach (var genre in movieGenres)
+                    {
+
+                        <MudChipSet T="Color" Class="d-inline-flex">
+                            <MudChip>@genre.Name</MudChip>
+                        </MudChipSet>
+                    }
+                }
+            </MudItem>
         </MudGrid>
     </MudItem>
 </MudGrid>
 
-<MudGrid Class="py-6">
-    <MudItem xs="12">
-        <MudText Typo="Typo.h4">Past picks</MudText>
-        @if (pastPicks is null)
-        {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-        }
-        else
-        {
-            <MudCarouselWithPagination Items=@pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
-        }
+<MudGrid Style="margin-top: 25px;">
+    <MudItem>
+        <MudText Typo="Typo.h4">Reviews</MudText>
     </MudItem>
-</MudGrid>
-<MudGrid>
-    <MudItem xs="12">
-        <MudText Typo="Typo.h4">Trending community collections</MudText>
-        @if (trendingMovieCollections is null)
+    <MudItem Style="width: 100%;">
+        @if (topTwoReviews is null || topTwoReviews.Count == 0)
         {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+            <MudText Typo="Typo.subtitle1" Color="Color.Dark">No reviews yet</MudText>
         }
         else
         {
-            <MudCarouselWithPagination Items=@trendingMovieCollections itemsPerCarousel="5"></MudCarouselWithPagination>
+            foreach (var review in topTwoReviews)
+            {
+
+                <MudChat>
+                    <MudAvatar>
+                        @review.UserName.FirstOrDefault()
+                    </MudAvatar>
+                    <MudChatHeader Name="@review.UserName" Time="@review.CreatedAt.ToString()" />
+                    <MudChatBubble Style="width: 100%;">
+                        @review.Content
+                    </MudChatBubble>
+                    <MudChatFooter>
+                        <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" />
+                        @review.LikeRating
+                        <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" />
+                        @review.DislikeRating
+                    </MudChatFooter>
+                </MudChat>
+            }
         }
     </MudItem>
 </MudGrid>
 
-@code {
-    Movie? movieOfTheDay = null!;
+
+@code
+{
+    [Parameter]
+    public required string MovieId { get; set; }
+
+    Movie? movie= null!;
     double movieRating;
     List<Genre> movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
-
-    List<Movie> pastPicks = null!;
-    List<MovieCollection> trendingMovieCollections = null!;
-
+    List<GetMovieReviewWithRating> topTwoReviews = null!;
     protected override async Task OnInitializedAsync()
     {
-        movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
-        var movieOfTheDayId = movieOfTheDay.Id;
-
-        movieRating = await MovieSvc.GetMovieRatingByIdAsync(movieOfTheDayId);
-        movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
-        crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
-
-        pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
-
-        trendingMovieCollections = await MovieSvc.GetTrendingMovieCollections(10);
+        movie = await MovieSvc.GetMovieByIdAsync(MovieId);
+        movieRating = await MovieSvc.GetMovieRatingByIdAsync(MovieId);
+        movieGenres = await MovieSvc.GetMovieGenresByIdAsync(MovieId);
+        crew = await MovieSvc.GetMovieCrewByMovieIdAsync(MovieId);
+        topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(MovieId, 2);
     }
 }

@@ -1,0 +1,22 @@
+﻿@page "/ranking"
+
+<MudText Class="py-6" Typo="Typo.h4">Reputation ranking</MudText>
+
+@foreach (var row in rows)
+{
+    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="py-2">
+        <MudText Typo="Typo.h6">@row.</MudText>
+            <MudLink Href="#" Typo="Typo.h6" Color="Color.Dark">
+            <MudAvatar>U</MudAvatar>
+                User@(row)
+            </MudLink>
+        <MudText Typo="Typo.body1">Joined @DateTime.Now.Date</MudText>
+        <MudText Typo="Typo.body1">@row points</MudText>
+        <MudText Typo="Typo.body1">@row reviews</MudText>
+    </MudStack>
+}
+
+@code
+{
+    List<int> rows = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+}

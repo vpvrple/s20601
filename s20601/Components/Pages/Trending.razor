@@ -1,9 +1,9 @@
-﻿@page "/top100"
+﻿@page "/trending"
 @using Services
 @using s20601.Data.Models.DTOs
 @inject IMovieService MovieSvc
 
-<MudText Class="py-6" Typo="Typo.h4">Top 100 movies of all time</MudText>
+<MudText Class="py-6" Typo="Typo.h4">Trending movies</MudText>
 <MudGrid>
     @if (topMoviesByRating is null)
     {
