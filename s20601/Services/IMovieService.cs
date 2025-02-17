@@ -5,7 +5,7 @@ namespace s20601.Services
 {
     public interface IMovieService
     {
-        Task<Movie> GetMovieOfTheDayAsync();
+        Task<Movie?> GetMovieOfTheDayAsync();
         Task<double> GetMovieRatingByIdAsync(string id);
         Task<Movie?> GetMovieByIdAsync(string id);
         Task<List<Genre>> GetMovieGenresByIdAsync(string id);

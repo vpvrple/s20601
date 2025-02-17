@@ -1,10 +1,7 @@
 ﻿@page "/"
-@using Microsoft.EntityFrameworkCore
-@using s20601.Data
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @using s20601.Services
-@inject IDbContextFactory<s20601.Data.S20601Context> DbFactory
 @inject IMovieService MovieSvc
 
 <MudText Class="py-6" Typo="Typo.h4">Movie of the day</MudText>
@@ -33,7 +30,6 @@
                         </MudLink>
                     
                 }
-                
             </MudItem>
             <MudFlexBreak/>
             <MudItem>
@@ -155,6 +151,7 @@
         }
     </MudItem>
 </MudGrid>
+
 <MudGrid>
     <MudItem xs="12">
         <MudText Typo="Typo.h4">Trending community collections</MudText>

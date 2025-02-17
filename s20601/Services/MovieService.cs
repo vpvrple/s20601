@@ -12,7 +12,7 @@ public class MovieService : IMovieService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<Movie> GetMovieOfTheDayAsync()
+    public async Task<Movie?> GetMovieOfTheDayAsync()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Movies
@@ -60,18 +60,11 @@ public class MovieService : IMovieService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var ratingSum = await context.MovieRates
+        var rating = await context.MovieRates
             .Where(x => x.Movie_Id == id)
-            .SumAsync(x => x.Rating);
+            .AverageAsync(x =>x.Rating);
 
-        var rateCount = await context.MovieRates
-            .Where(x => x.Movie_Id == id)
-            .CountAsync();
-
-        if (rateCount == 0)
-            return 0;
-
-        return Math.Round((double)(ratingSum / rateCount));
+        return rating;
     }
 
     public async Task<List<Genre>> GetMovieGenresByIdAsync(string id)
