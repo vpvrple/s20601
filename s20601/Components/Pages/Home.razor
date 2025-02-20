@@ -4,7 +4,7 @@
 @using s20601.Services
 @inject IMovieService MovieSvc
 
-<MudText Class="py-6" Typo="Typo.h4">Movie of the day</MudText>
+<MudText Class="mt-6" Typo="Typo.h4">Movie of the day</MudText>
 <MudGrid>
     <MudItem lg="6" md="6" sm="12" xs="12" Style="position: relative;">
         <MudImage Src="favicon.png"
@@ -136,7 +136,7 @@
     </MudItem>
 </MudGrid>
 
-<MudGrid Class="py-6">
+<MudGrid Class="mt-6">
     <MudItem xs="12">
         <MudText Typo="Typo.h4">Past picks</MudText>
         @if (pastPicks is null)
@@ -150,7 +150,7 @@
     </MudItem>
 </MudGrid>
 
-<MudGrid>
+<MudGrid Class="mt-6">
     <MudItem xs="12">
         <MudText Typo="Typo.h4">Trending community collections</MudText>
         @if (trendingMovieCollections is null)
