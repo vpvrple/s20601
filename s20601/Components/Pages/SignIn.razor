@@ -1,0 +1,31 @@
+﻿@page "/signin"
+
+<MudContainer Class="mt-18" MaxWidth="MaxWidth.Small">
+    <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Sign In</MudText>
+    <MudGrid>
+        <MudItem xs="12">
+            <MudTextField T="string" Label="Email" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField InputType="InputType.Password" T="string" Label="Password" />
+        </MudItem>
+        <MudItem xs="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8">Sign In</MudButton>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h6" Align="Align.Center">or continue with</MudText>
+        </MudItem>
+        <MudItem xs="12" Class="d-flex justify-center">
+            <MudIconButton Class="align-center" Icon="@Icons.Custom.Brands.Facebook" Size="Size.Large"></MudIconButton>
+            <MudIconButton Icon="@Icons.Custom.Brands.Google" Size="Size.Large"></MudIconButton>
+            <MudIconButton Icon="@Icons.Custom.Brands.X" Size="Size.Large"></MudIconButton>
+        </MudItem>
+        <MudItem xs="12">
+            <MudDivider />
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">Not a member yet?</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center"><MudLink Href="/signup">Click here to Sign Up</MudLink></MudText>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

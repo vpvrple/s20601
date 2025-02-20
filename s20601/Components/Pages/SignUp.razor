@@ -1,0 +1,29 @@
+﻿@page "/signup"
+
+<MudContainer Class="mt-18" MaxWidth="MaxWidth.Small">
+    <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Sign Up</MudText>
+    <MudGrid>
+        <MudItem xs="12">
+            <MudTextField T="string" Label="Email" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" Label="Username" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField InputType="InputType.Password" T="string" Label="Password" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField InputType="InputType.Password" T="string" Label="Confirm password" />
+        </MudItem>
+        <MudItem xs="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8">Create new account</MudButton>
+        </MudItem>
+        <MudItem xs="12">
+            <MudDivider/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">Already a member?</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center"><MudLink Href="/signin">Click here to Sign In</MudLink></MudText>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
