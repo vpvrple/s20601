@@ -8,10 +8,10 @@
 <MudGrid>
     <MudItem lg="6" md="6" sm="12" xs="12" Style="position: relative;">
         <MudImage Src="favicon.png"
-                  ObjectFit="ObjectFit.None"
-                  Alt="Movie poster"
-                  Elevation="1"
-                  Style="width: 100%; height: auto;" />
+        ObjectFit="ObjectFit.None"
+        Alt="Movie poster"
+        Elevation="1"
+        Style="width: 100%; height: auto;" />
         <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark" Color="Color.Secondary" />
     </MudItem>
     <MudItem lg="6" md="6" xs="12">
@@ -34,15 +34,12 @@
                 <MudText Typo="Typo.h6">Genres</MudText>
                 @if (movieGenres is null || movieGenres.Count == 0)
                 {
-                    <MudItem>
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
-                    </MudItem>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
                 }
                 else
                 {
                     foreach (var genre in movieGenres)
                     {
-
                         <MudChipSet T="Color" Class="d-inline-flex">
                             <MudChip>@genre.Name</MudChip>
                         </MudChipSet>
@@ -52,7 +49,14 @@
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Community rating</MudText>
-                <MudRating SelectedValue="@((int)Math.Round(movieRating))" />
+                @if (movieRating is not null)
+                {
+                    <MovieRatingExtended Rating="@movieRating.AvgRating" RateCount="@movieRating.RateCount" Size="Size.Medium" Typo="Typo.body1" />
+                }
+                else
+                {
+                    <p>Loading..</p>
+                }
             </MudItem>
             <MudFlexBreak />
             <MudItem>
@@ -62,12 +66,10 @@
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Directors</MudText>
-                <MudGrid>
+                <MudStack Row="true" Justify="Justify.Center" Spacing="7">
                     @if (crew is null || crew.Count == 0)
                     {
-                        <MudItem>
-                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
-                        </MudItem>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
                     }
                     else
                     {
@@ -75,23 +77,19 @@
                         {
                             if (member.Job == "Writer")
                             {
-                                <MudItem>
-                                    <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                                </MudItem>
+                                <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
                             }
                         }
                     }
-                </MudGrid>
+                </MudStack>
             </MudItem>
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Writers</MudText>
-                <MudGrid>
+                <MudStack Row="true" Justify="Justify.Center" Spacing="7">
                     @if (crew is null || crew.Count == 0)
                     {
-                        <MudItem>
-                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
-                        </MudItem>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
                     }
                     else
                     {
@@ -99,23 +97,19 @@
                         {
                             if (member.Job == "Writer")
                             {
-                                <MudItem>
-                                    <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                                </MudItem>
+                                <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
                             }
                         }
                     }
-                </MudGrid>
+                </MudStack>
             </MudItem>
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Cast</MudText>
-                <MudGrid>
+                <MudStack Row="true" Justify="Justify.Center" Spacing="7">
                     @if (crew is null || crew.Count == 0)
                     {
-                        <MudItem>
-                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors for this movie.</MudText>
-                        </MudItem>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors for this movie.</MudText>
                     }
                     else
                     {
@@ -123,14 +117,15 @@
                         {
                             if (member.Job == "Actor")
                             {
-                                <MudItem>
+                                <MudPaper Elevation="0">
                                     <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
                                     <MudText Typo="Typo.subtitle2" Color="Color.Dark">@member.CharacterName</MudText>
-                                </MudItem>
+                                </MudPaper>
+
                             }
                         }
                     }
-                </MudGrid>
+                </MudStack>
             </MudItem>
         </MudGrid>
     </MudItem>
@@ -166,7 +161,7 @@
 
 @code {
     Movie? movieOfTheDay = null!;
-    double movieRating;
+    MovieRatingSummary? movieRating = null!;
     List<Genre> movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
 
@@ -178,7 +173,7 @@
         movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
         var movieOfTheDayId = movieOfTheDay.Id;
 
-        movieRating = await MovieSvc.GetMovieRatingByIdAsync(movieOfTheDayId);
+        movieRating = await MovieSvc.GetMovieRatingSummaryByIdAsync(movieOfTheDayId);
         movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
         crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
 

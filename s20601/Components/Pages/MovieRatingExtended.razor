@@ -1,0 +1,20 @@
+﻿<MudStack Row="true" Class="justify-center">
+    <MudRating SelectedValue="@((int)Math.Round(Rating))" Size="@Size" />
+    <MudText Typo="@Typo">@Math.Round(Rating, 1)</MudText>
+    <MudText Typo="@Typo">(@RateCount)</MudText>
+</MudStack>
+
+@code {
+    [Parameter]
+    public double Rating { get; set; }
+
+    [Parameter]
+    public double RateCount { get; set; }
+
+    [Parameter]
+    public Typo Typo { get; set; } = Typo.subtitle2;
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Small;
+}
+

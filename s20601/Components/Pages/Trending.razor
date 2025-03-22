@@ -5,13 +5,13 @@
 
 <MudText Class="mt-6" Typo="Typo.h4">Trending movies</MudText>
 <MudGrid>
-    @if (topMoviesByRating is null)
+    @if (trendingMovies is null)
     {
-        <p>Loading...</p>
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
     else
     {
-        @foreach (var movie in topMoviesByRating)
+        @foreach (var movie in trendingMovies)
         {
             <MudItem>
                 <MudCard>
@@ -30,9 +30,7 @@
 
                             <MudDivider />
                             <MudStack Row="true" Class="justify-center">
-                                <MudRating SelectedValue="@((int)Math.Round(movie.Rating))" Size="Size.Small" />
-                                <MudText Typo="Typo.subtitle2">@Math.Round(movie.Rating, 1)</MudText>
-                                <MudText Typo="Typo.subtitle2">(@movie.RateCount)</MudText>
+                                <MovieRatingExtended RateCount="movie.MovieRatingSummary.RateCount" Rating="movie.MovieRatingSummary.AvgRating" Size="Size.Small" Typo="Typo.subtitle2" />
                             </MudStack>
                         </MudStack>
                     </MudCardContent>
@@ -43,11 +41,15 @@
 
 </MudGrid>
 
+
 @code {
-    List<GetTopMovieByRating> topMoviesByRating = null!;
+    List<MovieWithRating> trendingMovies = null!;
+    int currentPage = 1;
+    int pageSize = 10;
+    int totalMovies = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        topMoviesByRating = await MovieSvc.GetTopMoviesByRatingAsync(100);
+        trendingMovies = await MovieSvc.GetTopMoviesByRatingAsync(100);
     }
 }

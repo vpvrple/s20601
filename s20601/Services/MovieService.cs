@@ -56,15 +56,18 @@ public class MovieService : IMovieService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<double> GetMovieRatingByIdAsync(string id)
+    public async Task<MovieRatingSummary?> GetMovieRatingSummaryByIdAsync(string id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var rating = await context.MovieRates
-            .Where(x => x.Movie_Id == id)
-            .AverageAsync(x =>x.Rating);
+        var ratings = context.MovieRates
+            .Where(x => x.Movie_Id == id);
 
-        return rating;
+        return new MovieRatingSummary
+        {
+            AvgRating = await ratings.AverageAsync(x => x.Rating),
+            RateCount = await ratings.CountAsync()
+        };
     }
 
     public async Task<List<Genre>> GetMovieGenresByIdAsync(string id)
@@ -144,7 +147,7 @@ public class MovieService : IMovieService
         return reviews ?? new List<GetMovieReviewWithRating>();
     }
 
-    public async Task<List<GetTopMovieByRating>> GetTopMoviesByRatingAsync(int n)
+    public async Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -152,23 +155,28 @@ public class MovieService : IMovieService
             .Join(context.MovieRates,
             x => x.Id,
             y => y.Movie_Id,
-            (x, y) => new { 
-                x,y
+            (x, y) => new
+            {
+                x,
+                y
             })
             .GroupBy(joined => joined.x.Id)
-            .Select(movieWithRating => new GetTopMovieByRating
+            .Select(movieWithRating => new MovieWithRating
             {
                 Id = movieWithRating.Key,
                 Title = movieWithRating.Select(x => x.x.Title).First(),
-                Rating = movieWithRating.Average(x => x.y.Rating),
-                RateCount = movieWithRating.Count(),
+                StartYear = movieWithRating.Select(x => x.x.StartYear).First(),
                 Runtime = movieWithRating.Select(x => x.x.RuntimeMinutes).First(),
-                StartYear = movieWithRating.Select(x => x.x.StartYear).First()
+                MovieRatingSummary = new()
+                {
+                    AvgRating = movieWithRating.Average(x => x.y.Rating),
+                    RateCount = movieWithRating.Count(),
+                }
             })
-            .OrderByDescending(x => x.Rating)
+            .OrderByDescending(x => x.MovieRatingSummary.AvgRating)
             .Take(n)
             .ToListAsync();
-            
+
 
         return top100;
     }
