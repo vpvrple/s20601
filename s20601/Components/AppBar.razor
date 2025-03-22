@@ -1,14 +1,40 @@
-﻿<Menu/>
+﻿@using s20601.Data.Models
+@using s20601.Services
+@inject IUserService UserSvc
+
+<Menu/>
 <MudSpacer/>
 <MudTextField @bind-Value="Search"
-              Label="Search"
-              Variant="Variant.Outlined"
-              Adornment="Adornment.End"
-              AdornmentIcon="@Icons.Material.Filled.Search"
-              AdornmentColor="Color.Primary" />
+Label="Search"
+Variant="Variant.Outlined"
+Adornment="Adornment.End"
+AdornmentIcon="@Icons.Material.Filled.Search"
+AdornmentColor="Color.Primary" />
 <MudSpacer />
-<MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/signup">Sign Up</MudButton>
+@if (CurrentUser == null)
+{
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/signup">Sign Up</MudButton>
+}
+else
+{
+    <MudMenu Label="@CurrentUser.UserName" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
+        <MudMenuItem Href="@($"user/{CurrentUser.Id}")">My profile</MudMenuItem>
+            <MudMenuItem>My groups</MudMenuItem>
+            <MudMenuItem>My collections</MudMenuItem>
+            <MudMenuItem>Friends</MudMenuItem>
+            <MudMenuItem>Inbox</MudMenuItem>
+            <MudMenuItem>Log out</MudMenuItem>
+    </MudMenu>
+}
+    
 
-@code {
+@code 
+{
+    public User CurrentUser { get; set; }
     public string Search { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentUser = await UserSvc.GetUserByIdAsync(1);
+    }
 }
