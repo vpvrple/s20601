@@ -27,10 +27,38 @@
                     </MudText>
                 }
             </MudItem>
+            
+            <MudItem>
+                <MudText Typo="Typo.h6">Genres</MudText>
+                <MudFlexBreak />
+                @if (movieGenres is null || movieGenres.Count == 0)
+                {
+                    <MudItem>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
+                    </MudItem>
+                }
+                else
+                {
+                    foreach (var genre in movieGenres)
+                    {
+
+                        <MudChipSet T="Color" Class="d-inline-flex">
+                            <MudChip>@genre.Name</MudChip>
+                        </MudChipSet>
+                    }
+                }
+            </MudItem>
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Community rating</MudText>
-                <MudRating SelectedValue="@((int)Math.Round(movieRating))" />
+                @if (movieRating is null)
+                {
+                    <p>Loading..</p>
+                }
+                else 
+                {
+                    <MovieRatingExtended Rating="@movieRating.AvgRating" RateCount="@movieRating.RateCount" Size="Size.Medium" Typo="Typo.body1" />
+                }
             </MudItem>
             <MudFlexBreak />
             <MudItem>
@@ -111,26 +139,6 @@
                 </MudGrid>
             </MudItem>
             <MudFlexBreak />
-            <MudItem>
-                <MudText Typo="Typo.h6">Genres</MudText>
-                <MudFlexBreak />
-                @if (movieGenres is null || movieGenres.Count == 0)
-                {
-                    <MudItem>
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
-                    </MudItem>
-                }
-                else
-                {
-                    foreach (var genre in movieGenres)
-                    {
-
-                        <MudChipSet T="Color" Class="d-inline-flex">
-                            <MudChip>@genre.Name</MudChip>
-                        </MudChipSet>
-                    }
-                }
-            </MudItem>
         </MudGrid>
     </MudItem>
 </MudGrid>
@@ -176,14 +184,14 @@
     public required string MovieId { get; set; }
 
     Movie? movie= null!;
-    double movieRating;
+    MovieRatingSummary movieRating;
     List<Genre> movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
     List<GetMovieReviewWithRating> topTwoReviews = null!;
     protected override async Task OnInitializedAsync()
     {
         movie = await MovieSvc.GetMovieByIdAsync(MovieId);
-        movieRating = await MovieSvc.GetMovieRatingByIdAsync(MovieId);
+        movieRating = await MovieSvc.GetMovieRatingSummaryByIdAsync(MovieId);
         movieGenres = await MovieSvc.GetMovieGenresByIdAsync(MovieId);
         crew = await MovieSvc.GetMovieCrewByMovieIdAsync(MovieId);
         topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(MovieId, 2);
