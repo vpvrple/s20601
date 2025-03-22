@@ -7,7 +7,7 @@
 <MudGrid>
     @if (topMoviesByRating is null)
     {
-        <p>Loading...</p>
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
     else
     {
@@ -24,15 +24,13 @@
                     <MudCardContent>
                         <MudStack>
                             <MudText Typo="Typo.h6" Align="Align.Center">
-                                @movie.Title
+                                @(topMoviesByRating.IndexOf(movie) + 1). @movie.Title
                                 <MudText Typo="Typo.subtitle2">(@movie.StartYear) @(movie.Runtime / 60) hours @(movie.Runtime % 60) minutes</MudText>
                             </MudText>
 
                             <MudDivider />
                             <MudStack Row="true" Class="justify-center">
-                                <MudRating SelectedValue="@((int)Math.Round(movie.Rating))" Size="Size.Small" />
-                                <MudText Typo="Typo.subtitle2">@Math.Round(movie.Rating, 1)</MudText>
-                                <MudText Typo="Typo.subtitle2">(@movie.RateCount)</MudText>
+                                <MovieRatingExtended RateCount="movie.MovieRatingSummary.RateCount" Rating="movie.MovieRatingSummary.AvgRating" Size="Size.Small" Typo="Typo.subtitle2" />
                             </MudStack>
                         </MudStack>
                     </MudCardContent>
@@ -44,7 +42,7 @@
 </MudGrid>
 
 @code {
-    List<GetTopMovieByRating> topMoviesByRating = null!;
+    List<MovieWithRating> topMoviesByRating = null!;
 
     protected override async Task OnInitializedAsync()
     {

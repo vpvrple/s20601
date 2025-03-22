@@ -1,22 +1,46 @@
 ﻿@page "/ranking"
+@using s20601.Data.Models
+@using s20601.Services
+@inject IUserService UserSvc
 
 <MudText Class="mt-6" Typo="Typo.h4">Reputation ranking</MudText>
 
-@foreach (var row in rows)
+@if (Users is null)
 {
-    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="py-2">
-        <MudText Typo="Typo.h6">@row.</MudText>
-            <MudLink Href="#" Typo="Typo.h6" Color="Color.Dark">
-            <MudAvatar>U</MudAvatar>
-                User@(row)
-            </MudLink>
-        <MudText Typo="Typo.body1">Joined @DateTime.Now.Date</MudText>
-        <MudText Typo="Typo.body1">@row points</MudText>
-        <MudText Typo="Typo.body1">@row reviews</MudText>
-    </MudStack>
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
 }
-
-@code
+else
 {
-    List<int> rows = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    <MudTable Class="mt-6" Items="@Users" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+        <HeaderContent>
+            <MudTh>Nr</MudTh>
+            <MudTh>Username</MudTh>
+            <MudTh>Joined</MudTh>
+            <MudTh>Points</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nr">@(Users.IndexOf(context) + 1)</MudTd>
+            <MudTd DataLabel="Username"><MudLink Href="@($"user/{context.Id}")">@context.UserName</MudLink></MudTd>
+            <MudTd DataLabel="Name">@context.CreatedAt.Date.ToShortDateString()</MudTd>
+            <MudTd DataLabel="Position" HideSmall="_hidePosition">@context.ReputationPoints</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }"
+                           RowsPerPageString="@rowsPerPageString" />
+
+        </PagerContent>
+        
+    </MudTable>
+}
+@code {
+    private bool _hidePosition;
+    private bool _loading;
+    private List<User> Users = null!;
+
+    private string rowsPerPageString = "Rows per page:";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = await UserSvc.GetTopUsersByPoints();
+    }
 }
