@@ -24,6 +24,9 @@ builder.Services
 builder.Services
     .AddScoped<IMovieService, MovieService>();
 
+builder.Services
+    .AddScoped<IUserService, UserService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
