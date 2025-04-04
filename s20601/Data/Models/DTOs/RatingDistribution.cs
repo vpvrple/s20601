@@ -2,7 +2,7 @@
 {
     public class RatingDistribution
     {
-        public byte RatingValue { get; set; }
+        public int RatingValue { get; set; }
         public int Frequency { get; set; }
     }
 }

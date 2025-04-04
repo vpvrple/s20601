@@ -13,9 +13,9 @@ public partial class Group
 
     public byte[] Image { get; set; } = null!;
 
-    public virtual ICollection<GroupMembership> GroupMemberships { get; set; } = new List<GroupMembership>();
+    public virtual ICollection<GroupMembership> GroupMemberships { get; set; } = [];
 
-    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
+    public virtual ICollection<Post> Posts { get; set; } = [];
 
-    public virtual ICollection<User> IdOwners { get; set; } = new List<User>();
+    public virtual ICollection<ApplicationUser> IdOwners { get; set; } = [];
 }

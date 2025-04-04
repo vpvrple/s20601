@@ -5,7 +5,7 @@ namespace s20601.Data.Models;
 
 public partial class GroupMembership
 {
-    public int IdUser { get; set; }
+    public string IdUser { get; set; } = null!;
 
     public int IdGroup { get; set; }
 
@@ -13,5 +13,5 @@ public partial class GroupMembership
 
     public virtual Group IdGroupNavigation { get; set; } = null!;
 
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 }

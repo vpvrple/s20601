@@ -7,7 +7,7 @@ public partial class MovieGenre
 {
     public int Id { get; set; }
 
-    public string Movie_Id { get; set; } = null!;
+    public int Movie_Id { get; set; }
 
     public int Genre_Id { get; set; }
 

@@ -5,13 +5,13 @@ namespace s20601.Data.Models;
 
 public partial class UserRelationship
 {
-    public int IdUser { get; set; }
+    public string IdUser { get; set; } = null!;
 
-    public int IdRelatedUser { get; set; }
+    public string IdRelatedUser { get; set; } = null!;
 
     public string Type { get; set; } = null!;
 
-    public virtual User IdRelatedUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdRelatedUserNavigation { get; set; } = null!;
 
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 }

@@ -15,5 +15,5 @@ public partial class Crew
 
     public int? DeathYear { get; set; }
 
-    public virtual ICollection<MovieCrew> MovieCrews { get; set; } = new List<MovieCrew>();
+    public virtual ICollection<MovieCrew> MovieCrews { get; set; } = [];
 }

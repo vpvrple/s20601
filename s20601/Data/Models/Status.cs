@@ -9,5 +9,5 @@ public partial class Status
 
     public string Type { get; set; } = null!;
 
-    public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
+    public virtual ICollection<Message> Messages { get; set; } = [];
 }

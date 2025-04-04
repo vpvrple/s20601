@@ -5,7 +5,7 @@ namespace s20601.Data.Models;
 
 public partial class Movie
 {
-    public string Id { get; set; } = null!;
+    public int Id { get; set; }
 
     public string Title { get; set; } = null!;
 
@@ -19,19 +19,19 @@ public partial class Movie
 
     public string TitleType { get; set; } = null!;
 
-    public virtual ICollection<MovieCollectionMovie> MovieCollectionMovies { get; set; } = new List<MovieCollectionMovie>();
+    public virtual ICollection<MovieCollectionMovie> MovieCollectionMovies { get; set; } = [];
 
-    public virtual ICollection<MovieCrew> MovieCrews { get; set; } = new List<MovieCrew>();
+    public virtual ICollection<MovieCrew> MovieCrews { get; set; } = [];
 
-    public virtual ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
+    public virtual ICollection<MovieGenre> MovieGenres { get; set; } = [];
 
     public virtual MovieOfTheDay? MovieOfTheDay { get; set; }
 
-    public virtual ICollection<MovieRate> MovieRates { get; set; } = new List<MovieRate>();
+    public virtual ICollection<MovieRate> MovieRates { get; set; } = [];
 
-    public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = new List<MovieUpdateRequest>();
+    public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = [];
 
-    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public virtual ICollection<Review> Reviews { get; set; } = [];
 
     public override string ToString()
     {

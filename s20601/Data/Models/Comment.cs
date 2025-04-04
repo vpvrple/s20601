@@ -9,7 +9,7 @@ public partial class Comment
 
     public int IdPost { get; set; }
 
-    public int IdUser { get; set; }
+    public string IdUser { get; set; } = null!;
 
     public int? IdComment { get; set; }
 
@@ -23,7 +23,7 @@ public partial class Comment
 
     public virtual Post IdPostNavigation { get; set; } = null!;
 
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 
-    public virtual ICollection<Comment> InverseIdCommentNavigation { get; set; } = new List<Comment>();
+    public virtual ICollection<Comment> InverseIdCommentNavigation { get; set; } = [];
 }

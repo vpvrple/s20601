@@ -9,7 +9,7 @@ public partial class MovieCollectionMovie
 
     public DateTime AddedAt { get; set; }
 
-    public string Movie_Id { get; set; } = null!;
+    public int Movie_Id { get; set; }
 
     public virtual MovieCollection IdMovieCollectionNavigation { get; set; } = null!;
 

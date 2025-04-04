@@ -7,7 +7,7 @@ public partial class SocialActivityLog
 {
     public int Id { get; set; }
 
-    public int IdUser { get; set; }
+    public string IdUser { get; set; } = null!;
 
     public int IdActivityType { get; set; }
 
@@ -15,5 +15,5 @@ public partial class SocialActivityLog
 
     public virtual ActivityType IdActivityTypeNavigation { get; set; } = null!;
 
-    public virtual User IdUserNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 }

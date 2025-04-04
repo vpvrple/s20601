@@ -13,7 +13,7 @@ public partial class MovieCrew
 
     public string? CharacterName { get; set; }
 
-    public string Movie_Id { get; set; } = null!;
+    public int Movie_Id { get; set; }
 
     public virtual Crew IdCrewNavigation { get; set; } = null!;
 

@@ -7,9 +7,9 @@ public partial class Message
 {
     public int Id { get; set; }
 
-    public int IdSender { get; set; }
+    public string IdSender { get; set; } = null!;
 
-    public int IdRecipient { get; set; }
+    public string IdRecipient { get; set; } = null!;
 
     public int Created { get; set; }
 
@@ -19,9 +19,9 @@ public partial class Message
 
     public DateTime? DeliverTime { get; set; }
 
-    public virtual User IdRecipientNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdRecipientNavigation { get; set; } = null!;
 
-    public virtual User IdSenderNavigation { get; set; } = null!;
+    public virtual ApplicationUser IdSenderNavigation { get; set; } = null!;
 
     public virtual Status IdStatusNavigation { get; set; } = null!;
 }
