@@ -1,0 +1,138 @@
+﻿@page "/user/{username}"
+@using s20601.Services
+@using s20601.Data
+@using s20601.Data.Models
+@using s20601.Data.Models.DTOs
+@inject IUserService UserSvc
+@inject IRatingService RatingSvc
+
+<AuthorizeView>
+    <MudContainer Class="mt-6" MaxWidth="MaxWidth.Medium">
+        <MudGrid Class="d-flex">
+            <MudItem>
+                <MudImage Src="favicon.png"
+                          ObjectFit="ObjectFit.ScaleDown"
+                          Alt="Movie poster"
+                          Elevation="1"
+                          Height="300"
+                          Width="280">
+                </MudImage>
+            </MudItem>
+            <MudItem>
+                @if (User is null)
+                {
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h4">@User.UserName</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.PersonAdd" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"></MudIconButton>
+                    </MudStack>
+                    <MudText Typo="Typo.subtitle1">points @User.ReputationPoints</MudText>
+                    <MudText Class="mt-9" Typo="Typo.h5">Description</MudText>
+                    <MudText Typo="Typo.body1">@User.ProfileDescription</MudText>
+                }
+            </MudItem>
+            <MudItem xs="12">
+                <MudDivider />
+                <MudText Typo="Typo.h4" Class="mt-3">Statistics</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.h5" Align="Align.Center">Rating distribution</MudText>
+                <MudChart ChartType="ChartType.Donut" LegendPosition="Position.Bottom" Width="300px" Height="300px"
+                          InputData="@ratingData" InputLabels="@labels">
+                </MudChart>
+            </MudItem>
+            <MudItem xs="6">
+                <MudText Typo="Typo.h5" Align="Align.Center">General</MudText>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Average</MudText>
+                        <MudPaper Class="pa-6">
+                            @if (UserRatingSummary is null)
+                            {
+                                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h3" Align="Align.Center">@(Math.Round((UserRatingSummary.AvgMovieRating), 1))</MudText>
+                            }
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Median</MudText>
+                        <MudPaper Class="pa-6">
+                            @if (UserRatingSummary is null)
+                            {
+                                <MudProgressCircular Class="align-center" Color="Color.Default" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h3" Align="Align.Center">@(Math.Round((UserRatingSummary.MedMovieRating), 1))</MudText>
+                            }
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Total ratings</MudText>
+                        <MudPaper Class="pa-6">
+                            @if (UserRatingSummary is null)
+                            {
+                                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h3" Align="Align.Center">@UserRatingSummary.TotalRatings</MudText>
+                            }
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Total reviews</MudText>
+                        <MudPaper Class="pa-6">
+                            @if (UserRatingSummary is null)
+                            {
+                                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h3" Align="Align.Center">@UserRatingSummary.TotalReviews</MudText>
+                            }
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+
+    @code
+    {
+        [Parameter]
+        public required string username { get; set; }
+
+        private ApplicationUser? User = null;
+
+        UserRatingSummary? UserRatingSummary = null;
+
+        private string[] labels = null!;
+        private double[] ratingData = null!;
+
+        protected override async Task OnInitializedAsync()
+        {
+        User = await UserSvc.GetUserByUsernameAsync(username);
+        UserRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(User.UserName);
+        var ratingCount = UserRatingSummary.RatingDistribution.Count;
+
+        labels = new string[ratingCount];
+        ratingData = new double[ratingCount];
+
+        int index = 0;
+        foreach (var rating in UserRatingSummary.RatingDistribution)
+        {
+            labels[index] = rating.RatingValue.ToString() + " stars";
+            ratingData[index] = rating.Frequency;
+            index++;
+        }
+        }
+
+    }
+</AuthorizeView>

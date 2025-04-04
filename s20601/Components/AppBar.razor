@@ -1,40 +1,65 @@
-﻿@using s20601.Data.Models
+﻿@using s20601.Data
+@using s20601.Data.Models
 @using s20601.Services
 @inject IUserService UserSvc
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
-<Menu/>
-<MudSpacer/>
-<MudTextField @bind-Value="Search"
-Label="Search"
-Variant="Variant.Outlined"
-Adornment="Adornment.End"
-AdornmentIcon="@Icons.Material.Filled.Search"
-AdornmentColor="Color.Primary" />
 <MudSpacer />
-@if (CurrentUser == null)
+<MudBlazor.StaticInput.MudStaticTextField T="string"
+                                          Label="Search"
+                                          Variant="Variant.Outlined"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          AdornmentColor="Color.Primary" />
+<MudSpacer />
+@if (userName is null)
 {
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/signup">Sign Up</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/login" Class="mr-3">Log in</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/register">Register</MudButton>
 }
 else
 {
-    <MudMenu Label="@CurrentUser.UserName" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
-        <MudMenuItem Href="@($"user/{CurrentUser.Id}")">My profile</MudMenuItem>
-            <MudMenuItem>My groups</MudMenuItem>
-            <MudMenuItem>My collections</MudMenuItem>
-            <MudMenuItem>Friends</MudMenuItem>
-            <MudMenuItem>Inbox</MudMenuItem>
-            <MudMenuItem>Log out</MudMenuItem>
+    <MudMenu Label="@userName" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
+        <MudMenuItem Href="@($"user/{userName}")">My profile</MudMenuItem>
+        <MudMenuItem>My groups</MudMenuItem>
+        <MudMenuItem>My collections</MudMenuItem>
+        <MudMenuItem>Friends</MudMenuItem>
+        <MudMenuItem>Inbox</MudMenuItem>
+        <MudMenuItem>
+                <form action="Account/Logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" />
+                    <button type="submit">
+                        Logout
+                    </button>
+                </form>
+        </MudMenuItem>
     </MudMenu>
 }
-    
 
-@code 
+@code
 {
-    public User CurrentUser { get; set; }
+    private string? currentUrl;
     public string Search { get; set; } = null!;
+    private string userName = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        CurrentUser = await UserSvc.GetUserByIdAsync(1);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        userName = authState.User.Identity?.Name;
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }
