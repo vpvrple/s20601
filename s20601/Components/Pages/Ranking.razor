@@ -1,7 +1,10 @@
 ﻿@page "/ranking"
+@using s20601.Data
 @using s20601.Data.Models
 @using s20601.Services
 @inject IUserService UserSvc
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <MudText Class="mt-6" Typo="Typo.h4">Reputation ranking</MudText>
 
@@ -20,27 +23,46 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Nr">@(Users.IndexOf(context) + 1)</MudTd>
-            <MudTd DataLabel="Username"><MudLink Href="@($"user/{context.Id}")">@context.UserName</MudLink></MudTd>
+            <MudTd DataLabel="Username">
+                @if (isAuthenticated)
+                {
+                    <MudLink Href="@($"user/{context.Email}")">@context.UserName</MudLink>
+                }
+                else
+                {
+                    <MudLink Href="/account/login">@context.UserName</MudLink>
+                }
+                </MudTd>
             <MudTd DataLabel="Name">@context.CreatedAt.Date.ToShortDateString()</MudTd>
             <MudTd DataLabel="Position" HideSmall="_hidePosition">@context.ReputationPoints</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }"
-                           RowsPerPageString="@rowsPerPageString" />
+            RowsPerPageString="@rowsPerPageString" />
 
         </PagerContent>
-        
+
     </MudTable>
 }
 @code {
     private bool _hidePosition;
     private bool _loading;
-    private List<User> Users = null!;
+    private List<ApplicationUser> Users = null!;
+    private bool isAuthenticated = false;
+
 
     private string rowsPerPageString = "Rows per page:";
 
     protected override async Task OnInitializedAsync()
     {
         Users = await UserSvc.GetTopUsersByPoints();
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            isAuthenticated = true;
+        }
+
     }
 }

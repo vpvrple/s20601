@@ -1,0 +1,81 @@
+﻿@using Services
+@inject IRatingService RatingSvc
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IUserService UserSvc
+@using s20601.Data
+@using s20601.Data.Models
+
+<MudStack Row="true" Class="justify-center">
+    @if (user is null)
+    {
+        <MudRating SelectedValue="@((int)Math.Round(AvgRating))"
+                   Size="@Size"
+                   SelectedValueChanged="OnRatingChanged" />
+    }
+    else
+    {
+        <MudRating SelectedValue="@(currentUserMovieRating?.Rating ?? 0)"
+                   Size="@Size"
+                   SelectedValueChanged="OnRatingChanged" />
+    }
+    
+    <MudText Typo="@Typo">@Math.Round(AvgRating, 1)</MudText>
+    <MudText Typo="@Typo">(@RateCount)</MudText>
+</MudStack>
+
+@code {
+    [Parameter]
+    public double AvgRating { get; set; }
+
+    [Parameter]
+    public double RateCount { get; set; }
+
+    [Parameter]
+    public Typo Typo { get; set; } = Typo.subtitle2;
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Small;
+
+    [Parameter]
+    public int MovieId { get; set; }
+
+    private ApplicationUser user = null!;
+
+    private MovieRate currentUserMovieRating = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userAuthenticationState = authenticationState.User;
+
+        if (userAuthenticationState.Identity?.IsAuthenticated == true)
+        {
+            var username = userAuthenticationState.Identity?.Name;
+                user = await UserSvc.GetUserByUsernameAsync(username);
+                currentUserMovieRating = await RatingSvc.GetUserMovieRating(user.Id, MovieId);
+        }
+    }
+
+    private async Task OnRatingChanged(int newRating)
+    {
+        if (user is not null)
+        {
+            await RatingSvc.RateMovieAsync(MovieId, user.Id, newRating);
+
+            var updatedRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
+            if (updatedRating is null)
+            {
+                return;
+            }
+            AvgRating = updatedRating.AvgRating;
+            RateCount = updatedRating.RateCount;
+            StateHasChanged();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/account/login", true);
+        }
+    }
+}
+

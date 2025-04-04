@@ -1,8 +1,10 @@
 ﻿@page "/"
+@using MudBlazor
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @using s20601.Services
 @inject IMovieService MovieSvc
+@inject IRatingService RatingSvc
 
 <MudText Class="mt-6" Typo="Typo.h4">Movie of the day</MudText>
 <MudGrid>
@@ -49,13 +51,13 @@
             <MudFlexBreak />
             <MudItem>
                 <MudText Typo="Typo.h6">Community rating</MudText>
-                @if (movieRating is not null)
+                @if (movieRating is null)
                 {
-                    <MovieRatingExtended Rating="@movieRating.AvgRating" RateCount="@movieRating.RateCount" Size="Size.Medium" Typo="Typo.body1" />
+                    <p>Loading..</p>
                 }
                 else
                 {
-                    <p>Loading..</p>
+                    <MovieRatingExtended MovieId="@movieOfTheDay.Id" AvgRating="@movieRating.AvgRating" RateCount="@movieRating.RateCount" Size="Size.Medium" Typo="Typo.body1" />
                 }
             </MudItem>
             <MudFlexBreak />
@@ -164,6 +166,7 @@
     MovieRatingSummary? movieRating = null!;
     List<Genre> movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
+    MovieRate movieRate = null!;
 
     List<Movie> pastPicks = null!;
     List<MovieCollection> trendingMovieCollections = null!;
@@ -171,11 +174,15 @@
     protected override async Task OnInitializedAsync()
     {
         movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
-        var movieOfTheDayId = movieOfTheDay.Id;
+        if (movieOfTheDay is not null)
+        {
+            var movieOfTheDayId = movieOfTheDay.Id;
 
-        movieRating = await MovieSvc.GetMovieRatingSummaryByIdAsync(movieOfTheDayId);
-        movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
-        crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
+            movieRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(movieOfTheDayId);
+            movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
+            crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
+        }
+        
 
         pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
 

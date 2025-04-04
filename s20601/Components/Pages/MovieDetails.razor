@@ -3,6 +3,7 @@
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @inject IMovieService MovieSvc
+@inject IRatingService RatingSvc
 
 <MudGrid Class="mt-6">
     <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center">
@@ -181,7 +182,7 @@
 @code
 {
     [Parameter]
-    public required string MovieId { get; set; }
+    public required int MovieId { get; set; }
 
     Movie? movie= null!;
     MovieRatingSummary movieRating;
@@ -191,7 +192,7 @@
     protected override async Task OnInitializedAsync()
     {
         movie = await MovieSvc.GetMovieByIdAsync(MovieId);
-        movieRating = await MovieSvc.GetMovieRatingSummaryByIdAsync(MovieId);
+        movieRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
         movieGenres = await MovieSvc.GetMovieGenresByIdAsync(MovieId);
         crew = await MovieSvc.GetMovieCrewByMovieIdAsync(MovieId);
         topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(MovieId, 2);
