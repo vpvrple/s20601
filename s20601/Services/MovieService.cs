@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
@@ -6,8 +7,8 @@ namespace s20601.Services;
 
 public class MovieService : IMovieService
 {
-    private readonly IDbContextFactory<S20601Context> _dbContextFactory;
-    public MovieService(IDbContextFactory<S20601Context> dbContextFactory)
+    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+    public MovieService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }
@@ -38,7 +39,7 @@ public class MovieService : IMovieService
 
     public async Task<List<MovieCollection>> GetTrendingMovieCollections(int n)
     {
-        // needs to be revisited
+        //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var movieCollections = await context.MovieCollections
@@ -48,7 +49,7 @@ public class MovieService : IMovieService
         return movieCollections ?? new List<MovieCollection>();
     }
 
-    public async Task<Movie?> GetMovieByIdAsync(string id)
+    public async Task<Movie?> GetMovieByIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Movies
@@ -56,21 +57,7 @@ public class MovieService : IMovieService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<MovieRatingSummary?> GetMovieRatingSummaryByIdAsync(string id)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        var ratings = context.MovieRates
-            .Where(x => x.Movie_Id == id);
-
-        return new MovieRatingSummary
-        {
-            AvgRating = await ratings.AverageAsync(x => x.Rating),
-            RateCount = await ratings.CountAsync()
-        };
-    }
-
-    public async Task<List<Genre>> GetMovieGenresByIdAsync(string id)
+    public async Task<List<Genre>> GetMovieGenresByIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -83,7 +70,7 @@ public class MovieService : IMovieService
         return genres ?? new List<Genre>();
     }
 
-    public async Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(string id)
+    public async Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -104,7 +91,7 @@ public class MovieService : IMovieService
     }
 
 
-    public async Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(string id)
+    public async Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -125,7 +112,7 @@ public class MovieService : IMovieService
         return reviews ?? new List<GetMovieReviewWithRating>();
     }
 
-    public async Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(string id, int n)
+    public async Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(int id, int n)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -147,37 +134,37 @@ public class MovieService : IMovieService
         return reviews ?? new List<GetMovieReviewWithRating>();
     }
 
-    public async Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+    //public async Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n)
+    //{
+    //    using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var top100 = await context.Movies
-            .Join(context.MovieRates,
-            x => x.Id,
-            y => y.Movie_Id,
-            (x, y) => new
-            {
-                x,
-                y
-            })
-            .GroupBy(joined => joined.x.Id)
-            .Select(movieWithRating => new MovieWithRating
-            {
-                Id = movieWithRating.Key,
-                Title = movieWithRating.Select(x => x.x.Title).First(),
-                StartYear = movieWithRating.Select(x => x.x.StartYear).First(),
-                Runtime = movieWithRating.Select(x => x.x.RuntimeMinutes).First(),
-                MovieRatingSummary = new()
-                {
-                    AvgRating = movieWithRating.Average(x => x.y.Rating),
-                    RateCount = movieWithRating.Count(),
-                }
-            })
-            .OrderByDescending(x => x.MovieRatingSummary.AvgRating)
-            .Take(n)
-            .ToListAsync();
+    //    var top100 = await context.Movies
+    //        .Join(context.MovieRates,
+    //        x => x.Id,
+    //        y => y.Movie_Id,
+    //        (x, y) => new
+    //        {
+    //            x,
+    //            y
+    //        })
+    //        .GroupBy(joined => joined.x.Id)
+    //        .Select(movieWithRating => new MovieWithRating
+    //        {
+    //            Id = movieWithRating.Key,
+    //            Title = movieWithRating.Select(x => x.x.Title).First(),
+    //            StartYear = movieWithRating.Select(x => x.x.StartYear).First(),
+    //            Runtime = movieWithRating.Select(x => x.x.RuntimeMinutes).First(),
+    //            MovieRatingSummary = new()
+    //            {
+    //                AvgRating = movieWithRating.Average(x => x.y.Rating),
+    //                RateCount = movieWithRating.Count(),
+    //            }
+    //        })
+    //        .OrderByDescending(x => x.MovieRatingSummary.AvgRating)
+    //        .Take(n)
+    //        .ToListAsync();
 
 
-        return top100;
-    }
+    //    return top100;
+    //}
 }

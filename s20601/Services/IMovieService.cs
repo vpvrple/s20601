@@ -6,14 +6,13 @@ namespace s20601.Services
     public interface IMovieService
     {
         Task<Movie?> GetMovieOfTheDayAsync();
-        Task<Movie?> GetMovieByIdAsync(string id);
-        Task<List<Genre>> GetMovieGenresByIdAsync(string id);
-        Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(string id);
-        Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(string id);
-        Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(string id, int n);
+        Task<Movie?> GetMovieByIdAsync(int id);
+        Task<List<Genre>> GetMovieGenresByIdAsync(int id);
+        Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(int id);
+        Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(int id);
+        Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(int id, int n);
         Task<List<Movie>> GetPastMoviesOfTheDay(int n);
         Task<List<MovieCollection>> GetTrendingMovieCollections(int n);
-        Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n);
-        Task<MovieRatingSummary?> GetMovieRatingSummaryByIdAsync(string id);
+        //Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n);
     }
 }
