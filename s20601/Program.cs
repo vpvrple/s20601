@@ -10,6 +10,8 @@ using s20601.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddUserSecrets<Program>();
+
 // Add services to the container.
 builder.Services
     .AddRazorComponents()
@@ -59,6 +61,9 @@ builder.Services
 
 builder.Services
     .AddScoped<IRatingService, RatingService>();
+
+builder.Services
+    .AddScoped<IReviewService, ReviewService>();
 
 builder.Services
     .AddScoped<IRankingService, RankingService>();

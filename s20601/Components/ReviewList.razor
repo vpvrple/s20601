@@ -1,0 +1,125 @@
+﻿@using s20601.Services
+@using s20601.Data.Models.DTOs;
+@using s20601.Data.Models;
+@using Microsoft.AspNetCore.Identity;
+
+@inject IReviewService ReviewSvc
+@inject IUserService UserSvc
+
+<AuthorizeView>
+    @if (!userReviewed)
+    {
+        <MudPaper Class="d-flex justify-end flex-grow-1 gap-4 mt-6 mb-6" Elevation="0">
+            <MudTextField @bind-Value="reviewContent" T="string" Label="Write a review" Variant="Variant.Text" AutoGrow="true" />
+            <MudButton Disabled="@_processing" OnClick="() => PostReview(reviewContent)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Class="d-flex justify-end align-self-end">
+                @if (_processing)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Posting</MudText>
+                }
+                else
+                {
+                    <MudText>Post</MudText>
+                }
+            </MudButton>
+        </MudPaper>
+    }
+</AuthorizeView>
+
+@if (reviews is null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    @foreach (var review in reviews.OrderByDescending(x => x.LikeRating))
+    {
+        <Review Id="@review.Id"
+        AuthorId="@review.AuthorId"
+        CurrentUserId="@userId"
+        Avatar="@(review.Nickname.FirstOrDefault().ToString())"
+        Nickname="@review.Nickname"
+        Content="@review.Content"
+        CreatedAt="@review.CreatedAt"
+        LikeRating="@review.LikeRating"
+        DislikeRating="@review.DislikeRating"
+        OnRemove="RemoveFromList"
+        OnVote="OnVote" />
+    }
+
+}
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    [Parameter]
+    public int MovieId { get; set; }
+
+    private string reviewContent = string.Empty;
+    private bool _processing = false;
+
+    private bool userReviewed = false;
+    private string userId = null!;
+    private List<GetMovieReviewWithRating?> reviews = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            userId = authState.User.Claims.First().Value;
+            userReviewed = await ReviewSvc.AlreadyReviewed(MovieId, userId);
+        }
+        reviews = await ReviewSvc.GetMovieReviewsWithRating(MovieId);
+
+    }
+
+    private async Task PostReview(string review)
+    {
+        _processing = true;
+
+        await ReviewSvc.AddReviewAsync(review, MovieId, userId);
+
+        reviews = await ReviewSvc.GetMovieReviewsWithRating(MovieId);
+
+        userReviewed = true;
+
+        StateHasChanged();
+
+        _processing = false;
+    }
+
+    private async Task RemoveFromList(int reviewId)
+    {
+        reviews.RemoveAll(x => x.Id == reviewId);
+        userReviewed = false;
+        await Task.CompletedTask;
+    }
+
+    private async Task OnVote((int reviewId, int newVote, int previousVote) vote)
+    {
+        var review = reviews.FirstOrDefault(x => x?.Id == vote.reviewId);
+        if (review != null)
+        {
+            if (vote.previousVote == 1)
+            {
+                review.LikeRating--;
+            }
+            else if (vote.previousVote == -1)
+            {
+                review.DislikeRating--;
+            }
+
+            if (vote.newVote == 1)
+            {
+                review.LikeRating++;
+            }
+            else if (vote.newVote == -1)
+            {
+                review.DislikeRating++;
+            }
+        }
+    }
+}

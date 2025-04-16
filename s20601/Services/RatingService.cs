@@ -3,7 +3,6 @@ using s20601.Data;
 using s20601.Data.Models.DTOs;
 using s20601.Data.Models;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Identity.Client;
 
 namespace s20601.Services;
 
@@ -15,20 +14,12 @@ public class RatingService : IRatingService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<UserRatingSummary?> GetUserRatingSummaryAsync(string username)
+    public async Task<UserRatingSummary?> GetUserRatingSummaryAsync(string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var user = await context.Users
-            .FirstOrDefaultAsync(x => x.UserName == username);
-
-        if (user == null)
-        {
-            return null;
-        }
-
         var ratings = await context.MovieRates
-            .Where(x => x.IdUser == user.Id)
+            .Where(x => x.IdUser == userId)
             .ToListAsync();
 
         double avgRating = ratings.Count != 0 ? ratings.Average(x => x.Rating) : 0;
@@ -44,7 +35,7 @@ public class RatingService : IRatingService
 
         if (medianRating.Count != 0)
         {
-            var count = medianRating.Count();
+            var count = medianRating.Count;
             var middleValue = count / 2;
 
             if (count % 2 == 0)
@@ -57,8 +48,8 @@ public class RatingService : IRatingService
             }
         }
 
-        var totalReviews = await context.ReviewRates
-            .Where(x => x.IdUser == user.Id)
+        var totalReviews = await context.Reviews
+            .Where(x => x.IdAuthor == userId)
             .CountAsync();
 
         var ratingDistribution = ratings
@@ -138,4 +129,37 @@ public class RatingService : IRatingService
         return await context.MovieRates.FirstOrDefaultAsync(x => x.IdUser == userId && x.Movie_Id == movieId);
     }
 
+    public async Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var top100 = await context.Movies
+            .Join(context.MovieRates,
+            x => x.Id,
+            y => y.Movie_Id,
+            (x, y) => new
+            {
+                x,
+                y
+            })
+            .GroupBy(joined => joined.x.Id)
+            .Select(movieWithRating => new MovieWithRating
+            {
+                Id = movieWithRating.Key,
+                Title = movieWithRating.Select(x => x.x.Title).First(),
+                StartYear = movieWithRating.Select(x => x.x.StartYear).First(),
+                Runtime = movieWithRating.Select(x => x.x.RuntimeMinutes).First(),
+                MovieRatingSummary = new()
+                {
+                    AvgRating = movieWithRating.Average(x => x.y.Rating),
+                    RateCount = movieWithRating.Count(),
+                }
+            })
+            .OrderByDescending(x => x.MovieRatingSummary.AvgRating)
+            .Take(n)
+            .ToListAsync();
+
+
+        return top100;
+    }
 }

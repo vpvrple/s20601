@@ -1,0 +1,136 @@
+﻿@using s20601.Services;
+@using s20601.Data.Models;
+
+@inject IUserService UserSvc
+@inject IReviewService ReviewSvc
+@inject NavigationManager NavigationManager
+
+<MudChat Color="@Color">
+    <MudAvatar>
+        @Avatar
+    </MudAvatar>
+    <MudChatHeader Name="@Nickname" Time="@CreatedAt.ToString()"/>
+    <MudChatBubble Style="width: 100%;">
+        @Content
+    </MudChatBubble>
+    <MudChatFooter>
+        <AuthorizeView>
+            <Authorized>
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Disabled="@(_processing)" OnClick="() => Vote(Id, CurrentUserId, 1)" />
+                @LikeRating
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Disabled="@(_processing)" OnClick="() => Vote(Id, CurrentUserId, -1)" />
+                @DislikeRating
+
+                @if (CurrentUserId == AuthorId)
+                {
+                    @* <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"  /> *@
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Disabled="@_processing" OnClick="() => Remove(Id, CurrentUserId)" />
+                }
+            </Authorized>
+            <NotAuthorized>
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" OnClick="NavigateToLoginPage" />
+                @LikeRating
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" OnClick="NavigateToLoginPage" />
+                @DislikeRating
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudChatFooter>
+</MudChat>
+
+
+
+@code {
+
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    private string userId = null!;
+    //private ApplicationUser user = null!;
+    private bool _processing = false;
+    private int CurrentUserVote { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            userId = authState.User.Claims.First().Value;
+        }
+    }
+
+    [Parameter]
+    public required string CurrentUserId { get; set; }
+
+    [Parameter]
+    public required int Id { get; set; }
+
+    [Parameter]
+    public required string AuthorId { get; set; }
+
+    [Parameter]
+    public required string Avatar { get; set; }
+
+    [Parameter]
+    public required string Nickname { get; set; }
+
+    [Parameter]
+    public required DateTime CreatedAt { get; set; }
+
+    [Parameter]
+    public required string Content { get; set; }
+
+    [Parameter]
+    public required int LikeRating { get; set; }
+
+    [Parameter]
+    public required int DislikeRating { get; set; }
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Default;
+
+    [Parameter] 
+    public required EventCallback<int> OnRemove { get; set; }
+
+    [Parameter]
+    public required EventCallback<(int reviewId, int currentVote, int previousVote)> OnVote { get; set; }
+
+    private async Task Remove(int reviewId, string userId)
+    {
+        _processing = true;
+
+        await ReviewSvc.RemoveReviewAsync(reviewId, userId);
+
+        await OnRemove.InvokeAsync(reviewId);
+
+        _processing = false;
+    }
+
+    private async Task Vote(int reviewId, string userId, int vote)
+    {
+
+        _processing = true;
+        var authState = await AuthenticationStateTask;
+        if (!authState.User.Identity.IsAuthenticated)
+        {
+            // redirect
+        }
+        int previousVote = CurrentUserVote;
+
+        if (vote == CurrentUserVote)
+        {
+            await ReviewSvc.RemoveVote(reviewId, userId);
+            CurrentUserVote = 0;
+        }
+        else
+        {
+            await ReviewSvc.VoteReview(reviewId, userId, vote);
+            CurrentUserVote = vote;
+        }
+
+        await OnVote.InvokeAsync((reviewId, CurrentUserVote, previousVote));
+
+        _processing = false;
+    }
+
+    private void NavigateToLoginPage() => NavigationManager.NavigateTo("account/login", true);
+}

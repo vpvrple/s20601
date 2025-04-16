@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
+
 namespace s20601.Services;
 
 public class MovieService : IMovieService
@@ -34,7 +34,7 @@ public class MovieService : IMovieService
             .Take(n)
             .ToListAsync();
 
-        return movies ?? new List<Movie>();
+        return movies ?? [];
     }
 
     public async Task<List<MovieCollection>> GetTrendingMovieCollections(int n)
@@ -46,7 +46,7 @@ public class MovieService : IMovieService
             .Take(n)
             .ToListAsync();
 
-        return movieCollections ?? new List<MovieCollection>();
+        return movieCollections ?? [];
     }
 
     public async Task<Movie?> GetMovieByIdAsync(int id)
@@ -67,7 +67,7 @@ public class MovieService : IMovieService
             .Select(x => x.Genre)
             .ToListAsync();
 
-        return genres ?? new List<Genre>();
+        return genres ?? [];
     }
 
     public async Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(int id)
@@ -87,84 +87,6 @@ public class MovieService : IMovieService
             })
             .ToListAsync();
 
-        return crew ?? new List<GetMovieCrewMemberWithDetails>();
+        return crew ?? [];
     }
-
-
-    public async Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(int id)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        var reviews = await context.Reviews
-            .Where(x => x.Movie_Id == id)
-            .Include(x => x.ReviewRates)
-            .ThenInclude(x => x.IdUserNavigation)
-            .Select(x => new GetMovieReviewWithRating
-            {
-                UserName = x.IdAuthorNavigation.UserName,
-                CreatedAt = x.CreatedAt,
-                Content = x.Content,
-                LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
-                DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 0)
-            })
-            .ToListAsync();
-
-        return reviews ?? new List<GetMovieReviewWithRating>();
-    }
-
-    public async Task<List<GetMovieReviewWithRating>> GetMovieReviewsByMovieIdAsync(int id, int n)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        var reviews = await context.Reviews
-            .Where(x => x.Movie_Id == id)
-            .Include(x => x.ReviewRates)
-            .ThenInclude(x => x.IdUserNavigation)
-            .Select(x => new GetMovieReviewWithRating
-            {
-                UserName = x.IdAuthorNavigation.UserName,
-                CreatedAt = x.CreatedAt,
-                Content = x.Content,
-                LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
-                DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 0)
-            })
-            .Take(n)
-            .ToListAsync();
-
-        return reviews ?? new List<GetMovieReviewWithRating>();
-    }
-
-    //public async Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n)
-    //{
-    //    using var context = await _dbContextFactory.CreateDbContextAsync();
-
-    //    var top100 = await context.Movies
-    //        .Join(context.MovieRates,
-    //        x => x.Id,
-    //        y => y.Movie_Id,
-    //        (x, y) => new
-    //        {
-    //            x,
-    //            y
-    //        })
-    //        .GroupBy(joined => joined.x.Id)
-    //        .Select(movieWithRating => new MovieWithRating
-    //        {
-    //            Id = movieWithRating.Key,
-    //            Title = movieWithRating.Select(x => x.x.Title).First(),
-    //            StartYear = movieWithRating.Select(x => x.x.StartYear).First(),
-    //            Runtime = movieWithRating.Select(x => x.x.RuntimeMinutes).First(),
-    //            MovieRatingSummary = new()
-    //            {
-    //                AvgRating = movieWithRating.Average(x => x.y.Rating),
-    //                RateCount = movieWithRating.Count(),
-    //            }
-    //        })
-    //        .OrderByDescending(x => x.MovieRatingSummary.AvgRating)
-    //        .Take(n)
-    //        .ToListAsync();
-
-
-    //    return top100;
-    //}
 }
