@@ -1,4 +1,6 @@
-﻿@typeparam TItem
+﻿@using s20601.Data.Interfaces
+
+@typeparam TItem where TItem : INavigable
 
 <MudCarousel Style="height: 300px;" ShowArrows="true" TData="TItem" ShowBullets="false" AutoCycle="false">
     @{
@@ -21,7 +23,7 @@
                                       Fluid="true"
                                       Style="height:100%; width: 100%;">
                             </MudImage>
-                            <MudCardContent><MudLink Href="#">@item</MudLink></MudCardContent>
+                            <MudCardContent><MudLink Href="@item.GetUrl()">@item</MudLink></MudCardContent>
                         </MudCard>
                     </MudItem>
                 }
@@ -32,7 +34,7 @@
 
 @code {
     [Parameter]
-    public List<TItem> Items { get; set; }
+    public required ICollection<TItem> Items { get; set; }
 
     [Parameter]
     public int itemsPerCarousel { get; set; }

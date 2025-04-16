@@ -1,7 +1,7 @@
 ﻿@page "/trending"
 @using Services
 @using s20601.Data.Models.DTOs
-@inject IMovieService MovieSvc
+@inject IRatingService RatingSvc
 
 <MudText Class="mt-6" Typo="Typo.h4">Trending movies</MudText>
 <MudGrid>
@@ -30,7 +30,7 @@
 
                             <MudDivider />
                             <MudStack Row="true" Class="justify-center">
-                                <MovieRatingExtended RateCount="movie.MovieRatingSummary.RateCount" Rating="movie.MovieRatingSummary.AvgRating" Size="Size.Small" Typo="Typo.subtitle2" />
+                                <MovieRatingExtended MovieId="movie.Id" Size="Size.Medium" Typo="Typo.body1" />
                             </MudStack>
                         </MudStack>
                     </MudCardContent>
@@ -50,6 +50,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // trendingMovies = await MovieSvc.GetTopMoviesByRatingAsync(100);
+        trendingMovies = await RatingSvc.GetTopMoviesByRatingAsync(100);
     }
 }

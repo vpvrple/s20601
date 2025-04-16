@@ -1,35 +1,43 @@
 ﻿@using Services
+@using s20601.Data
+@using s20601.Data.Models.DTOs
+@using s20601.Data.Models
+
 @inject IRatingService RatingSvc
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IUserService UserSvc
-@using s20601.Data
-@using s20601.Data.Models
+
 
 <MudStack Row="true" Class="justify-center">
-    @if (user is null)
+    <AuthorizeView>
+        <NotAuthorized>
+            <MudRating SelectedValue="@((int)Math.Round(AvgRating))"
+                       Size="@Size"
+                       SelectedValueChanged="NavigateToLoginPage" />
+        </NotAuthorized>
+        <Authorized>
+            <MudRating SelectedValue="@(currentUserMovieRating?.Rating ?? 0)"
+                       Size="@Size"
+                       SelectedValueChanged="OnRatingChanged" />
+        </Authorized>
+    </AuthorizeView>
+
+    @if (ratingSummary is null)
     {
-        <MudRating SelectedValue="@((int)Math.Round(AvgRating))"
-                   Size="@Size"
-                   SelectedValueChanged="OnRatingChanged" />
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
     else
     {
-        <MudRating SelectedValue="@(currentUserMovieRating?.Rating ?? 0)"
-                   Size="@Size"
-                   SelectedValueChanged="OnRatingChanged" />
+        <MudText Typo="@Typo">@Math.Round(AvgRating, 1)</MudText>
+        <MudText Typo="@Typo">(@RateCount)</MudText>
     }
-    
-    <MudText Typo="@Typo">@Math.Round(AvgRating, 1)</MudText>
-    <MudText Typo="@Typo">(@RateCount)</MudText>
+
 </MudStack>
 
 @code {
-    [Parameter]
-    public double AvgRating { get; set; }
-
-    [Parameter]
-    public double RateCount { get; set; }
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
     [Parameter]
     public Typo Typo { get; set; } = Typo.subtitle2;
@@ -40,28 +48,37 @@
     [Parameter]
     public int MovieId { get; set; }
 
-    private ApplicationUser user = null!;
-
     private MovieRate currentUserMovieRating = null!;
+
+    private double AvgRating { get; set; }
+
+    private double RateCount { get; set; }
+
+    private string userId = null!;
+
+    MovieRatingSummary ratingSummary = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var userAuthenticationState = authenticationState.User;
+        ratingSummary = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
 
-        if (userAuthenticationState.Identity?.IsAuthenticated == true)
+        AvgRating = ratingSummary.AvgRating;
+        RateCount = ratingSummary.RateCount;
+
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
         {
-            var username = userAuthenticationState.Identity?.Name;
-                user = await UserSvc.GetUserByUsernameAsync(username);
-                currentUserMovieRating = await RatingSvc.GetUserMovieRating(user.Id, MovieId);
+            var username = user.Identity?.Name;
+            userId = authState.User.Claims.First().Value;
+            currentUserMovieRating = await RatingSvc.GetUserMovieRating(userId, MovieId);
         }
     }
 
     private async Task OnRatingChanged(int newRating)
     {
-        if (user is not null)
-        {
-            await RatingSvc.RateMovieAsync(MovieId, user.Id, newRating);
+            await RatingSvc.RateMovieAsync(MovieId, userId, newRating);
 
             var updatedRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
             if (updatedRating is null)
@@ -71,11 +88,8 @@
             AvgRating = updatedRating.AvgRating;
             RateCount = updatedRating.RateCount;
             StateHasChanged();
-        }
-        else
-        {
-            NavigationManager.NavigateTo("/account/login", true);
-        }
     }
+
+    private void NavigateToLoginPage() => NavigationManager.NavigateTo("account/login", true);
 }
 

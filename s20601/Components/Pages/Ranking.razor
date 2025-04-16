@@ -2,7 +2,8 @@
 @using s20601.Data
 @using s20601.Data.Models
 @using s20601.Services
-@inject IUserService UserSvc
+
+@inject IRankingService RankingSvc
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -17,20 +18,20 @@ else
     <MudTable Class="mt-6" Items="@Users" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
         <HeaderContent>
             <MudTh>Nr</MudTh>
-            <MudTh>Username</MudTh>
+            <MudTh>Nickname</MudTh>
             <MudTh>Joined</MudTh>
             <MudTh>Points</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Nr">@(Users.IndexOf(context) + 1)</MudTd>
-            <MudTd DataLabel="Username">
+            <MudTd DataLabel="Nickname">
                 @if (isAuthenticated)
                 {
-                    <MudLink Href="@($"user/{context.Email}")">@context.UserName</MudLink>
+                    <MudLink Href="@($"user/{context.Nickname}")">@context.Nickname</MudLink>
                 }
                 else
                 {
-                    <MudLink Href="/account/login">@context.UserName</MudLink>
+                    <MudLink Href="/account/login">@context.Nickname</MudLink>
                 }
                 </MudTd>
             <MudTd DataLabel="Name">@context.CreatedAt.Date.ToShortDateString()</MudTd>
@@ -55,7 +56,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Users = await UserSvc.GetTopUsersByPoints();
+        Users = await RankingSvc.GetTopUsersByPoints();
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authenticationState.User;
 

@@ -1,24 +1,26 @@
-﻿@page "/movie/{MovieId}"
+﻿@page "/movie/{MovieId:int}"
+
 @using Services
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
+
 @inject IMovieService MovieSvc
 @inject IRatingService RatingSvc
 
 <MudGrid Class="mt-6">
     <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center">
         <MudImage Src="favicon.png"
-        ObjectFit="ObjectFit.None"
-        Alt="Movie poster"
-        Elevation="1"
-        Style="width: 100%; height: auto;" />
+                  ObjectFit="ObjectFit.None"
+                  Alt="Movie poster"
+                  Elevation="1"
+                  Style="width: 100%; height: auto;" />
     </MudItem>
     <MudItem lg="6" md="6" xs="12">
         <MudGrid Class="align-center">
             <MudItem xs="12">
                 @if (movie is null)
                 {
-                    <MudText Typo="Typo.h5">We don't have information about this movie yet.'</MudText>
+                    <MudText Typo="Typo.h5">We don't have information about this movie yet.</MudText>
                 }
                 else
                 {
@@ -28,7 +30,7 @@
                     </MudText>
                 }
             </MudItem>
-            
+
             <MudItem>
                 <MudText Typo="Typo.h6">Genres</MudText>
                 <MudFlexBreak />
@@ -54,11 +56,11 @@
                 <MudText Typo="Typo.h6">Community rating</MudText>
                 @if (movieRating is null)
                 {
-                    <p>Loading..</p>
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
                 }
-                else 
+                else
                 {
-                    <MovieRatingExtended Rating="@movieRating.AvgRating" RateCount="@movieRating.RateCount" Size="Size.Medium" Typo="Typo.body1" />
+                    <MovieRatingExtended MovieId="MovieId" Size="Size.Medium" Typo="Typo.body1" />
                 }
             </MudItem>
             <MudFlexBreak />
@@ -144,36 +146,18 @@
     </MudItem>
 </MudGrid>
 
-<MudGrid Class="mt-6">
-    <MudItem>
-        <MudText Typo="Typo.h4">Reviews</MudText>
-    </MudItem>
-    <MudItem Style="width: 100%;">
-        @if (topTwoReviews is null || topTwoReviews.Count == 0)
-        {
-            <MudText Typo="Typo.subtitle1" Color="Color.Dark">No reviews yet</MudText>
-        }
-        else
-        {
-            foreach (var review in topTwoReviews)
-            {
+<MudText Typo="Typo.h4" Class="mt-6">Reviews</MudText>
 
-                <MudChat>
-                    <MudAvatar>
-                        @review.UserName.FirstOrDefault()
-                    </MudAvatar>
-                    <MudChatHeader Name="@review.UserName" Time="@review.CreatedAt.ToString()" />
-                    <MudChatBubble Style="width: 100%;">
-                        @review.Content
-                    </MudChatBubble>
-                    <MudChatFooter>
-                        <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" />
-                        @review.LikeRating
-                        <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" />
-                        @review.DislikeRating
-                    </MudChatFooter>
-                </MudChat>
-            }
+
+<MudGrid Class="mt-6">
+    <MudItem xs="12">
+        @if (movie is null)
+        {
+            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        }
+        else 
+        {
+            <ReviewList MovieId="movie.Id" />
         }
     </MudItem>
 </MudGrid>
@@ -183,18 +167,16 @@
 {
     [Parameter]
     public required int MovieId { get; set; }
+    private Movie? movie = null!;
+    private MovieRatingSummary movieRating;
+    private List<Genre> movieGenres = null!;
+    private List<GetMovieCrewMemberWithDetails> crew = null!;
 
-    Movie? movie= null!;
-    MovieRatingSummary movieRating;
-    List<Genre> movieGenres = null!;
-    List<GetMovieCrewMemberWithDetails> crew = null!;
-    List<GetMovieReviewWithRating> topTwoReviews = null!;
     protected override async Task OnInitializedAsync()
     {
         movie = await MovieSvc.GetMovieByIdAsync(MovieId);
         movieRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
         movieGenres = await MovieSvc.GetMovieGenresByIdAsync(MovieId);
         crew = await MovieSvc.GetMovieCrewByMovieIdAsync(MovieId);
-        topTwoReviews = await MovieSvc.GetMovieReviewsByMovieIdAsync(MovieId, 2);
     }
 }

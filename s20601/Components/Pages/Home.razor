@@ -10,18 +10,20 @@
 <MudGrid>
     <MudItem lg="6" md="6" sm="12" xs="12" Style="position: relative;">
         <MudImage Src="favicon.png"
-        ObjectFit="ObjectFit.None"
-        Alt="Movie poster"
-        Elevation="1"
-        Style="width: 100%; height: auto;" />
-        <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark" Color="Color.Secondary" />
+                  ObjectFit="ObjectFit.None"
+                  Alt="Movie poster"
+                  Elevation="1"
+                  Style="width: 100%; height: auto;" />
+        <AuthorizeView>
+            <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark" Color="Color.Secondary" />
+        </AuthorizeView>
     </MudItem>
     <MudItem lg="6" md="6" xs="12">
         <MudGrid Class="align-center">
             <MudItem>
                 @if (movieOfTheDay is null)
                 {
-                    <MudText Typo="Typo.h5">Movie of the day was not chosen yet.</MudText>
+                    <MudSkeleton Animation="Animation.Wave" />
                 }
                 else
                 {
@@ -53,11 +55,11 @@
                 <MudText Typo="Typo.h6">Community rating</MudText>
                 @if (movieRating is null)
                 {
-                    <p>Loading..</p>
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
                 }
                 else
                 {
-                    <MovieRatingExtended MovieId="@movieOfTheDay.Id" AvgRating="@movieRating.AvgRating" RateCount="@movieRating.RateCount" Size="Size.Medium" Typo="Typo.body1" />
+                    <MovieRatingExtended MovieId="@movieOfTheDay.Id" Size="Size.Medium" Typo="Typo.body1" />
                 }
             </MudItem>
             <MudFlexBreak />
@@ -69,9 +71,13 @@
             <MudItem>
                 <MudText Typo="Typo.h6">Directors</MudText>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="7">
-                    @if (crew is null || crew.Count == 0)
+                    @if (crew is null)
                     {
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
+                        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    }
+                    else if (crew.Count == 0)
+                    {
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the directors for this movie.</MudText>
                     }
                     else
                     {
@@ -89,9 +95,13 @@
             <MudItem>
                 <MudText Typo="Typo.h6">Writers</MudText>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="7">
-                    @if (crew is null || crew.Count == 0)
+                    @if (crew is null)
                     {
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the cast for this movie.</MudText>
+                        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    }
+                    else if (crew.Count == 0)
+                    {
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the writers for this movie.</MudText>
                     }
                     else
                     {
@@ -109,7 +119,11 @@
             <MudItem>
                 <MudText Typo="Typo.h6">Cast</MudText>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="7">
-                    @if (crew is null || crew.Count == 0)
+                    @if (crew is null)
+                    {
+                        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    }
+                    else if (crew.Count == 0)
                     {
                         <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors for this movie.</MudText>
                     }
@@ -123,7 +137,6 @@
                                     <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
                                     <MudText Typo="Typo.subtitle2" Color="Color.Dark">@member.CharacterName</MudText>
                                 </MudPaper>
-
                             }
                         }
                     }
@@ -147,19 +160,23 @@
     </MudItem>
 </MudGrid>
 
-<MudGrid Class="mt-6">
-    <MudItem xs="12">
-        <MudText Typo="Typo.h4">Trending community collections</MudText>
-        @if (trendingMovieCollections is null)
-        {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-        }
-        else
-        {
-            <MudCarouselWithPagination Items=@trendingMovieCollections itemsPerCarousel="5"></MudCarouselWithPagination>
-        }
-    </MudItem>
-</MudGrid>
+@if (trendingMovieCollections is null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    if (trendingMovieCollections.Count > 0)
+    {
+        <MudGrid Class="mt-6">
+            <MudItem xs="12">
+                <MudText Typo="Typo.h4">Trending community collections</MudText>
+                <MudCarouselWithPagination Items=@trendingMovieCollections itemsPerCarousel="5"></MudCarouselWithPagination>
+            </MudItem>
+        </MudGrid>
+    }
+}
+
 
 @code {
     Movie? movieOfTheDay = null!;
@@ -182,7 +199,7 @@
             movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
             crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
         }
-        
+
 
         pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
 

@@ -5,6 +5,7 @@ using MudBlazor.Services;
 using s20601.Components;
 using s20601.Components.Account;
 using s20601.Data;
+using s20601.Data.Models;
 using s20601.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +59,9 @@ builder.Services
 
 builder.Services
     .AddScoped<IRatingService, RatingService>();
+
+builder.Services
+    .AddScoped<IRankingService, RankingService>();
 
 var app = builder.Build();
 
