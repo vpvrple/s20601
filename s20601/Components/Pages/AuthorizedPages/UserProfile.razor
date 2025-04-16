@@ -3,6 +3,7 @@
 @using s20601.Data
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
+
 @inject IUserService UserSvc
 @inject IRatingService RatingSvc
 
@@ -26,26 +27,22 @@
                 else
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudText Typo="Typo.h4">@User.UserName</MudText>
+                        <MudText Typo="Typo.h4">@User.Nickname</MudText>
                         <MudIconButton Icon="@Icons.Material.Filled.PersonAdd" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"></MudIconButton>
                     </MudStack>
                     <MudText Typo="Typo.subtitle1">points @User.ReputationPoints</MudText>
-                    <MudText Class="mt-9" Typo="Typo.h5">Description</MudText>
-                    <MudText Typo="Typo.body1">@User.ProfileDescription</MudText>
+                    <MudText Typo="Typo.body1">@(User.ProfileDescription ?? "No description available.")</MudText>
                 }
             </MudItem>
             <MudItem xs="12">
-                <MudDivider />
-                <MudText Typo="Typo.h4" Class="mt-3">Statistics</MudText>
+                <MudText Typo="Typo.h5" Class="mt-3">Statistics</MudText>
             </MudItem>
             <MudItem xs="6">
-                <MudText Typo="Typo.h5" Align="Align.Center">Rating distribution</MudText>
                 <MudChart ChartType="ChartType.Donut" LegendPosition="Position.Bottom" Width="300px" Height="300px"
                           InputData="@ratingData" InputLabels="@labels">
                 </MudChart>
             </MudItem>
             <MudItem xs="6">
-                <MudText Typo="Typo.h5" Align="Align.Center">General</MudText>
                 <MudGrid>
                     <MudItem xs="6">
                         <MudText Typo="Typo.subtitle1" Align="Align.Center">Average</MudText>
@@ -106,6 +103,9 @@
 
     @code
     {
+        [CascadingParameter]
+        public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
         [Parameter]
         public required string username { get; set; }
 
@@ -118,21 +118,29 @@
 
         protected override async Task OnInitializedAsync()
         {
-        User = await UserSvc.GetUserByUsernameAsync(username);
-        UserRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(User.UserName);
-        var ratingCount = UserRatingSummary.RatingDistribution.Count;
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
 
-        labels = new string[ratingCount];
-        ratingData = new double[ratingCount];
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var username = user.Identity?.Name;
+                var userId = authState.User.Claims.First().Value;
 
-        int index = 0;
-        foreach (var rating in UserRatingSummary.RatingDistribution)
-        {
-            labels[index] = rating.RatingValue.ToString() + " stars";
-            ratingData[index] = rating.Frequency;
-            index++;
+                User = await UserSvc.GetUserByIdAsync(userId);
+                UserRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(userId);
+                var ratingCount = UserRatingSummary.RatingDistribution.Count;
+
+                labels = new string[ratingCount];
+                ratingData = new double[ratingCount];
+
+                int index = 0;
+                foreach (var rating in UserRatingSummary.RatingDistribution)
+                {
+                    labels[index] = rating.RatingValue.ToString() + " stars";
+                    ratingData[index] = rating.Frequency;
+                    index++;
+                }
+            }
         }
-        }
-
     }
 </AuthorizeView>

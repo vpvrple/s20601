@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using s20601.Data;
 
@@ -11,9 +12,11 @@ using s20601.Data;
 namespace s20601.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250407181029_addNicknameToRegister")]
+    partial class addNicknameToRegister
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,7 +174,21 @@ namespace s20601.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("s20601.Data.ApplicationUser", b =>
+            modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Name")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("ActivityType_pk");
+
+                    b.ToTable("ActivityType", (string)null);
+                });
+
+            modelBuilder.Entity("s20601.Data.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -204,6 +221,10 @@ namespace s20601.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Nickname")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -255,20 +276,6 @@ namespace s20601.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("User", (string)null);
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Name")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id")
-                        .HasName("ActivityType_pk");
-
-                    b.ToTable("ActivityType", (string)null);
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Comment", b =>
@@ -906,7 +913,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("GroupOwnership_Group");
 
-                    b.HasOne("s20601.Data.ApplicationUser", null)
+                    b.HasOne("s20601.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("IdOwner")
                         .IsRequired()
@@ -924,7 +931,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", null)
+                    b.HasOne("s20601.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -933,7 +940,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", null)
+                    b.HasOne("s20601.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -948,7 +955,7 @@ namespace s20601.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("s20601.Data.ApplicationUser", null)
+                    b.HasOne("s20601.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -957,7 +964,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", null)
+                    b.HasOne("s20601.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -977,7 +984,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("Comment_Post");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("Comments")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -998,7 +1005,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("GroupMembership_Group");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("GroupMemberships")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1011,13 +1018,13 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.Message", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", "IdRecipientNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdRecipientNavigation")
                         .WithMany("MessageIdRecipientNavigations")
                         .HasForeignKey("IdRecipient")
                         .IsRequired()
                         .HasConstraintName("Message_Recipient");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdSenderNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdSenderNavigation")
                         .WithMany("MessageIdSenderNavigations")
                         .HasForeignKey("IdSender")
                         .IsRequired()
@@ -1063,7 +1070,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("MovieCollectionUsers_MovieCollection");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("MovieCollectionUsers")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1125,7 +1132,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.MovieRate", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("MovieRates")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1144,7 +1151,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.MovieUpdateRequest", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("MovieUpdateRequests")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1169,7 +1176,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("Post_Group");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("Posts")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1182,7 +1189,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.Review", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", "IdAuthorNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdAuthorNavigation")
                         .WithOne("Review")
                         .HasForeignKey("s20601.Data.Models.Review", "IdAuthor")
                         .IsRequired()
@@ -1201,7 +1208,7 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.ReviewRate", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithOne("ReviewRate")
                         .HasForeignKey("s20601.Data.Models.ReviewRate", "IdUser")
                         .IsRequired()
@@ -1226,7 +1233,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("ActivityLog_ActivityType");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("SocialActivityLogs")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1239,13 +1246,13 @@ namespace s20601.Migrations
 
             modelBuilder.Entity("s20601.Data.Models.UserRelationship", b =>
                 {
-                    b.HasOne("s20601.Data.ApplicationUser", "IdRelatedUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdRelatedUserNavigation")
                         .WithMany("UserRelationshipIdRelatedUserNavigations")
                         .HasForeignKey("IdRelatedUser")
                         .IsRequired()
                         .HasConstraintName("UserRelationship_User2");
 
-                    b.HasOne("s20601.Data.ApplicationUser", "IdUserNavigation")
+                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
                         .WithMany("UserRelationshipIdUserNavigations")
                         .HasForeignKey("IdUser")
                         .IsRequired()
@@ -1256,7 +1263,12 @@ namespace s20601.Migrations
                     b.Navigation("IdUserNavigation");
                 });
 
-            modelBuilder.Entity("s20601.Data.ApplicationUser", b =>
+            modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
+                {
+                    b.Navigation("SocialActivityLogs");
+                });
+
+            modelBuilder.Entity("s20601.Data.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Comments");
 
@@ -1283,11 +1295,6 @@ namespace s20601.Migrations
                     b.Navigation("UserRelationshipIdRelatedUserNavigations");
 
                     b.Navigation("UserRelationshipIdUserNavigations");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
-                {
-                    b.Navigation("SocialActivityLogs");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Comment", b =>

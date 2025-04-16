@@ -5,7 +5,7 @@
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-@using s20601.Data
+@using s20601.Data.Models
 @using s20601.Components.Account
 
 @inject UserManager<ApplicationUser> UserManager
@@ -27,7 +27,7 @@
                 <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Register</MudText>
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudStaticTextField @bind-Value="Input.Username" id="Input.Username" class="form-control" autocomplete="username" aria-required="true" placeholder="s20601" Label="Username" />
+                        <MudStaticTextField @bind-Value="Input.Nickname" id="Input.Nickname" class="form-control" autocomplete="Nickname" aria-required="true" placeholder="s20601" Label="Nickname" />
                         <ValidationMessage For="() => Input.Email" class="text-danger" />
                     </MudItem>
                     <MudItem xs="12">
@@ -84,7 +84,8 @@
     {
         var user = CreateUser();
         user.CreatedAt = DateTime.UtcNow;
-        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
+        user.Nickname = Input.Nickname;
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
@@ -143,8 +144,8 @@
     {
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [Display(Name = "Username")]
-        public string Username { get; set; } = "";
+        [Display(Name = "Nickname")]
+        public string Nickname { get; set; } = "";
 
         [Required]
         [EmailAddress]

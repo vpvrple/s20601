@@ -1,65 +1,76 @@
 ﻿@using s20601.Data
 @using s20601.Data.Models
 @using s20601.Services
+
 @inject IUserService UserSvc
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
 <MudSpacer />
 <MudBlazor.StaticInput.MudStaticTextField T="string"
-                                          Label="Search"
-                                          Variant="Variant.Outlined"
-                                          Adornment="Adornment.End"
-                                          AdornmentIcon="@Icons.Material.Filled.Search"
-                                          AdornmentColor="Color.Primary" />
+Label="Search"
+Variant="Variant.Outlined"
+Adornment="Adornment.End"
+AdornmentIcon="@Icons.Material.Filled.Search"
+AdornmentColor="Color.Primary" />
 <MudSpacer />
-@if (userName is null)
-{
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/login" Class="mr-3">Log in</MudButton>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/register">Register</MudButton>
-}
-else
-{
-    <MudMenu Label="@userName" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
-        <MudMenuItem Href="@($"user/{userName}")">My profile</MudMenuItem>
-        <MudMenuItem>My groups</MudMenuItem>
-        <MudMenuItem>My collections</MudMenuItem>
-        <MudMenuItem>Friends</MudMenuItem>
-        <MudMenuItem>Inbox</MudMenuItem>
-        <MudMenuItem>
-                <form action="Account/Logout" method="post">
-                    <AntiforgeryToken />
-                    <input type="hidden" name="ReturnUrl" />
-                    <button type="submit">
-                        Logout
-                    </button>
-                </form>
-        </MudMenuItem>
-    </MudMenu>
-}
+<AuthorizeView>
+    <NotAuthorized>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/login" Class="mr-3">Log in</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/register">Register</MudButton>
+    </NotAuthorized>
+    <Authorized>
+        @if (user is not null)
+        {
+            <MudMenu Label="@user.Nickname" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
+                <MudMenuItem Href="@($"user/{@user.Nickname}")">My profile</MudMenuItem>
+                <MudMenuItem>My groups</MudMenuItem>
+                <MudMenuItem>My collections</MudMenuItem>
+                <MudMenuItem>Friends</MudMenuItem>
+                <MudMenuItem>Inbox</MudMenuItem>
+                <MudMenuItem>
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" />
+                        <button type="submit">
+                            Logout
+                        </button>
+                    </form>
+                </MudMenuItem>
+            </MudMenu>
+        }
+    </Authorized>
 
+</AuthorizeView>
 @code
 {
-    private string? currentUrl;
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
     public string Search { get; set; } = null!;
-    private string userName = null!;
+    private ApplicationUser user = null!;
+
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        userName = authState.User.Identity?.Name;
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
+        var authState = await AuthenticationStateTask;
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            var userId = authState.User.Claims.First().Value;
+            user = await UserSvc.GetUserByIdAsync(userId);
+        }
+        // currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        // NavigationManager.LocationChanged += OnLocationChanged;
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
-    }
+    // private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    // {
+    //     currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+    //     StateHasChanged();
+    // }
 
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
-    }
+    // public void Dispose()
+    // {
+    //     NavigationManager.LocationChanged -= OnLocationChanged;
+    // }
 }
