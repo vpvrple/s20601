@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace s20601.Data.Models;
+﻿namespace s20601.Data.Models;
 
 public partial class SocialActivityLog
 {

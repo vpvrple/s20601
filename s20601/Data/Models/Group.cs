@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using s20601.Data.Interfaces;
 
 namespace s20601.Data.Models;
 
-public partial class Group
+public partial class Group : INavigable
 {
     public int Id { get; set; }
 
@@ -18,4 +17,9 @@ public partial class Group
     public virtual ICollection<Post> Posts { get; set; } = [];
 
     public virtual ICollection<ApplicationUser> IdOwners { get; set; } = [];
+
+    public string GetUrl()
+    {
+        return $"group/{Id}";
+    }
 }

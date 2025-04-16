@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using s20601.Data.Interfaces;
 
 namespace s20601.Data.Models;
 
-public partial class MovieCollection
+public partial class MovieCollection : INavigable
 {
     public int Id { get; set; }
 
@@ -16,6 +15,11 @@ public partial class MovieCollection
     public virtual MovieCollectionMovie? MovieCollectionMovie { get; set; }
 
     public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = [];
+
+    public string GetUrl()
+    {
+        return $"movie-collection/{Id}";
+    }
 
     public override string ToString()
     {

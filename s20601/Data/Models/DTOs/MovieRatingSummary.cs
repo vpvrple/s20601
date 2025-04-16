@@ -1,8 +1,7 @@
-﻿namespace s20601.Data.Models.DTOs
+﻿namespace s20601.Data.Models.DTOs;
+
+public class MovieRatingSummary
 {
-    public class MovieRatingSummary
-    {
-        public double AvgRating { get; set; }
-        public int RateCount { get; set; }
-    }
+    public double AvgRating { get; set; }
+    public int RateCount { get; set; }
 }

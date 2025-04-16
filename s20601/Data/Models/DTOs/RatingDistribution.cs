@@ -1,8 +1,7 @@
-﻿namespace s20601.Data.Models.DTOs
+﻿namespace s20601.Data.Models.DTOs;
+
+public class RatingDistribution
 {
-    public class RatingDistribution
-    {
-        public int RatingValue { get; set; }
-        public int Frequency { get; set; }
-    }
+    public int RatingValue { get; set; }
+    public int Frequency { get; set; }
 }
