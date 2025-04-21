@@ -16,15 +16,14 @@
     <MudChatFooter>
         <AuthorizeView>
             <Authorized>
-                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" Disabled="@(_processing)" OnClick="() => Vote(Id, CurrentUserId, 1)" />
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp" OnClick="() => Vote(1)" />
                 @LikeRating
-                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" Disabled="@(_processing)" OnClick="() => Vote(Id, CurrentUserId, -1)" />
+                <MudIconButton Icon="@Icons.Material.Filled.ThumbDown" OnClick="() => Vote(-1)" />
                 @DislikeRating
 
                 @if (CurrentUserId == AuthorId)
                 {
-                    @* <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info"  /> *@
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Disabled="@_processing" OnClick="() => Remove(Id, CurrentUserId)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => Remove(Id, CurrentUserId)" />
                 }
             </Authorized>
             <NotAuthorized>
@@ -44,9 +43,6 @@
     [CascadingParameter]
     public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
     private string userId = null!;
-    //private ApplicationUser user = null!;
-    private bool _processing = false;
-    private int CurrentUserVote { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,6 +51,7 @@
         if (authState.User.Identity.IsAuthenticated)
         {
             userId = authState.User.Claims.First().Value;
+            var currentUserReviewRate = await ReviewSvc.GetUserVoteByReview(Id, userId);
         }
     }
 
@@ -91,46 +88,36 @@
     [Parameter] 
     public required EventCallback<int> OnRemove { get; set; }
 
-    [Parameter]
-    public required EventCallback<(int reviewId, int currentVote, int previousVote)> OnVote { get; set; }
-
     private async Task Remove(int reviewId, string userId)
     {
-        _processing = true;
-
         await ReviewSvc.RemoveReviewAsync(reviewId, userId);
 
         await OnRemove.InvokeAsync(reviewId);
-
-        _processing = false;
-    }
-
-    private async Task Vote(int reviewId, string userId, int vote)
-    {
-
-        _processing = true;
-        var authState = await AuthenticationStateTask;
-        if (!authState.User.Identity.IsAuthenticated)
-        {
-            // redirect
-        }
-        int previousVote = CurrentUserVote;
-
-        if (vote == CurrentUserVote)
-        {
-            await ReviewSvc.RemoveVote(reviewId, userId);
-            CurrentUserVote = 0;
-        }
-        else
-        {
-            await ReviewSvc.VoteReview(reviewId, userId, vote);
-            CurrentUserVote = vote;
-        }
-
-        await OnVote.InvokeAsync((reviewId, CurrentUserVote, previousVote));
-
-        _processing = false;
     }
 
     private void NavigateToLoginPage() => NavigationManager.NavigateTo("account/login", true);
+
+    [Parameter]
+    public required EventCallback<(int reviewId, int newVote, int previousVote)> OnVote { get; set; }
+
+    private async Task Vote(int newVote)
+    {
+        if (CurrentUserId == null)
+            return;
+
+        var currentVote = await ReviewSvc.GetUserVoteByReview(Id, CurrentUserId);
+        int previousVote = currentVote?.Rating ?? 0;
+
+        if (previousVote == newVote)
+        {
+            await ReviewSvc.RemoveVote(Id, CurrentUserId);
+            newVote = 0;
+        }
+        else
+        {
+            await ReviewSvc.VoteReview(Id, CurrentUserId, newVote);
+        }
+
+        await OnVote.InvokeAsync((Id, newVote, previousVote));
+    }
 }

@@ -422,7 +422,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.ToTable("ReviewRate");
 
             entity.Property(e => e.IdUser).ValueGeneratedNever();
-            entity.Property(e => e.RatedAt).HasPrecision(2);
+            entity.Property(e => e.RatedAt).HasPrecision(3);
 
             entity.HasOne(d => d.IdUserNavigation).WithOne(p => p.ReviewRate)
                 .HasForeignKey<ReviewRate>(d => d.IdUser)

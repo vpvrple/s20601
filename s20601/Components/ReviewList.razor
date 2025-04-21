@@ -32,7 +32,7 @@
 }
 else
 {
-    @foreach (var review in reviews.OrderByDescending(x => x.LikeRating))
+    @foreach (var review in reviews)
     {
         <Review Id="@review.Id"
         AuthorId="@review.AuthorId"
@@ -104,22 +104,16 @@ else
         if (review != null)
         {
             if (vote.previousVote == 1)
-            {
                 review.LikeRating--;
-            }
             else if (vote.previousVote == -1)
-            {
                 review.DislikeRating--;
-            }
 
             if (vote.newVote == 1)
-            {
                 review.LikeRating++;
-            }
             else if (vote.newVote == -1)
-            {
                 review.DislikeRating++;
-            }
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 }
