@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using s20601.Data;
+using s20601.Data.Models;
 
 namespace s20601.Components.Account
 {

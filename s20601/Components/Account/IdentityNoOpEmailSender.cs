@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using s20601.Data;
+using s20601.Data.Models;
 
 namespace s20601.Components.Account
 {
