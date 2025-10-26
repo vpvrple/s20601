@@ -155,7 +155,6 @@ public class ReviewService : IReviewService
             }
         }
 
-        
         await context.SaveChangesAsync();
     }
 
@@ -170,8 +169,6 @@ public class ReviewService : IReviewService
             context.ReviewRates.Remove(vote);
             await context.SaveChangesAsync();
         }
-        
-        
     }
 
     public async Task<ReviewRate> GetUserVoteByReview(int reviewId, string userId)
@@ -179,6 +176,5 @@ public class ReviewService : IReviewService
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.ReviewRates
             .FirstOrDefaultAsync(x => x.IdUser == userId && x.Review_Id == reviewId);
-
     }
 }
