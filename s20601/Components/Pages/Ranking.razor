@@ -18,20 +18,20 @@ else
     <MudTable Class="mt-6" Items="@Users" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
         <HeaderContent>
             <MudTh>Nr</MudTh>
-            <MudTh>Nickname</MudTh>
+            <MudTh>Username</MudTh>
             <MudTh>Joined</MudTh>
             <MudTh>Points</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Nr">@(Users.IndexOf(context) + 1)</MudTd>
-            <MudTd DataLabel="Nickname">
+            <MudTd DataLabel="Username">
                 @if (isAuthenticated)
                 {
-                    <MudLink Href="@($"user/{context.Nickname}")">@context.Nickname</MudLink>
+                    <MudLink Href="@($"user/{context.UserName}")">@context.UserName</MudLink>
                 }
                 else
                 {
-                    <MudLink Href="/account/login">@context.Nickname</MudLink>
+                    <MudLink Href="/account/login">@context.UserName</MudLink>
                 }
                 </MudTd>
             <MudTd DataLabel="Name">@context.CreatedAt.Date.ToShortDateString()</MudTd>

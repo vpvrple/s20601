@@ -20,12 +20,10 @@ AdornmentColor="Color.Primary" />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/register">Register</MudButton>
     </NotAuthorized>
     <Authorized>
-        @if (user is not null)
-        {
-            <MudMenu Label="@user.Nickname" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
-                <MudMenuItem Href="@($"user/{@user.Nickname}")">My profile</MudMenuItem>
+            <MudMenu Label="@username" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
+                <MudMenuItem Href="@($"user/{username}")">My profile</MudMenuItem>
                 <MudMenuItem>My groups</MudMenuItem>
-                <MudMenuItem>My collections</MudMenuItem>
+                <MudMenuItem Href="@($"movie-collections/{username}")">Movie collections</MudMenuItem>
                 <MudMenuItem>Friends</MudMenuItem>
                 <MudMenuItem>Inbox</MudMenuItem>
                 <MudMenuItem>
@@ -38,7 +36,6 @@ AdornmentColor="Color.Primary" />
                     </form>
                 </MudMenuItem>
             </MudMenu>
-        }
     </Authorized>
 
 </AuthorizeView>
@@ -47,17 +44,14 @@ AdornmentColor="Color.Primary" />
     [CascadingParameter]
     public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
-    public string Search { get; set; } = null!;
-    private ApplicationUser user = null!;
-
+    private string username = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
         if (authState.User.Identity.IsAuthenticated)
         {
-            var userId = authState.User.Claims.First().Value;
-            user = await UserSvc.GetUserByIdAsync(userId);
+            username = authState.User.Identity.Name!;
         }
         // currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         // NavigationManager.LocationChanged += OnLocationChanged;

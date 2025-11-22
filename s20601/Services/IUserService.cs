@@ -3,6 +3,6 @@
 namespace s20601.Services;
 public interface IUserService
 {
-    Task<ApplicationUser?> GetUserByNicknameAsync(string nickname);
+    Task<ApplicationUser?> GetUserByUsernameAsync(string username);
     Task<ApplicationUser?> GetUserByIdAsync(string id);
 }

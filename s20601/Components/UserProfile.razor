@@ -1,0 +1,229 @@
+﻿@page "/user/{username}"
+
+@using System.Security.Claims
+@using s20601.Services
+@using s20601.Data
+@using s20601.Data.Models
+@using s20601.Data.Models.DTOs
+
+@inject IUserService UserSvc
+@inject IRatingService RatingSvc
+
+<AuthorizeView>
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        @if (User is null)
+        {
+            <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+        }
+        else
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Start">
+                <MudImage Src="favicon.png"
+                          ObjectFit="ObjectFit.ScaleDown"
+                          Alt="User avatar"
+                          Elevation="1"
+                          Height="200"
+                          Width="180">
+                </MudImage>
+                <MudStack AlignItems="AlignItems.Start" Spacing="0">
+                    <MudText Typo="Typo.h5">@username</MudText>
+                    <MudText Typo="Typo.subtitle1">points @User.ReputationPoints</MudText>
+                    <MudText Typo="Typo.subtitle2">Joined: @User.CreatedAt.ToShortDateString()</MudText>
+                    <MudText Typo="Typo.body1" Class="mt-3 mb-3">@(User.ProfileDescription ?? "No description available.")</MudText>
+                </MudStack>
+                <MudSpacer />
+
+                @if (isLoggedInUser == true)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small" />
+                }
+                else
+                {
+                    <FriendsComponent />
+                }
+
+
+            </MudStack>
+
+        }
+        <MudStack Class="mt-9 mb-3 d-flex" Row="true">
+            <MudText Typo="Typo.h6" Style="width: 100%;">Statistics</MudText>
+            <MudSpacer />
+            <MudDatePicker Style="align-content: center"
+                           @ref="_picker"
+                           @bind-Date="_month"
+                           MinDate="_minDate"
+                           MaxDate="_maxDate"
+                           ShowToolbar="false"
+                           AutoClose="true"
+                           OpenTo="OpenTo.Month"
+                           FixDay="@DateTime.Today.Day"
+                           DateFormat="yyyy"
+                           Color="Color.Primary">
+
+                @* //TODO later *@
+                @* <PickerActions Context="MudDatePicker">
+                    <MudButton Class="mr-auto align-self-end" OnClick="AllYears">All years</MudButton>
+                </PickerActions> *@
+            </MudDatePicker>
+        </MudStack>
+
+
+        @code
+        {
+            private DateTime? _month = DateTime.Now;
+            private MudDatePicker _picker;
+            private DateTime _maxDate = DateTime.Now;
+            private DateTime _minDate;
+
+            protected override void OnAfterRender(bool firstRender)
+            {
+                if (firstRender)
+                {
+                    _minDate = User.CreatedAt;
+                    _picker.GoToDate();
+                    StateHasChanged();
+                }
+            }
+
+            @* private async Task AllYears()
+            {
+            } *@
+        }
+
+
+        <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.Center">
+            @if (UserRatingSummary is null)
+            {
+                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+            }
+            else if (ratingData.Length == 0)
+            {
+                @code
+                {
+                    private string[] emptyLabel = new string[] { "No ratings yet" };
+
+                    private ChartOptions emptyChartOptions = new ChartOptions
+                    {
+                        ShowToolTips = false,
+                        ChartPalette = new string[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
+                    };
+                }
+                <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
+                    InputData="new double[] {1}" InputLabels='@emptyLabel' ChartOptions="@emptyChartOptions">
+                </MudChart>
+            }
+            else
+            {
+                <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
+                          InputData="@ratingData" InputLabels="@labels">
+                </MudChart>
+            }
+
+            <MudPaper Class="pa-6" Elevation="0">
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">Average</MudText>
+
+                @if (UserRatingSummary is null)
+                {
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.h4" Align="Align.Center">@(Math.Round(UserRatingSummary.AvgMovieRating, 1))</MudText>
+                }
+            </MudPaper>
+
+            <MudPaper Class="pa-6" Elevation="0">
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">Median</MudText>
+
+                @if (UserRatingSummary is null)
+                {
+                    <MudProgressCircular Class="align-center" Color="Color.Default" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.h4" Align="Align.Center">
+                        @(Math.Round(UserRatingSummary.MedMovieRating, 1))
+                    </MudText>
+                }
+            </MudPaper>
+
+            <MudPaper Class="pa-6" Elevation="0">
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">Total ratings</MudText>
+
+                @if (UserRatingSummary is null)
+                {
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.h4" Align="Align.Center">@UserRatingSummary.TotalRatings</MudText>
+                }
+            </MudPaper>
+
+            <MudPaper Class="pa-6" Elevation="0">
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">Total reviews</MudText>
+
+                @if (UserRatingSummary is null)
+                {
+                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.h4" Align="Align.Center">@UserRatingSummary.TotalReviews</MudText>
+                }
+            </MudPaper>
+        </MudStack>
+
+        <MudFlexBreak />
+
+        <MudItem>
+            <MudText Typo="Typo.h6">Recent activity</MudText>
+        </MudItem>
+    </MudContainer>
+
+    @code
+    {
+        [CascadingParameter]
+        public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+        [Parameter]
+        public required string username { get; set; }
+
+        private ApplicationUser? User = null;
+        private UserRatingSummary? UserRatingSummary = null;
+        private string[] labels = null!;
+        private double[] ratingData = null!;
+        private bool isLoggedInUser = true;
+
+        protected override async Task OnInitializedAsync()
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                User = await UserSvc.GetUserByUsernameAsync(username);
+                UserRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(User.Id);
+                var ratingCount = UserRatingSummary.RatingDistribution.Count;
+
+                if (user.Identity.Name != User.UserName)
+                    isLoggedInUser = false;
+
+                labels = new string[ratingCount];
+                ratingData = new double[ratingCount];
+
+                int index = 0;
+                foreach (var rating in UserRatingSummary.RatingDistribution)
+                {
+                    labels[index] = rating.RatingValue.ToString() + " stars";
+                    ratingData[index] = rating.Frequency;
+                    index++;
+                }
+            }
+        }
+    }
+</AuthorizeView>

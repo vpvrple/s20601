@@ -68,6 +68,10 @@ builder.Services
 builder.Services
     .AddScoped<IRankingService, RankingService>();
 
+builder.Services
+    .AddScoped<IMovieCollectionService, MovieCollectionService>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

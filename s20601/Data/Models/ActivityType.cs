@@ -6,5 +6,5 @@ public partial class ActivityType
 
     public int Name { get; set; }
 
-    public virtual ICollection<SocialActivityLog> SocialActivityLogs { get; set; } = [];
+    public virtual ICollection<SocialActivityLog> SocialActivityLogs { get; set; } = new List<SocialActivityLog>();
 }

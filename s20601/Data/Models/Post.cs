@@ -16,7 +16,7 @@ public partial class Post
 
     public int? LastModifiedAt { get; set; }
 
-    public virtual ICollection<Comment> Comments { get; set; } = [];
+    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual Group IdGroupNavigation { get; set; } = null!;
 

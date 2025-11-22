@@ -2,8 +2,6 @@
 
 public partial class MovieRate
 {
-    public int Id { get; set; }
-
     public string IdUser { get; set; } = null!;
 
     public int Rating { get; set; }
@@ -11,6 +9,8 @@ public partial class MovieRate
     public DateTime RatedAt { get; set; }
 
     public int Movie_Id { get; set; }
+
+    public int Id { get; set; }
 
     public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 

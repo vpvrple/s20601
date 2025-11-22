@@ -2,6 +2,7 @@
 
 <MudThemeProvider />
 <MudPopoverProvider />
+<MudDialogProvider />
 
 <MudLayout>
     <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="false">
@@ -10,7 +11,7 @@
     </MudAppBar>
 
     <MudMainContent Class="pa-2" Style="min-height: 100vh;">
-        <MudContainer>
+        <MudContainer Class="mt-6">
             @Body
         </MudContainer>
     </MudMainContent>

@@ -24,8 +24,8 @@
                     <MudGrid>
                         <MudItem xs="12">
                             <div class="form-floating mb-3">
-                                <MudStaticTextField @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" Label="Email" />
-                                <ValidationMessage For="() => Input.Email" class="text-danger" />
+                                <MudStaticTextField @bind-Value="Input.Username" id="Input.Username" class="form-control" autocomplete="username" aria-required="true" placeholder="s20601" Label="Username" />
+                                <ValidationMessage For="() => Input.Username" class="text-danger" />
                             </div>
                         </MudItem>
                         <MudItem xs="12">
@@ -107,10 +107,10 @@
     {
         // This doesn't count login failures towards account lockout
         // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var result = await SignInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
-            var user = await UserManager.FindByEmailAsync(Input.Email);
+            var user = await UserManager.FindByEmailAsync(Input.Username);
             if (user is not null)
             {
                 user.LastLogin = DateTime.UtcNow;
@@ -139,8 +139,9 @@
     private sealed class InputModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [Display(Name = "Username")]
+        public string Username { get; set; } = "";
 
         [Required]
         [DataType(DataType.Password)]

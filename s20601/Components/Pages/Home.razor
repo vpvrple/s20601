@@ -20,7 +20,7 @@
     </MudItem>
     <MudItem lg="6" md="6" xs="12">
         <MudGrid Class="align-center">
-            <MudItem>
+            <MudItem xs="12">
                 @if (movieOfTheDay is null)
                 {
                     <MudSkeleton Animation="Animation.Wave" />
@@ -186,7 +186,7 @@ else
     MovieRate movieRate = null!;
 
     List<Movie> pastPicks = null!;
-    List<MovieCollection> trendingMovieCollections = null!;
+    List<s20601.Data.Models.MovieCollection> trendingMovieCollections = null!;
 
     protected override async Task OnInitializedAsync()
     {

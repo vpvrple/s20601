@@ -12,11 +12,11 @@ namespace s20601.Services
             _dbContextFactory = dbContextFactory;
         }
 
-        public async Task<ApplicationUser?> GetUserByNicknameAsync(string nickname)
+        public async Task<ApplicationUser?> GetUserByUsernameAsync(string username)
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
             return await context.Users
-                .FirstOrDefaultAsync(x => x.Nickname == nickname);
+                .FirstOrDefaultAsync(x => x.UserName == username);
         }
 
         public async Task<ApplicationUser?> GetUserByIdAsync(string id)

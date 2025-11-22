@@ -14,13 +14,12 @@ public partial class MovieCollection : INavigable
 
     public virtual MovieCollectionMovie? MovieCollectionMovie { get; set; }
 
-    public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = [];
+    public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = new List<MovieCollectionUser>();
 
     public string GetUrl()
     {
         return $"movie-collection/{Id}";
     }
-
     public override string ToString()
     {
         return Name;

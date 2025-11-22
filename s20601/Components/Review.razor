@@ -1,5 +1,6 @@
 ﻿@using s20601.Services;
 @using s20601.Data.Models;
+@using System.Security.Claims
 
 @inject IUserService UserSvc
 @inject IReviewService ReviewSvc
@@ -47,10 +48,10 @@
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
-
-        if (authState.User.Identity.IsAuthenticated)
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
         {
-            userId = authState.User.Claims.First().Value;
+            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             var currentUserReviewRate = await ReviewSvc.GetUserVoteByReview(Id, userId);
         }
     }

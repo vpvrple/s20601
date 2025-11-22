@@ -1,4 +1,5 @@
 ﻿<MudCard>
+    <MudLink Href="@url">
     <MudImage Src="favicon.png"
               ObjectFit="ObjectFit.None"
               Alt="image"
@@ -7,12 +8,13 @@
               Width="@ImageWidth" />
     <MudCardContent>
         <MudStack>
-            <MudText Typo="Typo.h6" Align="Align.Center">
-                @Title
-                <MudText Typo="Typo.subtitle2">@Subtitle</MudText>
-            </MudText>
+                <MudText Typo="Typo.h6" Align="Align.Center">
+                    @Title
+                    <MudText Typo="Typo.subtitle2">@Subtitle</MudText>
+                </MudText>
         </MudStack>
     </MudCardContent>
+    </MudLink>
 </MudCard>
 
 @code
@@ -21,6 +23,8 @@
     public required string Title { get; set; }
     [Parameter]
     public required string Subtitle { get; set; }
+    [Parameter]
+    public required string url { get; set; }
     [Parameter]
     public required int ImageHeight { get; set; }
     [Parameter]

@@ -18,25 +18,24 @@ public partial class Movie : INavigable
 
     public string TitleType { get; set; } = null!;
 
-    public virtual ICollection<MovieCollectionMovie> MovieCollectionMovies { get; set; } = [];
+    public virtual ICollection<MovieCollectionMovie> MovieCollectionMovies { get; set; } = new List<MovieCollectionMovie>();
 
-    public virtual ICollection<MovieCrew> MovieCrews { get; set; } = [];
+    public virtual ICollection<MovieCrew> MovieCrews { get; set; } = new List<MovieCrew>();
 
-    public virtual ICollection<MovieGenre> MovieGenres { get; set; } = [];
+    public virtual ICollection<MovieGenre> MovieGenres { get; set; } = new List<MovieGenre>();
 
     public virtual MovieOfTheDay? MovieOfTheDay { get; set; }
 
-    public virtual ICollection<MovieRate> MovieRates { get; set; } = [];
+    public virtual ICollection<MovieRate> MovieRates { get; set; } = new List<MovieRate>();
 
-    public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = [];
+    public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = new List<MovieUpdateRequest>();
 
-    public virtual ICollection<Review> Reviews { get; set; } = [];
+    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public string GetUrl()
     {
         return $"movie/{Id}";
     }
-
     public override string ToString()
     {
         return Title;

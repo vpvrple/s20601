@@ -24,7 +24,7 @@ public class ReviewService : IReviewService
             .Select(x => new GetMovieReviewWithRating
             {
                 Id = x.Id,
-                Nickname = x.IdAuthorNavigation.Nickname,
+                Username = x.IdAuthorNavigation.UserName,
                 CreatedAt = x.CreatedAt,
                 Content = x.Content,
                 LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
@@ -47,7 +47,7 @@ public class ReviewService : IReviewService
             {
                 Id = x.Id,
                 AuthorId = x.IdAuthor,
-                Nickname = x.IdAuthorNavigation.Nickname,
+                Username = x.IdAuthorNavigation.UserName,
                 CreatedAt = x.CreatedAt,
                 Content = x.Content,
                 LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
@@ -70,7 +70,7 @@ public class ReviewService : IReviewService
             {
                 Id = x.Id,
                 AuthorId = x.IdAuthor,
-                Nickname = x.IdAuthorNavigation.Nickname,
+                Username = x.IdAuthorNavigation.UserName,
                 CreatedAt = x.CreatedAt,
                 Content = x.Content,
                 LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
