@@ -23,7 +23,7 @@
             <MudItem xs="12">
                 @if (movieOfTheDay is null)
                 {
-                    <MudSkeleton Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="20px" />
                 }
                 else
                 {
@@ -55,7 +55,7 @@
                 <MudText Typo="Typo.h6">Community rating</MudText>
                 @if (movieRating is null)
                 {
-                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    <MudSkeleton Animation="Animation.Wave" />
                 }
                 else
                 {
@@ -68,12 +68,12 @@
                 <MudText Typo="Typo.body1" Color="Color.Success">Positive</MudText>
             </MudItem>
             <MudFlexBreak />
-            <MudItem>
+            <MudItem xs="12">
                 <MudText Typo="Typo.h6">Directors</MudText>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="7">
                     @if (crew is null)
                     {
-                        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px"/>
                     }
                     else if (crew.Count == 0)
                     {
@@ -92,12 +92,12 @@
                 </MudStack>
             </MudItem>
             <MudFlexBreak />
-            <MudItem>
+            <MudItem xs="12">
                 <MudText Typo="Typo.h6">Writers</MudText>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="7">
                     @if (crew is null)
                     {
-                        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
                     }
                     else if (crew.Count == 0)
                     {
@@ -116,12 +116,12 @@
                 </MudStack>
             </MudItem>
             <MudFlexBreak />
-            <MudItem>
+            <MudItem xs="12">
                 <MudText Typo="Typo.h6">Cast</MudText>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="7">
                     @if (crew is null)
                     {
-                        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
                     }
                     else if (crew.Count == 0)
                     {
@@ -199,7 +199,6 @@ else
             movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
             crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
         }
-
 
         pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
 
