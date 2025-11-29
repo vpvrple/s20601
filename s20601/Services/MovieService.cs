@@ -49,6 +49,18 @@ public class MovieService : IMovieService
         return movieCollections ?? [];
     }
 
+    public async Task<List<Movie>> GetTrendingMovies(int n)
+    {
+        //needs to be revisited
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var movies = await context.Movies
+            .Take(n)
+            .ToListAsync();
+
+        return movies ?? [];
+    }
+
     public async Task<Movie?> GetMovieByIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
