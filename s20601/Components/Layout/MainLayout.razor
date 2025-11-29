@@ -2,7 +2,13 @@
 
 <MudThemeProvider />
 <MudPopoverProvider />
-<MudDialogProvider />
+<MudDialogProvider 
+    CloseOnEscapeKey="true"
+    Position="DialogPosition.Center"
+    CloseButton="true"
+    MaxWidth="MaxWidth.Medium"
+    FullWidth="true"/>
+<MudSnackbarProvider />
 
 <MudLayout>
     <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="false">
