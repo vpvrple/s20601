@@ -25,13 +25,13 @@ public class MovieCollectionService : IMovieCollectionService
         return collections ?? [];
     }
 
-    public async Task<MovieCollection> CreateMovieCollection(string name, string userId)
+    public async Task<MovieCollection> CreateMovieCollection(string name, string? descritpion, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var newMovieCollection = new MovieCollection
         {
             Name = name,
-            Description = "",
+            Description = descritpion!,
             CreatedAt = DateTime.UtcNow,
             MovieCollectionUsers =
             [
@@ -94,7 +94,7 @@ public class MovieCollectionService : IMovieCollectionService
         await context.SaveChangesAsync();
     }
 
-    public async Task AddMovieToMovieCollection(int collectionId, int movieId, int userId)
+    public async Task AddMovieToMovieCollection(int collectionId, int movieId, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -105,13 +105,13 @@ public class MovieCollectionService : IMovieCollectionService
             AddedAt = DateTime.UtcNow
         };
 
-        context.MovieCollectionUsers.Add(new MovieCollectionUser
-        {
-            IdMovieCollection = collectionId,
-            IdUser = userId.ToString()
-        });
-
         context.MovieCollectionMovies.Add(collectionMovie);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<int> GetMovieCountForCollection(int collectionId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.MovieCollectionMovies.CountAsync(m => m.IdMovieCollection == collectionId);
     }
 }

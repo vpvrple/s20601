@@ -1,0 +1,78 @@
+﻿@using Services
+@using System.Security.Claims
+
+@inject IMovieCollectionService MovieCollectionSvc
+@inject ISearchService SearchSvc
+@inject IMovieService MovieSvc
+
+<MudDialog Class="d-flex justify-start">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Search for movies</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAutocomplete T="Data.Models.Movie"
+                         Label="Movies"
+                         @bind-Value="SelectedMovie"
+                         SearchFunc="SearchMovieByTitle"
+                         ToStringFunc="@(movie => movie?.Title)"
+                         Variant="Variant.Outlined"
+                         ShowProgressIndicator="true"
+                         ProgressIndicatorColor="Color.Primary" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+
+    private string userId = default!;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+        }
+        isLoading = false;
+    }
+
+    private void Submit()
+    {
+        if (SelectedMovie != null)
+        {
+            MudDialog.Close(DialogResult.Ok(SelectedMovie.Id));
+        }
+    }
+
+    private async Task<IEnumerable<Data.Models.Movie>> SearchMovieByTitle(string title, CancellationToken token)
+    {
+        // if text is null or empty, show trending movie list, NEEDS TO BE REVISITED AS THIS SHOULD RESULT IN MOVIES
+        // RELATED TO THE CURRENT MOVIE COLLECTION
+        if (string.IsNullOrEmpty(title))
+        {
+            var trendingMovies = await MovieSvc.GetTrendingMovies(10);
+            return trendingMovies.Take(10);
+        }
+
+        var movies = await SearchSvc.SearchMovieByTitle(title);
+        return movies.Take(10);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public required Data.Models.Movie SelectedMovie { get; set; } = default!;
+
+}
+}
