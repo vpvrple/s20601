@@ -9,9 +9,13 @@
 
 <MudText Class="mt-6" Typo="Typo.h4">Reputation ranking</MudText>
 
-@if (Users is null)
+@if ( _loading == true)
 {
     <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else if (Users == null || Users.Count == 0)
+{
+    <MudText Class="mt-6" Typo="Typo.body1">No users found.</MudText>
 }
 else
 {
@@ -56,6 +60,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
         Users = await RankingSvc.GetTopUsersByPoints();
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authenticationState.User;
@@ -64,6 +69,6 @@ else
         {
             isAuthenticated = true;
         }
-
+        _loading = false;
     }
 }
