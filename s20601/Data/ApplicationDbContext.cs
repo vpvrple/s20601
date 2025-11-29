@@ -209,7 +209,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ToTable("MovieCollection");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasPrecision(2);
             entity.Property(e => e.Description)
                 .HasMaxLength(250)
@@ -227,7 +226,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasIndex(e => e.Movie_Id, "IX_MovieCollectionMovie_Movie_Id");
 
-            entity.Property(e => e.IdMovieCollection).ValueGeneratedNever();
             entity.Property(e => e.AddedAt).HasPrecision(2);
 
             entity.HasOne(d => d.IdMovieCollectionNavigation).WithOne(p => p.MovieCollectionMovie)
@@ -250,8 +248,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(e => e.IdMovieCollection, "IX_MovieCollectionUser_IdMovieCollection");
 
             entity.HasIndex(e => new { e.IdUser, e.IdMovieCollection }, "MovieCollectionUser_ak_1").IsUnique();
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
 
             entity.HasOne(d => d.IdMovieCollectionNavigation).WithMany(p => p.MovieCollectionUsers)
                 .HasForeignKey(d => d.IdMovieCollection)
