@@ -46,7 +46,7 @@
     public Size Size { get; set; } = Size.Small;
 
     [Parameter]
-    public int MovieId { get; set; }
+    public required int MovieId { get; set; }
 
     private MovieRate currentUserMovieRating = null!;
 

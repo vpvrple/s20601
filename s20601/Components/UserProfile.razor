@@ -83,9 +83,12 @@
             {
                 if (firstRender)
                 {
-                    _minDate = User.CreatedAt;
-                    _picker.GoToDate();
-                    StateHasChanged();
+                    if (User is not null)
+                    {
+                        _minDate = User.CreatedAt;
+                        _picker.GoToDate();
+                        StateHasChanged();
+                    }
                 }
             }
 
@@ -102,21 +105,21 @@
             }
             else if (ratingData.Length == 0)
             {
-                @code
-                {
-                    private string[] emptyLabel = new string[] { "No ratings yet" };
+            @code
+            {
+                private string[] emptyLabel = new string[] { "No ratings yet" };
 
-                    private ChartOptions emptyChartOptions = new ChartOptions
-                    {
-                        ShowToolTips = false,
-                        ChartPalette = new string[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
-                    };
-                }
-                <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
-                    InputData="new double[] {1}" InputLabels='@emptyLabel' ChartOptions="@emptyChartOptions">
-                </MudChart>
+                private ChartOptions emptyChartOptions = new ChartOptions
+                {
+                    ShowToolTips = false,
+                    ChartPalette = new string[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
+                };
             }
-            else
+            <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
+                      InputData="new double[] {1}" InputLabels='@emptyLabel' ChartOptions="@emptyChartOptions">
+            </MudChart>
+                        }
+                        else
             {
                 <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
                           InputData="@ratingData" InputLabels="@labels">

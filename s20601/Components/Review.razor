@@ -10,7 +10,7 @@
     <MudAvatar>
         @Avatar
     </MudAvatar>
-    <MudChatHeader Name="@Nickname" Time="@CreatedAt.ToString()"/>
+    <MudChatHeader Name="@Username" Time="@CreatedAt.ToString()"/>
     <MudChatBubble Style="width: 100%;">
         @Content
     </MudChatBubble>
@@ -69,7 +69,7 @@
     public required string Avatar { get; set; }
 
     [Parameter]
-    public required string Nickname { get; set; }
+    public required string Username { get; set; }
 
     [Parameter]
     public required DateTime CreatedAt { get; set; }
