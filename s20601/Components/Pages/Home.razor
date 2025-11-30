@@ -1,181 +1,192 @@
 ﻿@page "/"
-@using MudBlazor
+
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @using s20601.Services
+
 @inject IMovieService MovieSvc
 @inject IRatingService RatingSvc
 
-<MudText Class="mt-6" Typo="Typo.h4">Movie of the day</MudText>
-<MudGrid>
-    <MudItem lg="6" md="6" sm="12" xs="12" Style="position: relative;">
-        <MudImage Src="favicon.png"
-                  ObjectFit="ObjectFit.None"
-                  Alt="Movie poster"
-                  Elevation="1"
-                  Style="width: 100%; height: auto;" />
-        <AuthorizeView>
-            <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark" Color="Color.Secondary" />
-        </AuthorizeView>
-    </MudItem>
-    <MudItem lg="6" md="6" xs="12">
-        <MudGrid Class="align-center">
-            <MudItem xs="12">
-                @if (movieOfTheDay is null)
-                {
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="20px" />
-                }
-                else
-                {
-                    <MudLink Href="@($"movie/{movieOfTheDay.Id}")" Typo="Typo.h5">
-                        @movieOfTheDay.Title
-                        <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
-                    </MudLink>
-                }
-            </MudItem>
-            <MudFlexBreak />
-            <MudItem>
-                <MudText Typo="Typo.h6">Genres</MudText>
-                @if (movieGenres is null || movieGenres.Count == 0)
-                {
-                    <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
-                }
-                else
-                {
-                    foreach (var genre in movieGenres)
-                    {
-                        <MudChipSet T="Color" Class="d-inline-flex">
-                            <MudChip>@genre.Name</MudChip>
-                        </MudChipSet>
-                    }
-                }
-            </MudItem>
-            <MudFlexBreak />
-            <MudItem>
-                <MudText Typo="Typo.h6">Community rating</MudText>
-                @if (movieRating is null)
-                {
-                    <MudSkeleton Animation="Animation.Wave" />
-                }
-                else
-                {
-                    <MovieRatingExtended MovieId="@movieOfTheDay.Id" Size="Size.Medium" Typo="Typo.body1" />
-                }
-            </MudItem>
-            <MudFlexBreak />
-            <MudItem>
-                <MudText Typo="Typo.h6">Community sentiment</MudText>
-                <MudText Typo="Typo.body1" Color="Color.Success">Positive</MudText>
-            </MudItem>
-            <MudFlexBreak />
-            <MudItem xs="12">
-                <MudText Typo="Typo.h6">Directors</MudText>
-                <MudStack Row="true" Justify="Justify.Center" Spacing="7">
-                    @if (crew is null)
-                    {
-                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px"/>
-                    }
-                    else if (crew.Count == 0)
-                    {
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the directors for this movie.</MudText>
-                    }
-                    else
-                    {
-                        foreach (var member in crew)
-                        {
-                            if (member.Job == "Writer")
-                            {
-                                <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                            }
-                        }
-                    }
-                </MudStack>
-            </MudItem>
-            <MudFlexBreak />
-            <MudItem xs="12">
-                <MudText Typo="Typo.h6">Writers</MudText>
-                <MudStack Row="true" Justify="Justify.Center" Spacing="7">
-                    @if (crew is null)
-                    {
-                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                    }
-                    else if (crew.Count == 0)
-                    {
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the writers for this movie.</MudText>
-                    }
-                    else
-                    {
-                        foreach (var member in crew)
-                        {
-                            if (member.Job == "Writer")
-                            {
-                                <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                            }
-                        }
-                    }
-                </MudStack>
-            </MudItem>
-            <MudFlexBreak />
-            <MudItem xs="12">
-                <MudText Typo="Typo.h6">Cast</MudText>
-                <MudStack Row="true" Justify="Justify.Center" Spacing="7">
-                    @if (crew is null)
-                    {
-                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="40px" />
-                    }
-                    else if (crew.Count == 0)
-                    {
-                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors for this movie.</MudText>
-                    }
-                    else
-                    {
-                        foreach (var member in crew)
-                        {
-                            if (member.Job == "Actor")
-                            {
-                                <MudPaper Elevation="0">
-                                    <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
-                                    <MudText Typo="Typo.subtitle2" Color="Color.Dark">@member.CharacterName</MudText>
-                                </MudPaper>
-                            }
-                        }
-                    }
-                </MudStack>
-            </MudItem>
-        </MudGrid>
-    </MudItem>
-</MudGrid>
-
-<MudGrid Class="mt-6">
-    <MudItem xs="12">
-        <MudText Typo="Typo.h4">Past picks</MudText>
-        @if (pastPicks is null)
-        {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-        }
-        else
-        {
-            <MudCarouselWithPagination Items=@pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
-        }
-    </MudItem>
-</MudGrid>
-
-@if (trendingMovieCollections is null)
+@if (_loading == true)
 {
-    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
 }
 else
 {
-    if (trendingMovieCollections.Count > 0)
+    <MudText Class="mt-6" Typo="Typo.h4">Movie of the day</MudText>
+    <MudGrid>
+        <MudItem lg="6" md="6" sm="12" xs="12" Style="position: relative;">
+            <MudImage Src="favicon.png"
+                      ObjectFit="ObjectFit.None"
+                      Alt="Movie poster"
+                      Elevation="1"
+                      Style="width: 100%; height: auto;"/>
+            <AuthorizeView>
+                <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark"
+                               Color="Color.Secondary"/>
+            </AuthorizeView>
+        </MudItem>
+        <MudItem lg="6" md="6" xs="12">
+            <MudGrid Class="align-center">
+                <MudItem xs="12">
+                    @if (movieOfTheDay is null)
+                    {
+                        <MudText Typo="Typo.subtitle1">No movie of the day yet!</MudText>
+                    }
+                    else
+                    {
+                        <MudLink Href="@($"movie/{movieOfTheDay.Id}")" Typo="Typo.h5">
+                            @movieOfTheDay.Title
+                            <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
+                        </MudLink>
+                    }
+                </MudItem>
+                <MudFlexBreak/>
+                <MudItem>
+                    <MudText Typo="Typo.h6">Genres</MudText>
+                    @if (movieGenres is null || movieGenres.Count == 0)
+                    {
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
+                    }
+                    else
+                    {
+                        foreach (var genre in movieGenres)
+                        {
+                            <MudChipSet T="Color" Class="d-inline-flex">
+                                <MudChip>@genre.Name</MudChip>
+                            </MudChipSet>
+                        }
+                    }
+                </MudItem>
+                <MudFlexBreak/>
+                <MudItem>
+                    <MudText Typo="Typo.h6">Community rating</MudText>
+                    @if (movieRating is null)
+                    {
+                        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No community rating yet!</MudText>
+                    }
+                    else
+                    {
+                        <MovieRatingExtended MovieId="@movieOfTheDay.Id" Size="Size.Medium" Typo="Typo.body1"/>
+                    }
+                </MudItem>
+                <MudFlexBreak/>
+                <MudItem>
+                    <MudText Typo="Typo.h6">Community sentiment</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Success">Positive</MudText>
+                </MudItem>
+                <MudFlexBreak/>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Directors</MudText>
+                    <MudStack Row="true" Justify="Justify.Center" Spacing="7">
+                        @if (crew is null || crew.Count == 0)
+                        {
+                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the directors
+                                for this movie.
+                            </MudText>
+                        }
+                        else
+                        {
+                            foreach (var member in crew)
+                            {
+                                if (member.Job == "Writer")
+                                {
+                                    <MudLink
+                                        Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                }
+                            }
+                        }
+                    </MudStack>
+                </MudItem>
+                <MudFlexBreak/>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Writers</MudText>
+                    <MudStack Row="true" Justify="Justify.Center" Spacing="7">
+                        @if (crew is null || crew.Count == 0)
+                        {
+                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the writers
+                                for this movie.
+                            </MudText>
+                        }
+                        else
+                        {
+                            foreach (var member in crew)
+                            {
+                                if (member.Job == "Writer")
+                                {
+                                    <MudLink
+                                        Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                }
+                            }
+                        }
+                    </MudStack>
+                </MudItem>
+                <MudFlexBreak/>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Cast</MudText>
+                    <MudStack Row="true" Justify="Justify.Center" Spacing="7">
+                        @if (crew is null || crew.Count == 0)
+                        {
+                            <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors
+                                for this movie.
+                            </MudText>
+                        }
+                        else
+                        {
+                            foreach (var member in crew)
+                            {
+                                if (member.Job == "Actor")
+                                {
+                                    <MudPaper Elevation="0">
+                                        <MudLink
+                                            Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                        <MudText Typo="Typo.subtitle2"
+                                                 Color="Color.Dark">@member.CharacterName</MudText>
+                                    </MudPaper>
+                                }
+                            }
+                        }
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Class="mt-6">
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4">Past picks</MudText>
+            @if (pastPicks is null)
+            {
+                <MudText Typo="Typo.subtitle1" Color="Color.Dark">No past picks yet!
+                </MudText>
+            }
+            else
+            {
+                <MudCarouselWithPagination Items=@pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
+            }
+        </MudItem>
+    </MudGrid>
+
+    @if (trendingMovieCollections is null)
     {
-        <MudGrid Class="mt-6">
-            <MudItem xs="12">
-                <MudText Typo="Typo.h4">Trending community collections</MudText>
-                <MudCarouselWithPagination Items=@trendingMovieCollections itemsPerCarousel="5"></MudCarouselWithPagination>
-            </MudItem>
-        </MudGrid>
+        <MudText Typo="Typo.subtitle1" Color="Color.Dark">No trending collections yet!
+        </MudText>
+    }
+    else
+    {
+        if (trendingMovieCollections.Count > 0)
+        {
+            <MudGrid Class="mt-6">
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h4">Trending community collections</MudText>
+                    <MudCarouselWithPagination Items=@trendingMovieCollections
+                                               itemsPerCarousel="5"></MudCarouselWithPagination>
+                </MudItem>
+            </MudGrid>
+        }
     }
 }
+
 
 
 @code {
@@ -188,8 +199,12 @@ else
     List<Movie> pastPicks = null!;
     List<s20601.Data.Models.MovieCollection> trendingMovieCollections = null!;
 
+    private bool _loading;
+
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
+
         movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
         if (movieOfTheDay is not null)
         {
@@ -203,5 +218,8 @@ else
         pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
 
         trendingMovieCollections = await MovieSvc.GetTrendingMovieCollections(10);
+
+        _loading = false;
     }
+
 }
