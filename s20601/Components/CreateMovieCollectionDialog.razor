@@ -31,7 +31,7 @@
     public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
 
-    private string userId = default!;
+    private string userId = null!;
     private bool isLoading = true;
 
     protected override async Task OnParametersSetAsync()
@@ -55,9 +55,9 @@
 
     private void Cancel() => MudDialog.Cancel();
 
-    public required string CollectionTitle { get; set; } = default!;
+    public required string CollectionTitle { get; set; } = null!;
 
-    public string Description { get; set; } = default!;
+    public string Description { get; set; } = null!;
 
     public string Visibility { get; set; } = "Public";
 

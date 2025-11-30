@@ -15,14 +15,14 @@
         }
         else
         {
-            if (isLoggedInUser)
+            if (_isLoggedInUser)
             {
                 <MudTabs Style="align-items: center;" Rounded="true" ApplyEffectsToContainer="true"
                          PanelClass="pa-6 ma-2">
                     <MudTabPanel Icon="@Icons.Material.Filled.VideoLibrary" Text="My collections">
                         
                         <MudStack Row="true">
-                            @if (movieCollections?.Count == 0)
+                            @if (_movieCollections?.Count == 0)
                             {
                                 <MudButton @onclick="OpenDialogAsync"
                                            Variant="Variant.Filled"
@@ -43,7 +43,7 @@
                                     </MudButton>
                                     <MudSpacer></MudSpacer>
                                     <MudGrid Spacing="3">
-                                        @foreach (var collection in movieCollections)
+                                        @foreach (var collection in _movieCollections!)
                                         {
                                             <MudItem>
                                                 <MudLink Href="@collection.GetUrl()" Underline="Underline.None">
@@ -57,7 +57,7 @@
                                                         <MudCardContent>
                                                             <MudStack>
                                                                 <MudText Typo="Typo.subtitle1" Align="Align.Center">
-                                                                    @(movieCollections.IndexOf(collection) + 1). @((collection.Name.Length > 10) ? $"{collection.Name.Substring(0, 10)}..." : collection.Name)
+                                                                    @(_movieCollections.IndexOf(collection) + 1). @((collection.Name.Length > 10) ? $"{collection.Name.Substring(0, 10)}..." : collection.Name)
                                                                     <MudText Typo="Typo.subtitle2">
                                                                         @((collection.Description.Length > 10) ? $"{collection.Description.Substring(0, 10)}..." : collection.Description)
                                                                     </MudText>
@@ -93,12 +93,12 @@
             }
             else
             {
-                <MudText Typo="Typo.h6">@username's collections</MudText>
+                <MudText Typo="Typo.h6">@Username's collections</MudText>
                 <MudTabs Style="align-items: center;" Rounded="true" ApplyEffectsToContainer="true"
                          PanelClass="pa-6 ma-2">
                     <MudTabPanel Icon="@Icons.Material.Filled.VideoLibrary" Text="Personal collections">
                         <MudStack Row="true">
-                            @if (movieCollections?.Count == 0)
+                            @if (_movieCollections?.Count == 0)
                             {
                                 <MudText Typo="Typo.body1">No collections found!</MudText>
                             }
@@ -106,7 +106,7 @@
                             {
                                 <MudStack>
                                     <MudGrid Spacing="3">
-                                        @foreach (var collection in movieCollections)
+                                        @foreach (var collection in _movieCollections)
                                         {
                                             <MudItem>
                                                 <MudLink Href="@collection.GetUrl()" Underline="Underline.None">
@@ -120,7 +120,7 @@
                                                         <MudCardContent>
                                                             <MudStack>
                                                                 <MudText Typo="Typo.subtitle1" Align="Align.Center">
-                                                                    @(movieCollections.IndexOf(collection) + 1). @collection.Name
+                                                                    @(_movieCollections.IndexOf(collection) + 1). @collection.Name
                                                                     <MudText Typo="Typo.subtitle2">
                                                                         @((collection.Description.Length > 20) ? $"{collection.Description.Substring(0, 20)}..." : collection.Description)
                                                                     </MudText>
@@ -157,14 +157,14 @@
 
 @code
 {
-    [Parameter] public string username { get; set; } = string.Empty;
+    [Parameter] public string Username { get; set; } = string.Empty;
 
     // Change the type to match the namespace of the returned type
-    private List<s20601.Data.Models.MovieCollection>? movieCollections = null!;
+    private List<s20601.Data.Models.MovieCollection>? _movieCollections;
     private bool _loading = true;
-    private Dictionary<int, int> movieCounts = new();
+    private Dictionary<int, int> _movieCounts = new();
     private string _processedUserId = null!;
-    private bool isLoggedInUser = false;
+    private bool _isLoggedInUser = false;
 
     [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
@@ -174,18 +174,18 @@
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
-        if (user.Identity.Name == username)
+        if (user.Identity.Name == Username)
         {
-            isLoggedInUser = true;
+            _isLoggedInUser = true;
             _processedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            await LoadMovieCollectionsAsync(_processedUserId);
         }
         else
         {
-            var userInfoByParameterUsername = await UserSvc.GetUserByUsernameAsync(username);
-            _processedUserId = userInfoByParameterUsername.Id;
-            await LoadMovieCollectionsAsync(_processedUserId);
+            var userInfoByParameterUsername = await UserSvc.GetUserByUsernameAsync(Username);
+            _processedUserId = userInfoByParameterUsername!.Id;
         }
+
+        await LoadMovieCollectionsAsync(_processedUserId);
 
         _loading = false;
     }
@@ -195,31 +195,31 @@
         _loading = true;
 
         var userMovieCollections = await MovieCollectionSvc.GetUserMovieCollections(userId);
-        movieCollections = new List<s20601.Data.Models.MovieCollection>();
+        _movieCollections = new List<s20601.Data.Models.MovieCollection>();
         foreach (var collection in userMovieCollections)
         {
             var collectionData = await MovieCollectionSvc.GetMovieCollectionById(collection.Id);
             if (collectionData == null) continue;
-            movieCollections.Add(collectionData);
+            _movieCollections.Add(collectionData);
             var count = await MovieCollectionSvc.GetMovieCountForCollection(collectionData.Id);
-            movieCounts[collectionData.Id] = count;
+            _movieCounts[collectionData.Id] = count;
         }
 
         _loading = false;
         StateHasChanged();
     }
 
-    private int GetMovieCount(int collectionId) => movieCounts.TryGetValue(collectionId, out var c) ? c : 0;
+    private int GetMovieCount(int collectionId) => _movieCounts.TryGetValue(collectionId, out var c) ? c : 0;
 
     private async Task OpenDialogAsync()
     {
         var dialog = await DialogService.ShowAsync<CreateMovieCollectionDialog>("CreateMovieCollectionDialog");
 
         var result = await dialog.Result;
-        if (result.Data is s20601.Data.Models.MovieCollection newCollection)
+        if (result?.Data is s20601.Data.Models.MovieCollection newCollection)
         {
-            movieCollections?.Add(newCollection);
-            movieCounts[newCollection.Id] = 0;
+            _movieCollections?.Add(newCollection);
+            _movieCounts[newCollection.Id] = 0;
             StateHasChanged();
         }
     }
