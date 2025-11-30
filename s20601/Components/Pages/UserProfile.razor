@@ -8,12 +8,13 @@
 
 @inject IUserService UserSvc
 @inject IRatingService RatingSvc
+@inject IMovieCollectionService MovieCollectionSvc
 
 <AuthorizeView>
     <MudContainer MaxWidth="MaxWidth.Medium">
-        @if (User is null)
+        @if (_loading)
         {
-            <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+            <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
         }
         else
         {
@@ -26,32 +27,32 @@
                           Width="180">
                 </MudImage>
                 <MudStack AlignItems="AlignItems.Start" Spacing="0">
-                    <MudText Typo="Typo.h5">@username</MudText>
+                    <MudText Typo="Typo.h5">@Username</MudText>
                     <MudText Typo="Typo.subtitle1">points @User.ReputationPoints</MudText>
                     <MudText Typo="Typo.subtitle2">Joined: @User.CreatedAt.ToShortDateString()</MudText>
-                    <MudText Typo="Typo.body1" Class="mt-3 mb-3">@(User.ProfileDescription ?? "No description available.")</MudText>
+                    <MudText Typo="Typo.body1"
+                             Class="mt-3 mb-3">@(User.ProfileDescription ?? "No description available.")</MudText>
                 </MudStack>
-                <MudSpacer />
+                <MudSpacer/>
 
                 @if (isLoggedInUser == true)
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.Settings"
                                    Variant="Variant.Filled"
                                    Color="Color.Primary"
-                                   Size="Size.Small" />
+                                   Size="Size.Small"/>
                 }
                 else
                 {
-                    <FriendsComponent />
+                    <FriendsComponent/>
                 }
 
 
             </MudStack>
-
-        }
+        
         <MudStack Class="mt-9 mb-3 d-flex" Row="true">
-            <MudText Typo="Typo.h6" Style="width: 100%;">Statistics</MudText>
-            <MudSpacer />
+            <MudText Class="mt-3" Typo="Typo.h6" Style="width: 100%;">Statistics</MudText>
+            <MudSpacer/>
             <MudDatePicker Style="align-content: center"
                            @ref="_picker"
                            @bind-Date="_month"
@@ -71,80 +72,50 @@
             </MudDatePicker>
         </MudStack>
 
-
-        @code
-        {
-            private DateTime? _month = DateTime.Now;
-            private MudDatePicker _picker;
-            private DateTime _maxDate = DateTime.Now;
-            private DateTime _minDate;
-
-            protected override void OnAfterRender(bool firstRender)
-            {
-                if (firstRender)
-                {
-                    if (User is not null)
-                    {
-                        _minDate = User.CreatedAt;
-                        _picker.GoToDate();
-                        StateHasChanged();
-                    }
-                }
-            }
-
-            @* private async Task AllYears()
-            {
-            } *@
-        }
-
-
         <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.Center">
-            @if (UserRatingSummary is null)
+            @if (ratingData.Length == 0)
             {
-                <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-            }
-            else if (ratingData.Length == 0)
-            {
-            @code
-            {
-                private string[] emptyLabel = new string[] { "No ratings yet" };
-
-                private ChartOptions emptyChartOptions = new ChartOptions
+                @code
                 {
-                    ShowToolTips = false,
-                    ChartPalette = new string[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
-                };
+                    private string[] emptyLabel = new string[] { "No ratings yet" };
+
+                    private ChartOptions emptyChartOptions = new ChartOptions
+                    {
+                        ShowToolTips = false,
+                        ChartPalette = new string[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
+                    };
+                }
+                <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
+                          InputData="new double[] {1}" InputLabels='@emptyLabel' ChartOptions="@emptyChartOptions">
+                </MudChart>
             }
-            <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
-                      InputData="new double[] {1}" InputLabels='@emptyLabel' ChartOptions="@emptyChartOptions">
-            </MudChart>
-                        }
-                        else
+            else
             {
                 <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
                           InputData="@ratingData" InputLabels="@labels">
                 </MudChart>
             }
-
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Average</MudText>
 
                 @if (UserRatingSummary is null)
                 {
-                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    <MudText Typo="Typo.h4"
+                             Align="Align.Center">0</MudText>
                 }
                 else
                 {
-                    <MudText Typo="Typo.h4" Align="Align.Center">@(Math.Round(UserRatingSummary.AvgMovieRating, 1))</MudText>
+                    <MudText Typo="Typo.h4"
+                             Align="Align.Center">@(Math.Round(UserRatingSummary.AvgMovieRating, 1))</MudText>
                 }
             </MudPaper>
-
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Median</MudText>
 
                 @if (UserRatingSummary is null)
                 {
-                    <MudProgressCircular Class="align-center" Color="Color.Default" Indeterminate="true" />
+                    <MudText Typo="Typo.h4"
+                             Align="Align.Center">0</MudText>
                 }
                 else
                 {
@@ -153,26 +124,25 @@
                     </MudText>
                 }
             </MudPaper>
-
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Total ratings</MudText>
 
                 @if (UserRatingSummary is null)
                 {
-                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    <MudText Typo="Typo.h4"
+                             Align="Align.Center">0</MudText>
                 }
                 else
                 {
                     <MudText Typo="Typo.h4" Align="Align.Center">@UserRatingSummary.TotalRatings</MudText>
                 }
             </MudPaper>
-
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Total reviews</MudText>
-
                 @if (UserRatingSummary is null)
                 {
-                    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                    <MudText Typo="Typo.h4"
+                             Align="Align.Center">0</MudText>
                 }
                 else
                 {
@@ -180,36 +150,67 @@
                 }
             </MudPaper>
         </MudStack>
-
-        <MudFlexBreak />
-
+        <MudFlexBreak/>
         <MudItem>
-            <MudText Typo="Typo.h6">Recent activity</MudText>
+            <MudText Class="mt-3" Typo="Typo.h6">Recently updated collections</MudText>
+            <MudCarouselWithPagination Items=@_userMovieCollections itemsPerCarousel="3"></MudCarouselWithPagination>
+            <div class="d-flex justify-end">
+                <MudLink Href="@($"movie-collections/{Username}")">See more...</MudLink>
+            </div>
         </MudItem>
+            <MudItem>
+                <MudText Class="mt-3" Typo="Typo.h6">Recent activity</MudText>
+            </MudItem>
+        }
     </MudContainer>
-
+ 
     @code
     {
-        [CascadingParameter]
-        public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+        [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
-        [Parameter]
-        public required string username { get; set; }
+        [Parameter] public required string Username { get; set; }
 
         private ApplicationUser? User = null;
         private UserRatingSummary? UserRatingSummary = null;
+        private List<s20601.Data.Models.MovieCollection> _userMovieCollections = null;
+
         private string[] labels = null!;
         private double[] ratingData = null!;
         private bool isLoggedInUser = true;
 
+        private bool _loading = false;
+        private bool _pickerInitialized = false;
+        
+        
+        private DateTime? _month = DateTime.Now;
+        private MudDatePicker _picker;
+        private DateTime _maxDate = DateTime.Now;
+        private DateTime _minDate;
+
+        protected override void OnAfterRender(bool firstRender)
+        {
+            if (!_pickerInitialized && _picker is not null && User is not null)
+            {
+                _minDate = User.CreatedAt;
+                _picker.GoToDate();
+                _pickerInitialized = true;
+                StateHasChanged();
+            }
+        }
+
+        @* private async Task AllYears()
+            {
+            } *@
+        
         protected override async Task OnInitializedAsync()
         {
+            _loading =  true;
             var authState = await AuthenticationStateTask;
             var user = authState.User;
 
             if (user.Identity?.IsAuthenticated == true)
             {
-                User = await UserSvc.GetUserByUsernameAsync(username);
+                User = await UserSvc.GetUserByUsernameAsync(Username);
                 UserRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(User.Id);
                 var ratingCount = UserRatingSummary.RatingDistribution.Count;
 
@@ -219,14 +220,19 @@
                 labels = new string[ratingCount];
                 ratingData = new double[ratingCount];
 
-                int index = 0;
+                var index = 0;
                 foreach (var rating in UserRatingSummary.RatingDistribution)
                 {
                     labels[index] = rating.RatingValue.ToString() + " stars";
                     ratingData[index] = rating.Frequency;
                     index++;
                 }
+
+                _userMovieCollections = await MovieCollectionSvc.GetNRecentUserMovieColletions(User.Id, 10);
+                _loading = false;
             }
         }
+        
+        
     }
 </AuthorizeView>

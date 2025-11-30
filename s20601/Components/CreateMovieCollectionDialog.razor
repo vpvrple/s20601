@@ -47,10 +47,10 @@
         isLoading = false;
     }
 
-    private void Submit()
+    private async Task Submit()
     {
-        MovieCollectionSvc.CreateMovieCollection(CollectionTitle, Description, userId);
-        MudDialog.Close(DialogResult.Ok(true));
+        var newCollection = await MovieCollectionSvc.CreateMovieCollection(CollectionTitle, Description, userId);
+        MudDialog.Close(DialogResult.Ok(newCollection));
     }
 
     private void Cancel() => MudDialog.Cancel();

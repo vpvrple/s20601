@@ -12,4 +12,5 @@ public interface IMovieService
     Task<List<Movie>> GetPastMoviesOfTheDay(int n);
     Task<List<MovieCollection>> GetTrendingMovieCollections(int n);
     Task<List<Movie>> GetTrendingMovies(int n);
+    Task<MovieWithRating?> GetMovieWithRatingById(int id);
 }

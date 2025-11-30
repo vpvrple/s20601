@@ -11,19 +11,21 @@
     {
         int numbersOfElementToSkip = i * itemsPerCarousel;
         <MudCarouselItem>
-            <MudGrid Justify="Justify.Center" Style="align-center" Class="pa-5">
+            <MudGrid Justify="Justify.Center" Class="pa-2 align-center" Spacing="3">
                 @foreach (var item in Items.Skip(numbersOfElementToSkip).Take(itemsPerCarousel))
                 {
-                    <MudItem xs="2">
-                        <MudCard Class="align-center">
+                    <MudItem>
+                        <MudCard Class="align-center" Style="height: 240px; width:180px">
                             <MudImage Src="favicon.png"
-                                      ObjectFit="ObjectFit.ScaleDown"
+                                      ObjectFit="ObjectFit.None"
                                       Alt="Movie poster"
                                       Elevation="1"
-                                      Fluid="true"
                                       Style="height:100%; width: 100%;">
                             </MudImage>
-                            <MudCardContent><MudLink Href="@item.GetUrl()">@item</MudLink></MudCardContent>
+                            
+                            <MudCardContent Style="height:100%"><MudLink Href="@item.GetUrl()">@((item.ToString().Length > 10) ?
+                                                                               $"{item.ToString().Substring(0, 10)}..." :
+                                                                               @item)</MudLink></MudCardContent>
                         </MudCard>
                     </MudItem>
                 }

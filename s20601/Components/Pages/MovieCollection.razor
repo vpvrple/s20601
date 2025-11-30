@@ -2,72 +2,120 @@
 
 @using Services
 @using s20601.Data.Models.DTOs
-@using s20601.Data.Models
 
 @inject ISnackbar Snackbar
 @inject IMovieCollectionService MovieCollectionSvc
-@inject IMovieService MovieSvc
 @inject IDialogService DialogService
+@inject IMovieService MovieSvc
 
-@if (_loading == true)
+@if (_loading)
 {
-    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
-    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
-    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
 }
-else if (moviesInCollection.Count == 0)
+else if (_moviesInCollection.Count == 0)
 {
     <MudStack Row="true" AlignItems="AlignItems.Baseline">
-        <MudText Class="mt-6" Typo="Typo.h4">@movieCollection.Name</MudText>
-        <MudButton OnClick="OpenAddMovieToCollectionDialogAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add movie</MudButton>
+        <MudText Class="mt-6" Typo="Typo.h4">@_movieCollection.Name</MudText>
+        <MudButton OnClick="OpenAddMovieToCollectionDialogAsync"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Color="Color.Primary">Add movie
+        </MudButton>
     </MudStack>
-    <MudFlexBreak />
-    if (movieCollection.Description is not null)
+    <MudFlexBreak/>
+    @if (_movieCollection.Description is not null)
     {
-        <MudText Class="mt-6" Typo="Typo.body2">@movieCollection.Description</MudText>
+        <MudText Typo="Typo.body2">@_movieCollection.Description</MudText>
     }
-    <MudFlexBreak />
-    <MudText Style="align-items: center;" Typo="Typo.body1">So empty here. Let's add something!</MudText>
-    <MudFlexBreak />
+
+    <MudStack Style="height: 60vh; width: 100%;" Class="mt-8 mb-2" Justify="Justify.Center" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@Icons.Material.Filled.Theaters" Style="font-size: 128px; color: lightgrey"/>
+        <MudText Typo="Typo.body1">So empty here... Let's add something!</MudText>
+    </MudStack>
 }
 else
 {
     <MudStack Row="true" AlignItems="AlignItems.Baseline">
-        <MudText Class="mt-6" Typo="Typo.h4">@movieCollection.Name</MudText>
-        <MudButton OnClick="OpenAddMovieToCollectionDialogAsync" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add movie</MudButton>
+        <MudText Class="mt-6" Typo="Typo.h4">@_movieCollection.Name</MudText>
+        <MudButton OnClick="OpenAddMovieToCollectionDialogAsync" Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">Add movie
+        </MudButton>
     </MudStack>
-    <MudFlexBreak />
-    if (movieCollection.Description is not null)
+    <MudFlexBreak/>
+    if (_movieCollection.Description is not null)
     {
-        <MudText Class="mt-6" Typo="Typo.body2">@movieCollection.Description</MudText>
+        <MudText Typo="Typo.body2">@_movieCollection.Description</MudText>
     }
-    <MudFlexBreak />
-    <MudTable Items="@moviesInCollection.Take(4)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" Bordered="false" Elevation="1">
+
+    <MudFlexBreak/>
+    <MudTable
+        Items="@_moviesInCollection"
+        Hover="true"
+        Breakpoint="Breakpoint.Sm"
+        Loading="@_loading"
+        LoadingProgressColor="Color.Info"
+        Bordered="false"
+        Elevation="1"
+        @ref="_mudTable"
+        @bind-SelectedItems="_selectedMovies"
+        MultiSelection="true">
         <HeaderContent>
             <MudTh>Title</MudTh>
             <MudTh>Release year</MudTh>
             <MudTh>Runtime</MudTh>
             <MudTh>Rating</MudTh>
+            <MudTh Style="text-align: right;">
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" AnchorOrigin="Origin.BottomRight"
+                         TransformOrigin="Origin.TopRight">
+                    <MudMenuItem Class="d-flex align-items-center" Icon="@Icons.Material.Filled.Delete"
+                                 IconColor="Color.Error" OnClick="OnDeleteSelectedMovies"
+                                 Disabled="@(_selectedMovies.Count == 0)">Delete Selected
+                    </MudMenuItem>
+                </MudMenu>
+            </MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Title">@context.Title</MudTd>
+            <MudTd DataLabel="Title">
+                <MudLink Href="@context.GetUrl()">@context.Title</MudLink>
+            </MudTd>
             <MudTd DataLabel="Release year">@context.StartYear</MudTd>
             <MudTd DataLabel="Runtime">@context.Runtime</MudTd>
-            <MudTd DataLabel="Rating"><MovieRatingExtended MovieId="@context.Id" /></MudTd>
+            <MudTd DataLabel="Rating">
+                <MovieRatingExtended MovieId="@context.Id"/>
+            </MudTd>
+            <MudTd></MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
     </MudTable>
+
+    <MudText Class="mt-6" Typo="Typo.h6">These seems like a good fit here</MudText>
 }
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    [Parameter] public required int MovieCollectionId { get; set; }
+    private string _userId = null!;
+    private Data.Models.MovieCollection? _movieCollection = null!;
+    private List<MovieWithRating> _moviesInCollection = null!;
 
-    [Parameter]
-    public required int MovieCollectionId { get; set; }
-    private string userId = null!;
-    private s20601.Data.Models.MovieCollection movieCollection = null!;
-    private List<MovieWithRating> moviesInCollection = null!;
+    private MudTable<MovieWithRating> _mudTable;
+
+    private HashSet<MovieWithRating> _selectedMovies = [];
+
+    private async Task OnDeleteSelectedMovies()
+    {
+        if (!_selectedMovies.Any()) return;
+        var selectedIds = _selectedMovies.Select(m => m.Id);
+        await MovieCollectionSvc.DeleteMoviesFromMovieCollection(selectedIds, MovieCollectionId);
+        _moviesInCollection.RemoveAll(m => _selectedMovies.Contains(m));
+        _selectedMovies.Clear();
+        StateHasChanged();
+    }
 
     private bool _loading;
 
@@ -78,10 +126,10 @@ else
 
         if (authState.User.Identity.IsAuthenticated)
         {
-            userId = authState.User.Claims.First().Value;
+            _userId = authState.User.Claims.First().Value;
         }
 
-        movieCollection = await MovieCollectionSvc.GetMovieCollectionById(MovieCollectionId);
+        _movieCollection = await MovieCollectionSvc.GetMovieCollectionById(MovieCollectionId);
         await LoadMovieCollectionData();
 
         _loading = false;
@@ -89,7 +137,7 @@ else
 
     private async Task LoadMovieCollectionData()
     {
-        moviesInCollection = await MovieCollectionSvc.GetMoviesWithRatingOfMovieCollectionById(MovieCollectionId);
+        _moviesInCollection = await MovieCollectionSvc.GetMoviesWithRatingOfMovieCollectionById(MovieCollectionId);
         StateHasChanged();
     }
 
@@ -98,16 +146,22 @@ else
         var dialog = await DialogService.ShowAsync<AddMovieToCollectionDialog>("AddMovieToCollectionDialog");
 
         var result = await dialog.Result;
-        if (result.Data is int movieId)
+        if (result?.Data is int movieId)
         {
-            if (moviesInCollection.Any(m => m.Id == movieId))
+            if (_moviesInCollection.Any(m => m.Id == movieId))
             {
                 Snackbar.Add("Movie is already in the collection.", Severity.Error);
                 StateHasChanged();
                 return;
             }
-            await MovieCollectionSvc.AddMovieToMovieCollection(MovieCollectionId, movieId, userId);
-            await LoadMovieCollectionData();
+
+            await MovieCollectionSvc.AddMovieToMovieCollection(MovieCollectionId, movieId, _userId);
+            var movie = await MovieSvc.GetMovieWithRatingById(movieId);
+            if (movie is not null)
+            {
+                _moviesInCollection.Add(movie);
+                StateHasChanged();
+            }
         }
     }
 }

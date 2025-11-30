@@ -13,4 +13,6 @@ public interface IMovieCollectionService
     Task AddMovieToMovieCollection(int collectionId, int movieId, string userId);
     Task<List<MovieWithRating>> GetMoviesWithRatingOfMovieCollectionById(int collectionId);
     Task<int> GetMovieCountForCollection(int collectionId);
+    Task DeleteMoviesFromMovieCollection(IEnumerable<int> movieIds, int collectionId);
+    Task<List<MovieCollection>> GetNRecentUserMovieColletions(string userId, int n);
 }

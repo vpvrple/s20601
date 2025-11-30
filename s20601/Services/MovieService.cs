@@ -68,6 +68,38 @@ public class MovieService : IMovieService
             .Where(x => x.Id == id)
             .FirstOrDefaultAsync();
     }
+    
+    public async Task<MovieWithRating?> GetMovieWithRatingById(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var movie = await context.Movies
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync();
+
+        if (movie is null)
+        {
+            return null;
+        }
+
+        var ratingSummary = await context.MovieRates
+            .Where(r => r.Movie_Id == id)
+            .GroupBy(r => r.Movie_Id)
+            .Select(g => new MovieRatingSummary
+            {
+                AvgRating = g.Average(r => r.Rating),
+                RateCount = g.Count()
+            })
+            .FirstOrDefaultAsync();
+
+        return new MovieWithRating
+        {
+            Id = movie.Id,
+            Title = movie.Title,
+            StartYear = movie.StartYear,
+            Runtime = movie.RuntimeMinutes,
+            MovieRatingSummary = ratingSummary ?? new MovieRatingSummary()
+        };
+    }
 
     public async Task<List<Genre>> GetMovieGenresByIdAsync(int id)
     {
