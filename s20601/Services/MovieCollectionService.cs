@@ -22,7 +22,7 @@ public class MovieCollectionService : IMovieCollectionService
             .Include(mc => mc.MovieCollectionUsers)
             .ToListAsync();
 
-        return collections ?? [];
+        return collections;
     }
     
     public async Task<List<MovieCollection>> GetNRecentUserMovieColletions(string userId, int n)
@@ -36,17 +36,17 @@ public class MovieCollectionService : IMovieCollectionService
             .Take(n)
             .ToListAsync();
 
-        return collections ?? [];
+        return collections;
     }
     
 
-    public async Task<MovieCollection> CreateMovieCollection(string name, string? descritpion, string userId)
+    public async Task<MovieCollection> CreateMovieCollection(string name, string? description, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var newMovieCollection = new MovieCollection
         {
             Name = name,
-            Description = descritpion!,
+            Description = description,
             CreatedAt = DateTime.UtcNow,
             MovieCollectionUsers =
             [
@@ -64,6 +64,12 @@ public class MovieCollectionService : IMovieCollectionService
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var collection = await context.MovieCollections
             .FirstOrDefaultAsync(x => x.Id == collectionId);
+
+        if (collection.Type != CollectionType.Custom)
+        {
+            throw new InvalidOperationException("You cannot delete system collections.");
+        }
+        
         if (collection != null)
         {
             context.MovieCollections.Remove(collection);
@@ -103,15 +109,17 @@ public class MovieCollectionService : IMovieCollectionService
             .ThenInclude(m => m.MovieRates)
             .Select(mcm => new MovieWithRating
             {
-                Id = mcm.Movie.Id,
+                Id = mcm.Movie!.Id,
                 Title = mcm.Movie.Title,
                 StartYear = mcm.Movie.StartYear,
                 Runtime = mcm.Movie.RuntimeMinutes,
-                MovieRatingSummary = mcm.Movie.MovieRates.Any() ? mcm.Movie.MovieRates.GroupBy(mr => mr.Movie_Id).Select(g => new MovieRatingSummary
+                MovieRatingSummary = mcm.Movie.MovieRates.Any() 
+                ? new MovieRatingSummary
                 {
-                    AvgRating = g.Average(mr => mr.Rating),
-                    RateCount = g.Count()
-                }).FirstOrDefault() : new MovieRatingSummary { AvgRating = 0, RateCount = 0 }
+                    AvgRating = mcm.Movie.MovieRates.Average(mr => mr.Rating),
+                    RateCount = mcm.Movie.MovieRates.Count()
+                } 
+                : new MovieRatingSummary { AvgRating = 0, RateCount = 0 }
             })
             .ToListAsync();
         return movies;
@@ -135,6 +143,48 @@ public class MovieCollectionService : IMovieCollectionService
             AddedAt = DateTime.UtcNow
         };
 
+        context.MovieCollectionMovies.Add(collectionMovie);
+        await context.SaveChangesAsync();
+    }
+    
+    public async Task RemoveMovieFromMyRatingsCollection(int movieId, string userId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+ 
+        var myRatingsCollection = await context.MovieCollections
+            .FirstOrDefaultAsync(mc => mc.Type == CollectionType.MyRatings && mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId));
+ 
+        var movieToRemove = await context.MovieCollectionMovies
+            .FirstOrDefaultAsync(mcm => mcm.IdMovieCollection == myRatingsCollection.Id && mcm.Movie_Id == movieId);
+ 
+        if (movieToRemove != null)
+        {
+            context.MovieCollectionMovies.Remove(movieToRemove);
+            await context.SaveChangesAsync();
+        }
+    }
+    
+    public async Task AddMovieToMyRatingsCollection(int movieId, string userId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var myRatingsCollection = await context.MovieCollections
+            .FirstOrDefaultAsync(mc => mc.Type == CollectionType.MyRatings && mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId));
+
+        var movieExists = await context.MovieCollectionMovies
+            .AnyAsync(mcm => mcm.IdMovieCollection == myRatingsCollection.Id && mcm.Movie_Id == movieId);
+
+        if (movieExists)
+        {
+            return; // Movie is already in the collection
+        }
+
+        var collectionMovie = new MovieCollectionMovie
+        {
+            IdMovieCollection = myRatingsCollection.Id,
+            Movie_Id = movieId,
+            AddedAt = DateTime.UtcNow
+        };
         context.MovieCollectionMovies.Add(collectionMovie);
         await context.SaveChangesAsync();
     }

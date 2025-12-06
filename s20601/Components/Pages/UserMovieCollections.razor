@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @using s20601.Services
 @using s20601.Components.Shared
+@using s20601.Data.Models
 
 @inject IMovieCollectionService MovieCollectionSvc
 @inject IUserService UserSvc
@@ -33,7 +34,6 @@
                             }
                             else
                             {
-
                                 <MudStack>
                                     <MudButton Class="pa-2 align-center" @onclick="OpenDialogAsync"
                                                Variant="Variant.Filled"
@@ -52,11 +52,28 @@
                                                         <CardHeaderContent>
                                                         </CardHeaderContent>
                                                         <CardHeaderActions>
-                                                            <MudMenu Icon="@Icons.Material.Filled.MoreVert" AnchorOrigin="Origin.BottomRight"
+                                                            <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                                                                     AnchorOrigin="Origin.BottomRight"
                                                                      TransformOrigin="Origin.TopRight">
-                                                                <MudMenuItem Class="d-flex align-items-center" Icon="@Icons.Material.Filled.Delete"
-                                                                             IconColor="Color.Error" OnClick="@(() => DeleteCollectionAsync(collection))">Delete
-                                                                </MudMenuItem>
+                                                                @if (collection.Type == CollectionType.Custom)
+                                                                {
+                                                                    <MudMenuItem Class="d-flex align-items-center"
+                                                                                 Icon="@Icons.Material.Filled.Delete"
+                                                                                 IconColor="Color.Error"
+                                                                                 OnClick="@(() => DeleteCollectionAsync(collection))">
+                                                                        Delete
+                                                                    </MudMenuItem>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <MudMenuItem Disabled="true"
+                                                                                 Class="d-flex align-items-center"
+                                                                                 Icon="@Icons.Material.Filled.Delete"
+                                                                                 IconColor="Color.Error"
+                                                                                 OnClick="@(() => DeleteCollectionAsync(collection))">
+                                                                        Delete
+                                                                    </MudMenuItem>
+                                                                }
                                                             </MudMenu>
                                                         </CardHeaderActions>
                                                     </MudCardHeader>

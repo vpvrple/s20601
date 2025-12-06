@@ -15,4 +15,6 @@ public interface IMovieCollectionService
     Task<int> GetMovieCountForCollection(int collectionId);
     Task DeleteMoviesFromMovieCollection(IEnumerable<int> movieIds, int collectionId);
     Task<List<MovieCollection>> GetNRecentUserMovieColletions(string userId, int n);
+    Task RemoveMovieFromMyRatingsCollection(int movieId, string userId);
+    Task AddMovieToMyRatingsCollection(int movieId, string userId);
 }

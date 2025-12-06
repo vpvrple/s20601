@@ -12,6 +12,8 @@ public partial class MovieCollection : INavigable
 
     public DateTime CreatedAt { get; set; }
 
+    public CollectionType Type { get; set; }
+
     public virtual MovieCollectionMovie? MovieCollectionMovie { get; set; }
 
     public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = new List<MovieCollectionUser>();
@@ -24,4 +26,11 @@ public partial class MovieCollection : INavigable
     {
         return Name;
     }
+}
+
+public enum CollectionType
+{
+    Custom = 0,      // Created by user (Deletable)
+    MyRatings = 1,   // The rating target (Protected)
+    WatchLater = 2,  // Future proofing (Protected)
 }

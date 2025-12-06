@@ -511,6 +511,9 @@ namespace s20601.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.HasKey("Id")
                         .HasName("MovieCollection_pk");
 

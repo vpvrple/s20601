@@ -1,17 +1,21 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using s20601.Data;
 using s20601.Data.Models.DTOs;
 using s20601.Data.Models;
-using Microsoft.IdentityModel.Tokens;
+using s20601.Events.Commands;
+
 
 namespace s20601.Services;
 
 public class RatingService : IRatingService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    public RatingService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+    private readonly IMediator _mediator;
+    public RatingService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator)
     {
         _dbContextFactory = dbContextFactory;
+        _mediator = mediator;
     }
 
     public async Task<UserRatingSummary?> GetUserRatingSummaryAsync(string userId)
@@ -82,6 +86,7 @@ public class RatingService : IRatingService
         if (rating == 0 && currentRating is not null)
         {
             context.MovieRates.Remove(currentRating);
+            await _mediator.Publish(new MovieUnratedCommand(movieId, userId));
         }
         else if (currentRating is not null)
         {
@@ -99,6 +104,7 @@ public class RatingService : IRatingService
                 IdUser = userId
             };
             context.MovieRates.Add(newRating);
+            await _mediator.Publish(new MovieRatedCommand(movieId, userId));
         }
         await context.SaveChangesAsync();
     }
@@ -110,7 +116,7 @@ public class RatingService : IRatingService
         var ratings = context.MovieRates
             .Where(x => x.Movie_Id == id);
 
-        if (ratings.IsNullOrEmpty())
+        if (!await ratings.AnyAsync())
         {
             return new MovieRatingSummary();
         }

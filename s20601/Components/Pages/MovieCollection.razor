@@ -1,6 +1,7 @@
 ﻿@page "/movie-collection/{MovieCollectionId:int}"
 
 @using s20601.Components.Shared
+@using s20601.Data.Models
 @using Services
 @using s20601.Data.Models.DTOs
 
@@ -19,11 +20,14 @@ else if (_moviesInCollection.Count == 0)
 {
     <MudStack Row="true" AlignItems="AlignItems.Baseline">
         <MudText Class="mt-6" Typo="Typo.h4">@_movieCollection.Name</MudText>
-        <MudButton OnClick="OpenAddMovieToCollectionDialogAsync"
-                   Variant="Variant.Filled"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   Color="Color.Primary">Add movie
-        </MudButton>
+        @if (_movieCollection.Type == CollectionType.Custom)
+        {
+            <MudButton OnClick="OpenAddMovieToCollectionDialogAsync"
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary">Add movie
+            </MudButton>
+        }
     </MudStack>
     <MudFlexBreak/>
     @if (_movieCollection.Description is not null)
@@ -33,7 +37,7 @@ else if (_moviesInCollection.Count == 0)
 
     <MudStack Style="height: 60vh; width: 100%;" Class="mt-8 mb-2" Justify="Justify.Center" AlignItems="AlignItems.Center">
         <MudIcon Icon="@Icons.Material.Filled.Theaters" Style="font-size: 128px; color: lightgrey"/>
-        <MudText Typo="Typo.body1">So empty here... Let's add something!</MudText>
+        <MudText Typo="Typo.body1">So empty here... Go explore and add something!</MudText>
     </MudStack>
 }
 else
