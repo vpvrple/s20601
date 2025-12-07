@@ -30,7 +30,6 @@
 
   <ItemGroup>
     <Folder Include="Events\Queries\" />
-    <Folder Include="Services\Orchestrators\" />
   </ItemGroup>
 
 </Project>

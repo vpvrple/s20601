@@ -11,4 +11,13 @@ public partial class MovieCollectionUser
     public virtual MovieCollection IdMovieCollectionNavigation { get; set; } = null!;
 
     public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
+    
+    public CollectionRole Role { get; set; }
+}
+
+public enum CollectionRole
+{
+    Viewer = 0,      // Read-only (for private shared)
+    Contributor = 1, // Can add/edit movies
+    Owner = 2        // Can delete collection, manage users
 }

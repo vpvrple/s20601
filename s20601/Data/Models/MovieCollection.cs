@@ -14,6 +14,7 @@ public partial class MovieCollection : INavigable
 
     public CollectionType Type { get; set; }
 
+    public CollectionVisibility Visibility { get; set; }
     public virtual MovieCollectionMovie? MovieCollectionMovie { get; set; }
 
     public virtual ICollection<MovieCollectionUser> MovieCollectionUsers { get; set; } = new List<MovieCollectionUser>();
@@ -33,4 +34,10 @@ public enum CollectionType
     Custom = 0,      // Created by user (Deletable)
     MyRatings = 1,   // The rating target (Protected)
     WatchLater = 2,  // Future proofing (Protected)
+}
+
+public enum CollectionVisibility
+{
+    Private = 0,
+    Public = 1
 }

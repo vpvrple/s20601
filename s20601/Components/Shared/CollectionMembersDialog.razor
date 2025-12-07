@@ -1,0 +1,162 @@
+﻿@using System.Security.Claims
+@using s20601.Data.Models
+@using s20601.Services
+
+@inject IMovieCollectionService MovieCollectionSvc
+@inject ISearchService SearchSvc
+
+@if (isLoading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudDialog Class="d-flex justify-start">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Baseline">
+            <MudText Typo="Typo.h6">Collection members</MudText>
+            @if (isOwner)
+            {
+                <MudAutocomplete @bind-Value="_userToAdd"
+                                 T="ApplicationUser"
+                                 Label="Find and add member"
+                                 SearchFunc="@SearchMemberByUsername"
+                                 SelectValueOnTab="true"
+                                 AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary"
+                                 ToStringFunc="@(u => u?.UserName)"
+                />
+                <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick=@(()=>OnMemberAdd(_userToAdd))></MudButton>
+            }
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudTable Items="@membersRoles" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@isLoading" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Username</MudTh>
+                <MudTh>Role</MudTh>
+                <MudTh>Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Username">@context.Key.UserName</MudTd>
+                <MudTd DataLabel="Role">
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowDropDown" Color="Color.Primary" Disabled="!isOwner">@context.Value</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            @foreach (var role in Enum.GetValues<CollectionRole>())
+                            {
+                                @if (role != context.Value)
+                                {
+                                    // Disable demotion for the last owner
+                                    var isSelfDemotion = context.Key.Id == userId && context.Value == CollectionRole.Owner && role != CollectionRole.Owner;
+                                    var isLastOwner = membersRoles.Count(r => r.Value == CollectionRole.Owner) <= 1;
+                                    var demotionDisabled = isSelfDemotion && isLastOwner;
+
+                                    <MudMenuItem OnClick="@(() => ChangeRole(context.Key, role))" Disabled="@demotionDisabled">@role.ToString()</MudMenuItem>
+                                }
+                            }
+                        </ChildContent>
+                    </MudMenu>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Disabled="@(!isOwner || context.Key.Id == userId)" OnClick="@(() => RemoveMember(context.Key))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    [Parameter] public int CollectionId { get; set; }
+
+    private string userId = null!;
+    private bool isLoading = true;
+    private IDictionary<ApplicationUser, CollectionRole> membersRoles = new Dictionary<ApplicationUser, CollectionRole>();
+    private bool isOwner = false;
+    private ApplicationUser? _userToAdd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            membersRoles = await MovieCollectionSvc.GetCollectionMembers(CollectionId);
+            var currentUserRole = membersRoles.FirstOrDefault(x => x.Key.Id == userId);
+            if (currentUserRole.Key != null && currentUserRole.Value == CollectionRole.Owner)
+            {
+                isOwner = true;
+            }
+        }
+        
+        isLoading = false;
+    }
+
+    private void ChangeRole(ApplicationUser user, CollectionRole newRole)
+    {
+        if (membersRoles.ContainsKey(user))
+        {
+            membersRoles[user] = newRole;
+        }
+    }
+
+    private void RemoveMember(ApplicationUser user)
+    {
+        if (membersRoles.ContainsKey(user))
+        {
+            membersRoles.Remove(user);
+        }
+    }
+
+    private async Task Submit()
+    {
+        await MovieCollectionSvc.UpdateCollectionMembers(CollectionId, membersRoles);
+        MudDialog.Close(DialogResult.Ok(membersRoles));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task<IEnumerable<ApplicationUser>> SearchMemberByUsername(string username, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(username) || username.Length < 3)
+        {
+            return Enumerable.Empty<ApplicationUser>();
+        }
+        var foundUsers = await SearchSvc.SearchUsersByUsernameAsync(username);
+        var existingMemberIds = membersRoles.Keys.Select(u => u.Id).ToHashSet();
+        return foundUsers.Where(u => !existingMemberIds.Contains(u.Id));
+    }
+
+    private async Task OnMemberAdd(ApplicationUser user)
+    {
+        if (user != null)
+        {
+            if (!membersRoles.Keys.Any(existingUser => existingUser.Id == user.Id))
+            {
+                await MovieCollectionSvc.AddMemberToCollectionAsync(CollectionId, user.Id, CollectionRole.Viewer);
+                membersRoles[user] = CollectionRole.Viewer;
+                StateHasChanged();
+            }
+        }
+        _userToAdd = null;
+    }
+    
+    public required string CollectionTitle { get; set; } = null!;
+
+    public string Description { get; set; } = null!;
+}

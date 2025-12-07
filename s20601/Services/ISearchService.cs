@@ -5,4 +5,5 @@ namespace s20601.Services;
 public interface ISearchService
 {
     Task<List<Movie>> SearchMovieByTitle(string title);
+    Task<IEnumerable<ApplicationUser>> SearchUsersByUsernameAsync(string username);
 }

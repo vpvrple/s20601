@@ -2,6 +2,7 @@
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
+using System.Linq.Expressions;
 
 namespace s20601.Services;
 
@@ -24,7 +25,37 @@ public class MovieCollectionService : IMovieCollectionService
 
         return collections;
     }
-    
+
+    public async Task<List<GetMovieCollectionWithDetails>> GetMovieCollectionsWithDetails(Expression<Func<MovieCollection, bool>>? filter = null)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var query = context.MovieCollections
+            .Include(mc => mc.MovieCollectionUsers)
+            .ThenInclude(mcu => mcu.IdUserNavigation)
+            .AsQueryable();
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        var collectionsFromDb = await query.ToListAsync();
+
+        var collections = collectionsFromDb.Select(mc => new GetMovieCollectionWithDetails
+            {
+                Id = mc.Id,
+                Name = mc.Name,
+                Description = mc.Description,
+                CreatedAt = mc.CreatedAt,
+                Type = mc.Type,
+                Visibility = mc.Visibility,
+                Members = mc.MovieCollectionUsers.ToDictionary(mcu => mcu.IdUserNavigation, mcu => mcu.Role)
+            })
+            .ToList();
+
+        return collections;
+    }
     public async Task<List<MovieCollection>> GetNRecentUserMovieColletions(string userId, int n)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -40,23 +71,39 @@ public class MovieCollectionService : IMovieCollectionService
     }
     
 
-    public async Task<MovieCollection> CreateMovieCollection(string name, string? description, string userId)
+    public async Task<GetMovieCollectionWithDetails> CreateMovieCollection(string name, string? description, string userId, CollectionVisibility visibility)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var newMovieCollection = new MovieCollection
         {
             Name = name,
-            Description = description,
+            Description = description!,
             CreatedAt = DateTime.UtcNow,
             MovieCollectionUsers =
             [
-                new() { IdUser = userId }
+                new() { IdUser = userId, Role = CollectionRole.Owner }
             ],
-            MovieCollectionMovie = null
+            MovieCollectionMovie = null,
+            Visibility = visibility
         };
         context.MovieCollections.Add(newMovieCollection);
         await context.SaveChangesAsync();
-        return newMovieCollection;
+        
+        var user = await context.Users.FindAsync(userId);
+
+        return new GetMovieCollectionWithDetails
+        {
+            Id = newMovieCollection.Id,
+            Name = newMovieCollection.Name,
+            Description = newMovieCollection.Description,
+            CreatedAt = newMovieCollection.CreatedAt,
+            Type = newMovieCollection.Type,
+            Visibility = newMovieCollection.Visibility,
+            Members = new Dictionary<ApplicationUser, CollectionRole>
+            {
+                { user, CollectionRole.Owner }
+            }
+        };
     }
 
     public async Task DeleteMovieCollection(int collectionId)
@@ -193,5 +240,73 @@ public class MovieCollectionService : IMovieCollectionService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.MovieCollectionMovies.CountAsync(m => m.IdMovieCollection == collectionId);
+    }
+
+    public async Task<Dictionary<ApplicationUser, CollectionRole>> GetCollectionMembers(int collectionId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.MovieCollectionUsers
+            .Where(x => x.IdMovieCollection == collectionId)
+            .Include(x => x.IdUserNavigation)
+            .ToDictionaryAsync(x => x.IdUserNavigation, x => x.Role);
+    }
+    
+    public async Task UpdateCollectionMembers(int collectionId, IDictionary<ApplicationUser, CollectionRole> membersRoles)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var collectionUsers = await context.MovieCollectionUsers
+            .Where(x => x.IdMovieCollection == collectionId)
+            .ToListAsync();
+
+        var existingUserIds = collectionUsers.Select(u => u.IdUser).ToHashSet();
+        var incomingUserIds = membersRoles.Keys.Select(u => u.Id).ToHashSet();
+
+        // 1. Handle Removals
+        var usersToRemove = collectionUsers.Where(cu => !incomingUserIds.Contains(cu.IdUser)).ToList();
+        if (usersToRemove.Any())
+        {
+            context.MovieCollectionUsers.RemoveRange(usersToRemove);
+        }
+
+        // 2. Handle Additions
+        var usersToAddIds = incomingUserIds.Where(id => !existingUserIds.Contains(id)).ToList();
+        if (usersToAddIds.Any())
+        {
+            var usersToAdd = membersRoles
+                .Where(mr => usersToAddIds.Contains(mr.Key.Id))
+                .Select(mr => new MovieCollectionUser
+                {
+                    IdMovieCollection = collectionId,
+                    IdUser = mr.Key.Id,
+                    Role = mr.Value
+                });
+            await context.MovieCollectionUsers.AddRangeAsync(usersToAdd);
+        }
+
+        // 3. Handle Role Updates for existing users
+        var usersToUpdate = collectionUsers.Where(cu => incomingUserIds.Contains(cu.IdUser)).ToList();
+        foreach (var user in usersToUpdate)
+        {
+            var appUser = membersRoles.Keys.First(x => x.Id == user.IdUser);
+            if (user.Role != membersRoles[appUser])
+            {
+                user.Role = membersRoles[appUser];
+            }
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    public async Task AddMemberToCollectionAsync(int collectionId, string userId, CollectionRole role)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var newMember = new MovieCollectionUser
+        {
+            IdMovieCollection = collectionId,
+            IdUser = userId,
+            Role = role
+        };
+        context.MovieCollectionUsers.Add(newMember);
+        await context.SaveChangesAsync();
     }
 }

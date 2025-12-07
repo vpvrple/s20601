@@ -4,10 +4,13 @@
 @using s20601.Services
 @using s20601.Components.Shared
 @using s20601.Data.Models
+@using System.Linq.Expressions
+@using s20601.Data.Models.DTOs
 
 @inject IMovieCollectionService MovieCollectionSvc
 @inject IUserService UserSvc
 @inject IDialogService DialogService
+@inject NavigationManager Navigation
 
 <AuthorizeView>
     <Authorized>
@@ -19,107 +22,100 @@
         {
             if (_isLoggedInUser)
             {
-                <MudTabs Style="align-items: center;" Rounded="true" ApplyEffectsToContainer="true"
-                         PanelClass="pa-6 ma-2">
-                    <MudTabPanel Icon="@Icons.Material.Filled.VideoLibrary" Text="My collections">
+                <MudText Typo="Typo.h6">My collections</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Baseline" Class="mt-3">
+                    <MudButton Class="pa-2 align-center" @onclick="OpenCreateMovieCollectionDialog"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.PlaylistAdd" Color="Color.Primary">
+                        Create
+                        movie
+                        collection
+                    </MudButton>
+                    <MudSpacer/>
+                    <MudButton StartIcon="@Icons.Material.Filled.FilterList">Filter</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Sort">Sort</MudButton>
+                </MudStack>
+                
+                <MudStack Row="true" Class="mt-6">
+                            <MudStack>
+                            <MudGrid Spacing="3">
+                                @foreach (var collection in _movieCollections!)
+                                {
+                                    <MudItem>
+                                        <MudCard Style="height: 100%; width: 280px">
+                                            <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudStack Row="true" AlignItems="AlignItems.Baseline">
+                                                    @if (collection.Visibility == CollectionVisibility.Public)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.Public"
+                                                                 Color="Color.Success"/>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.PublicOff"
+                                                                 Color="Color.Error"/>
+                                                    }
+                                                        <MudButton StartIcon="@Icons.Material.Filled.Group" OnClick="@(() =>OpenMembersDialogAsync(collection.Id))"></MudButton>
+                                                </MudStack>
+                                            </CardHeaderContent>
+                                                <CardHeaderActions>
+                                                    
+                                                    <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                                                             AnchorOrigin="Origin.BottomRight"
+                                                             TransformOrigin="Origin.TopRight">
+                                                        @if (collection.Type == CollectionType.Custom)
+                                                        {
+                                                            <MudMenuItem Class="d-flex align-items-center"
+                                                                         Icon="@Icons.Material.Filled.Delete"
+                                                                         IconColor="Color.Error"
+                                                                         OnClick="@(() => DeleteCollectionAsync(collection))">
+                                                                Delete
+                                                            </MudMenuItem>
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudMenuItem Disabled="true"
+                                                                         Class="d-flex align-items-center"
+                                                                         Icon="@Icons.Material.Filled.Delete"
+                                                                         IconColor="Color.Error"
+                                                                         OnClick="@(() => DeleteCollectionAsync(collection))">
+                                                                Delete
+                                                            </MudMenuItem>
+                                                        }
+                                                    </MudMenu>
+                                                </CardHeaderActions>
+                                            </MudCardHeader>
+                                            <MudLink Href="@($"/movie-collection/{collection.Id}")"
+                                                     Underline="Underline.None">
+                                                <MudImage Src="favicon.png"
+                                                          ObjectFit="ObjectFit.None"
+                                                          Alt="Movie poster"
+                                                          Elevation="0"
+                                                          Height="300"
+                                                          Width="280"/>
+                                                <MudCardContent>
+                                                    <MudStack>
+                                                        <MudText Typo="Typo.subtitle1" Align="Align.Center">
+                                                            @(_movieCollections.IndexOf(collection) + 1). @((collection.Name.Length > 10) ? $"{collection.Name.Substring(0, 10)}..." : collection.Name)
+                                                            <MudText Typo="Typo.subtitle2">
+                                                                @((collection.Description.Length > 10) ? $"{collection.Description.Substring(0, 10)}..." : collection.Description)
+                                                            </MudText>
 
-                        <MudStack Row="true">
-                            @if (_movieCollections?.Count == 0)
-                            {
-                                <MudButton @onclick="OpenDialogAsync"
-                                           Variant="Variant.Filled"
-                                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
-                                           Color="Color.Primary">Create movie collection
-                                </MudButton>
-                            }
-                            else
-                            {
-                                <MudStack>
-                                    <MudButton Class="pa-2 align-center" @onclick="OpenDialogAsync"
-                                               Variant="Variant.Filled"
-                                               StartIcon="@Icons.Material.Filled.PlaylistAdd" Color="Color.Primary">
-                                        Create
-                                        movie
-                                        collection
-                                    </MudButton>
-                                    <MudSpacer></MudSpacer>
-                                    <MudGrid Spacing="3">
-                                        @foreach (var collection in _movieCollections!)
-                                        {
-                                            <MudItem>
-                                                <MudCard Style="height: 100%; width: 280px">
-                                                    <MudCardHeader>
-                                                        <CardHeaderContent>
-                                                        </CardHeaderContent>
-                                                        <CardHeaderActions>
-                                                            <MudMenu Icon="@Icons.Material.Filled.MoreVert"
-                                                                     AnchorOrigin="Origin.BottomRight"
-                                                                     TransformOrigin="Origin.TopRight">
-                                                                @if (collection.Type == CollectionType.Custom)
-                                                                {
-                                                                    <MudMenuItem Class="d-flex align-items-center"
-                                                                                 Icon="@Icons.Material.Filled.Delete"
-                                                                                 IconColor="Color.Error"
-                                                                                 OnClick="@(() => DeleteCollectionAsync(collection))">
-                                                                        Delete
-                                                                    </MudMenuItem>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <MudMenuItem Disabled="true"
-                                                                                 Class="d-flex align-items-center"
-                                                                                 Icon="@Icons.Material.Filled.Delete"
-                                                                                 IconColor="Color.Error"
-                                                                                 OnClick="@(() => DeleteCollectionAsync(collection))">
-                                                                        Delete
-                                                                    </MudMenuItem>
-                                                                }
-                                                            </MudMenu>
-                                                        </CardHeaderActions>
-                                                    </MudCardHeader>
-                                                    <MudLink Href="@collection.GetUrl()" Underline="Underline.None">
-                                                        <MudImage Src="favicon.png"
-                                                                  ObjectFit="ObjectFit.None"
-                                                                  Alt="Movie poster"
-                                                                  Elevation="0"
-                                                                  Height="300"
-                                                                  Width="280"/>
-                                                        <MudCardContent>
-                                                            <MudStack>
-                                                                <MudText Typo="Typo.subtitle1" Align="Align.Center">
-                                                                    @(_movieCollections.IndexOf(collection) + 1). @((collection.Name.Length > 10) ? $"{collection.Name.Substring(0, 10)}..." : collection.Name)
-                                                                    <MudText Typo="Typo.subtitle2">
-                                                                        @((collection.Description.Length > 10) ? $"{collection.Description.Substring(0, 10)}..." : collection.Description)
-                                                                    </MudText>
-
-                                                                    <MudText Typo="Typo.subtitle2">
-                                                                        Movies: @GetMovieCount(collection.Id)</MudText>
-                                                                    <MudText Typo="Typo.subtitle2">Created
-                                                                        at: @collection.CreatedAt.ToShortDateString()</MudText>
-                                                                </MudText>
-                                                            </MudStack>
-                                                        </MudCardContent>
-                                                    </MudLink>
-                                                </MudCard>
-                                            </MudItem>
-                                        }
-                                    </MudGrid>
-                                </MudStack>
-                            }
+                                                            <MudText Typo="Typo.subtitle2">
+                                                                Movies: @GetMovieCount(collection.Id)</MudText>
+                                                            <MudText Typo="Typo.subtitle2">Created
+                                                                at: @collection.CreatedAt.ToShortDateString()</MudText>
+                                                        </MudText>
+                                                    </MudStack>
+                                                </MudCardContent>
+                                            </MudLink>
+                                        </MudCard>
+                                    </MudItem>
+                                }
+                            </MudGrid>
                         </MudStack>
-                    </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Filled.GroupWork" Text="Shared Collections">
-                        <MudText Typo="Typo.body1">No shared collections found. Share yours with others or ask someone
-                            to do
-                            it
-                            for you!
-                        </MudText>
-                    </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Filled.Group" Text="Community Collections">
-                        <MudText Typo="Typo.body1">Nothing here, someone has to be the first!</MudText>
-                    </MudTabPanel>
-
-                </MudTabs>
+                </MudStack>
             }
             else
             {
@@ -139,7 +135,8 @@
                                         @foreach (var collection in _movieCollections)
                                         {
                                             <MudItem>
-                                                <MudLink Href="@collection.GetUrl()" Underline="Underline.None">
+                                                <MudLink Href="@($"/movie-collection/{collection.Id}")"
+                                                         Underline="Underline.None">
                                                     <MudCard Style="height: 100%; width: 280px">
                                                         <MudImage Src="favicon.png"
                                                                   ObjectFit="ObjectFit.None"
@@ -171,9 +168,6 @@
                             }
                         </MudStack>
                     </MudTabPanel>
-                    <MudTabPanel Icon="@Icons.Material.Filled.GroupWork" Text="Collaborations">
-                        <MudText Typo="Typo.body1">No collaboration collections found.</MudText>
-                    </MudTabPanel>
                 </MudTabs>
             }
         }
@@ -185,12 +179,13 @@
     </NotAuthorized>
 </AuthorizeView>
 
+
+
 @code
 {
     [Parameter] public string Username { get; set; } = string.Empty;
 
-    // Change the type to match the namespace of the returned type
-    private List<s20601.Data.Models.MovieCollection>? _movieCollections;
+    private List<GetMovieCollectionWithDetails>? _movieCollections;
     private bool _loading = true;
     private Dictionary<int, int> _movieCounts = new();
     private string _processedUserId = null!;
@@ -204,7 +199,7 @@
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
-        if (user.Identity.Name == Username)
+        if (user.Identity?.IsAuthenticated == true && user.Identity.Name == Username)
         {
             _isLoggedInUser = true;
             _processedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
@@ -212,11 +207,16 @@
         else
         {
             var userInfoByParameterUsername = await UserSvc.GetUserByUsernameAsync(Username);
-            _processedUserId = userInfoByParameterUsername!.Id;
+            if (userInfoByParameterUsername == null)
+            {
+                Navigation.NavigateTo("notfound");
+                return;
+            }
+
+            _processedUserId = userInfoByParameterUsername.Id;
         }
 
         await LoadMovieCollectionsAsync(_processedUserId);
-
         _loading = false;
     }
 
@@ -224,15 +224,29 @@
     {
         _loading = true;
 
-        var userMovieCollections = await MovieCollectionSvc.GetUserMovieCollections(userId);
-        _movieCollections = new List<s20601.Data.Models.MovieCollection>();
-        foreach (var collection in userMovieCollections)
+        StateHasChanged();
+        
+        Expression<Func<s20601.Data.Models.MovieCollection, bool>>? filter = null;
+
+        if (_isLoggedInUser)
         {
-            var collectionData = await MovieCollectionSvc.GetMovieCollectionById(collection.Id);
-            if (collectionData == null) continue;
-            _movieCollections.Add(collectionData);
-            var count = await MovieCollectionSvc.GetMovieCountForCollection(collectionData.Id);
-            _movieCounts[collectionData.Id] = count;
+            filter = mc => mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId);
+        }
+        else
+        {
+            filter = mc => mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId) && mc.Visibility == CollectionVisibility.Public;
+        }
+
+        _movieCollections = await MovieCollectionSvc.GetMovieCollectionsWithDetails(filter);
+
+        _movieCounts.Clear();
+        if (_movieCollections != null)
+        {
+            foreach (var collection in _movieCollections)
+            {
+                var count = await MovieCollectionSvc.GetMovieCountForCollection(collection.Id);
+                _movieCounts[collection.Id] = count;
+            }
         }
 
         _loading = false;
@@ -241,20 +255,40 @@
 
     private int GetMovieCount(int collectionId) => _movieCounts.TryGetValue(collectionId, out var c) ? c : 0;
 
-    private async Task OpenDialogAsync()
+    private async Task OpenCreateMovieCollectionDialog()
     {
         var dialog = await DialogService.ShowAsync<CreateMovieCollectionDialog>("CreateMovieCollectionDialog");
-
         var result = await dialog.Result;
-        if (result?.Data is s20601.Data.Models.MovieCollection newCollection)
+
+        if (result != null && !result.Canceled && result.Data is GetMovieCollectionWithDetails newCollection)
         {
-            _movieCollections?.Add(newCollection);
-            _movieCounts[newCollection.Id] = 0;
+            _movieCollections.Add(newCollection);
+            _movieCounts[newCollection.Id] = 0; // Initialize movie count
             StateHasChanged();
         }
     }
 
-    private async Task DeleteCollectionAsync(s20601.Data.Models.MovieCollection collection)
+    private async Task OpenMembersDialogAsync(int collectionId)
+    {
+        var parameters = new DialogParameters()
+        {
+            { "CollectionId", collectionId }
+        };
+        var dialog = await DialogService.ShowAsync<CollectionMembersDialog>("Collection members", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is IDictionary<ApplicationUser, CollectionRole> updatedMembers)
+        {
+            var collectionToUpdate = _movieCollections.FirstOrDefault(c => c.Id == collectionId);
+            if (collectionToUpdate != null)
+            {
+                collectionToUpdate.Members = updatedMembers;
+                StateHasChanged();
+            }
+        }
+    }
+    
+    private async Task DeleteCollectionAsync(GetMovieCollectionWithDetails collection)
     {
         var parameters = new DialogParameters<DeleteConfirmationDialog>
         {
@@ -265,11 +299,10 @@
         var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Delete Collection", parameters);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result != null && !result.Canceled)
         {
             await MovieCollectionSvc.DeleteMovieCollection(collection.Id);
-            _movieCollections.Remove(collection);
-            StateHasChanged();
+            await LoadMovieCollectionsAsync(_processedUserId);
         }
     }
 }

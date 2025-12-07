@@ -13,8 +13,6 @@
 @if (_loading)
 {
     <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
-    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
-    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
 }
 else if (_moviesInCollection.Count == 0)
 {
@@ -105,10 +103,10 @@ else
 
     [Parameter] public required int MovieCollectionId { get; set; }
     private string _userId = null!;
-    private Data.Models.MovieCollection? _movieCollection = null!;
+    private Data.Models.MovieCollection? _movieCollection;
     private List<MovieWithRating> _moviesInCollection = null!;
 
-    private MudTable<MovieWithRating> _mudTable;
+    private MudTable<MovieWithRating>? _mudTable;
 
     private HashSet<MovieWithRating> _selectedMovies = [];
 

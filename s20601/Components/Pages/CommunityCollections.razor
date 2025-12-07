@@ -1,0 +1,43 @@
+﻿@* @page "/community-collections" *@
+@* *@
+@* *@
+@*                         @if (_movieCollections?.Count == 0) *@
+@*                         { *@
+@*                             <MudText Typo="Typo.body1">Nothing here, someone has to be the first!</MudText> *@
+@*                         } *@
+@*                         else *@
+@*                         { *@
+@*                             <MudGrid Spacing="3"> *@
+@*                                 @foreach (var collection in _movieCollections!) *@
+@*                                 { *@
+@*                                     <MudItem> *@
+@*                                         <MudLink Href="@($"/movie-collection/{collection.Id}")" *@
+@*                                                  Underline="Underline.None"> *@
+@*                                             <MudCard Style="height: 100%; width: 280px"> *@
+@*                                                 <MudImage Src="favicon.png" *@
+@*                                                           ObjectFit="ObjectFit.None" *@
+@*                                                           Alt="Movie poster" *@
+@*                                                           Elevation="0" *@
+@*                                                           Height="300" *@
+@*                                                           Width="280"/> *@
+@*                                                 <MudCardContent> *@
+@*                                                     <MudStack> *@
+@*                                                         <MudText Typo="Typo.subtitle1" Align="Align.Center"> *@
+@*                                                             @(_movieCollections.IndexOf(collection) + 1). @collection.Name *@
+@*                                                             <MudText Typo="Typo.subtitle2"> *@
+@*                                                                 @((collection.Description.Length > 20) ? $"{collection.Description.Substring(0, 20)}..." : collection.Description) *@
+@*                                                             </MudText> *@
+@* *@
+@*                                                             <MudText Typo="Typo.subtitle2"> *@
+@*                                                                 Movies: @GetMovieCount(collection.Id)</MudText> *@
+@*                                                             <MudText Typo="Typo.subtitle2">Created *@
+@*                                                                 at: @collection.CreatedAt.ToShortDateString()</MudText> *@
+@*                                                         </MudText> *@
+@*                                                     </MudStack> *@
+@*                                                 </MudCardContent> *@
+@*                                             </MudCard> *@
+@*                                         </MudLink> *@
+@*                                     </MudItem> *@
+@*                                 } *@
+@*                             </MudGrid> *@
+@*                         } *@

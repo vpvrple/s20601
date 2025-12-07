@@ -1,4 +1,5 @@
-﻿using s20601.Data.Models;
+﻿using System.Linq.Expressions;
+using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
 
 namespace s20601.Services;
@@ -6,7 +7,7 @@ namespace s20601.Services;
 public interface IMovieCollectionService
 {
     Task<List<MovieCollection>> GetUserMovieCollections(string userId);
-    Task<MovieCollection> CreateMovieCollection(string name, string? description, string userId);
+    Task<GetMovieCollectionWithDetails> CreateMovieCollection(string name, string? description, string userId, CollectionVisibility visibility);
     Task DeleteMovieCollection(int collectionId);
     Task<MovieCollection?> GetMovieCollectionById(int collectionId);
     Task UpdateMovieCollection(MovieCollection collection);
@@ -17,4 +18,8 @@ public interface IMovieCollectionService
     Task<List<MovieCollection>> GetNRecentUserMovieColletions(string userId, int n);
     Task RemoveMovieFromMyRatingsCollection(int movieId, string userId);
     Task AddMovieToMyRatingsCollection(int movieId, string userId);
+    Task<List<GetMovieCollectionWithDetails>> GetMovieCollectionsWithDetails(Expression<Func<MovieCollection, bool>>? filter = null);
+    Task<Dictionary<ApplicationUser, CollectionRole>> GetCollectionMembers(int collectionId);
+    Task UpdateCollectionMembers(int collectionId, IDictionary<ApplicationUser, CollectionRole> membersRoles);
+    Task AddMemberToCollectionAsync(int collectionId, string userId, CollectionRole role);
 }

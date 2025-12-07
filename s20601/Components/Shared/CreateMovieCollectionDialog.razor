@@ -1,5 +1,7 @@
-﻿@using Services
-@using System.Security.Claims
+﻿@using System.Security.Claims
+@using s20601.Data.Models
+@using s20601.Services
+@using s20601.Data.Models.DTOs
 
 @inject IMovieCollectionService MovieCollectionSvc
 
@@ -7,14 +9,15 @@
     <TitleContent>
         Create movie list
     </TitleContent>
-    <DialogContent >
+    <DialogContent>
         <MudTextField @bind-Value="CollectionTitle" Label="Collection title" Variant="Variant.Text"></MudTextField>
         <MudTextField @bind-Value="Description" Label="Description" Lines="2" AutoGrow="true" MaxLines="10" Variant="Variant.Text"></MudTextField>
-        <MudSwitch @bind-Value="Visibility" 
+        <MudSwitch Class="ma-2"
+                   @bind-Value="Visibility"
                    LabelPlacement="Placement.Start"
-                   ThumbIcon="@(Visibility == "Private" ? @Icons.Material.Filled.Lock : @Icons.Material.Filled.LockOpen)"
-                   ThumbIconColor="@(Visibility == "Private" ? Color.Error : Color.Success)"
-                   Converter="@(new CustomStringToBoolConverter())">
+                   Converter="@(new VisibilityConverter())"
+                   ThumbIcon="@(Visibility == CollectionVisibility.Private ? @Icons.Material.Filled.Lock : @Icons.Material.Filled.LockOpen)"
+                   ThumbIconColor="@(Visibility == CollectionVisibility.Private ? Color.Error : Color.Success)">
             @(Visibility)
         </MudSwitch>
     </DialogContent>
@@ -49,7 +52,7 @@
 
     private async Task Submit()
     {
-        var newCollection = await MovieCollectionSvc.CreateMovieCollection(CollectionTitle, Description, userId);
+        var newCollection = await MovieCollectionSvc.CreateMovieCollection(CollectionTitle, Description, userId, Visibility);
         MudDialog.Close(DialogResult.Ok(newCollection));
     }
 
@@ -59,100 +62,15 @@
 
     public string Description { get; set; } = null!;
 
-    public string Visibility { get; set; } = "Public";
+    public CollectionVisibility Visibility { get; set; } = CollectionVisibility.Public;
 
-
-    public class ObjectToBoolConverter : BoolConverter<object>
+    public class VisibilityConverter : BoolConverter<CollectionVisibility>
     {
-
-        public ObjectToBoolConverter()
+        public VisibilityConverter()
         {
-            SetFunc = OnSet;
-            GetFunc = OnGet;
+            SetFunc = v => v == CollectionVisibility.Private;
+            GetFunc = b => b == true ? CollectionVisibility.Private : CollectionVisibility.Public;
         }
-
-        private object OnGet(bool? value)
-        {
-            try
-            {
-                return value == true;
-            }
-            catch (Exception e)
-            {
-                UpdateGetError("Conversion error: " + e.Message);
-                return default;
-            }
-        }
-
-        private bool? OnSet(object arg)
-        {
-            if (arg == null)
-                return null;
-            try
-            {
-                if (arg is bool)
-                    return (bool)arg;
-                else if (arg is bool?)
-                    return (bool?)arg;
-                else
-                {
-                    UpdateSetError("Unable to convert to bool? from type object");
-                    return null;
-                }
-            }
-            catch (FormatException e)
-            {
-                UpdateSetError("Conversion error: " + e.Message);
-                return null;
-            }
-        }
-
     }
 
-    public class CustomStringToBoolConverter : BoolConverter<string>
-    {
-
-        public CustomStringToBoolConverter()
-        {
-            SetFunc = OnSet;
-            GetFunc = OnGet;
-        }
-
-        private string TrueString = "Private";
-        private string FalseString = "Public";
-
-        private string OnGet(bool? value)
-        {
-            try
-            {
-                return (value == true) ? TrueString : FalseString;
-            }
-            catch (Exception e)
-            {
-                UpdateGetError("Conversion error: " + e.Message);
-                return default;
-            }
-        }
-
-        private bool? OnSet(string arg)
-        {
-            if (arg == null)
-                return null;
-            try
-            {
-                if (arg == TrueString)
-                    return true;
-                if (arg == FalseString)
-                    return false;
-                else
-                    return null;
-            }
-            catch (FormatException e)
-            {
-                UpdateSetError("Conversion error: " + e.Message);
-                return null;
-            }
-        }
-
-    }
 }

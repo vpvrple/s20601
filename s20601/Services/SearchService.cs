@@ -24,4 +24,12 @@ public class SearchService : ISearchService
 
         return movieTitles ?? [];
     }
+
+    public async Task<IEnumerable<ApplicationUser>> SearchUsersByUsernameAsync(string username)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Users
+            .Where(x => x.UserName.Contains(username))
+            .ToListAsync();
+    }
 }
