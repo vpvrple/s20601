@@ -22,7 +22,6 @@ AdornmentColor="Color.Primary" />
     <Authorized>
             <MudMenu Label="@username" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
                 <MudMenuItem Href="@($"user/{username}")">My profile</MudMenuItem>
-                <MudMenuItem>My groups</MudMenuItem>
                 <MudMenuItem Href="@($"movie-collections/{username}")">My collections</MudMenuItem>
                 <MudMenuItem Href="@($"community-collections/")">Community collections</MudMenuItem>
                 <MudMenuItem>Friends</MudMenuItem>
@@ -42,8 +41,7 @@ AdornmentColor="Color.Primary" />
 </AuthorizeView>
 @code
 {
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
     private string username = string.Empty;
 
@@ -54,18 +52,5 @@ AdornmentColor="Color.Primary" />
         {
             username = authState.User.Identity.Name!;
         }
-        // currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        // NavigationManager.LocationChanged += OnLocationChanged;
     }
-
-    // private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    // {
-    //     currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-    //     StateHasChanged();
-    // }
-
-    // public void Dispose()
-    // {
-    //     NavigationManager.LocationChanged -= OnLocationChanged;
-    // }
 }

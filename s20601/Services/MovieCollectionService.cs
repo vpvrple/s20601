@@ -183,6 +183,21 @@ public class MovieCollectionService : IMovieCollectionService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
+        var movieExists = await context.Movies.AnyAsync(m => m.Id == movieId);
+        if (!movieExists)
+        {
+
+            return;
+        }
+
+        var associationExists = await context.MovieCollectionMovies
+            .AnyAsync(mcm => mcm.IdMovieCollection == collectionId && mcm.Movie_Id == movieId);
+
+        if (associationExists)
+        {
+            return;
+        }
+
         var collectionMovie = new MovieCollectionMovie
         {
             IdMovieCollection = collectionId,
@@ -250,7 +265,18 @@ public class MovieCollectionService : IMovieCollectionService
             .Include(x => x.IdUserNavigation)
             .ToDictionaryAsync(x => x.IdUserNavigation, x => x.Role);
     }
-    
+
+    public async Task<CollectionRole?> GetUserCollectionRole(int collectionId, string userId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var userRole = await context.MovieCollectionUsers
+            .FirstOrDefaultAsync(x => x.IdMovieCollection == collectionId && x.IdUser == userId);
+
+        return userRole?.Role;
+    }
+
+
     public async Task UpdateCollectionMembers(int collectionId, IDictionary<ApplicationUser, CollectionRole> membersRoles)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -308,5 +334,29 @@ public class MovieCollectionService : IMovieCollectionService
         };
         context.MovieCollectionUsers.Add(newMember);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<List<MovieCollection>> GetUserCollectionsContainingMovie(string userId, int movieId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var collections = await context.MovieCollectionMovies
+            .Where(mcm => mcm.Movie_Id == movieId && mcm.IdMovieCollectionNavigation.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId))
+            .Select(mcm => mcm.IdMovieCollectionNavigation)
+            .ToListAsync();
+
+        return collections;
+    }
+    
+    public async Task LeaveCollectionAsync(int collectionId, string userId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var collectionUser = await context.MovieCollectionUsers
+            .FirstOrDefaultAsync(x => x.IdMovieCollection == collectionId && x.IdUser == userId);
+
+        if (collectionUser != null)
+        {
+            context.MovieCollectionUsers.Remove(collectionUser);
+            await context.SaveChangesAsync();
+        }
     }
 }

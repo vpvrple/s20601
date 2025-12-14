@@ -56,7 +56,7 @@
                                                         <MudIcon Icon="@Icons.Material.Filled.PublicOff"
                                                                  Color="Color.Error"/>
                                                     }
-                                                        <MudButton StartIcon="@Icons.Material.Filled.Group" OnClick="@(() =>OpenMembersDialogAsync(collection.Id))"></MudButton>
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Group" OnClick="@(() =>OpenMembersDialogAsync(collection.Id))"></MudIconButton>
                                                 </MudStack>
                                             </CardHeaderContent>
                                                 <CardHeaderActions>
@@ -64,24 +64,31 @@
                                                     <MudMenu Icon="@Icons.Material.Filled.MoreVert"
                                                              AnchorOrigin="Origin.BottomRight"
                                                              TransformOrigin="Origin.TopRight">
-                                                        @if (collection.Type == CollectionType.Custom)
-                                                        {
-                                                            <MudMenuItem Class="d-flex align-items-center"
-                                                                         Icon="@Icons.Material.Filled.Delete"
-                                                                         IconColor="Color.Error"
-                                                                         OnClick="@(() => DeleteCollectionAsync(collection))">
-                                                                Delete
-                                                            </MudMenuItem>
+                                                        @{
+                                                            var currentUserMemberInfo = collection.Members.FirstOrDefault(m => m.Key.Id == _processedUserId);
                                                         }
-                                                        else
+
+                                                        @if (currentUserMemberInfo.Key != null) // Check if user is a member
                                                         {
-                                                            <MudMenuItem Disabled="true"
-                                                                         Class="d-flex align-items-center"
-                                                                         Icon="@Icons.Material.Filled.Delete"
-                                                                         IconColor="Color.Error"
-                                                                         OnClick="@(() => DeleteCollectionAsync(collection))">
-                                                                Delete
-                                                            </MudMenuItem>
+                                                            @if (currentUserMemberInfo.Value == CollectionRole.Owner)
+                                                            {
+                                                                <MudMenuItem Class="d-flex align-items-center"
+                                                                             Icon="@Icons.Material.Filled.Delete"
+                                                                             IconColor="Color.Error"
+                                                                             OnClick="@(() => DeleteCollectionAsync(collection))"
+                                                                             Disabled="@(collection.Type != CollectionType.Custom)">
+                                                                    Delete
+                                                                </MudMenuItem>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudMenuItem Class="d-flex align-items-center"
+                                                                             Icon="@Icons.Material.Filled.ExitToApp"
+                                                                             IconColor="Color.Warning"
+                                                                             OnClick="@(() => LeaveCollectionAsync(collection))">
+                                                                    Leave
+                                                                </MudMenuItem>
+                                                            }
                                                         }
                                                     </MudMenu>
                                                 </CardHeaderActions>
@@ -97,9 +104,13 @@
                                                 <MudCardContent>
                                                     <MudStack>
                                                         <MudText Typo="Typo.subtitle1" Align="Align.Center">
-                                                            @(_movieCollections.IndexOf(collection) + 1). @((collection.Name.Length > 10) ? $"{collection.Name.Substring(0, 10)}..." : collection.Name)
+                                                            @(_movieCollections.IndexOf(collection) + 1). @((collection.Name.Length > 10) 
+                                                                                                              ? $"{collection.Name.Substring(0, 10)}..." 
+                                                                                                              : collection.Name)
                                                             <MudText Typo="Typo.subtitle2">
-                                                                @((collection.Description.Length > 10) ? $"{collection.Description.Substring(0, 10)}..." : collection.Description)
+                                                                @((collection.Description.Length > 10) 
+                                                                    ? $"{collection.Description.Substring(0, 10)}..." 
+                                                                    : collection.Description)
                                                             </MudText>
 
                                                             <MudText Typo="Typo.subtitle2">
@@ -285,6 +296,24 @@
                 collectionToUpdate.Members = updatedMembers;
                 StateHasChanged();
             }
+        }
+    }
+    
+    private async Task LeaveCollectionAsync(GetMovieCollectionWithDetails collection)
+    {
+        var parameters = new DialogParameters<DeleteConfirmationDialog>
+        {
+            { x => x.ContentText, $"Do you really want to leave the collection '{collection.Name}'?" },
+            { x => x.ButtonText, "Leave" }
+        };
+
+        var dialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Leave Collection", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await MovieCollectionSvc.LeaveCollectionAsync(collection.Id, _processedUserId);
+            await LoadMovieCollectionsAsync(_processedUserId);
         }
     }
     

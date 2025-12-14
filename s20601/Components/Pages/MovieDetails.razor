@@ -1,5 +1,6 @@
 ﻿@page "/movie/{MovieId:int}"
 
+@using s20601.Components.Shared
 @using Services
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
@@ -8,12 +9,15 @@
 @inject IRatingService RatingSvc
 
 <MudGrid Class="mt-6">
-    <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center">
+    <MudItem lg="6" md="6" sm="12" xs="12" Class="align-center justify-center" Style="position: relative;">
         <MudImage Src="favicon.png"
                   ObjectFit="ObjectFit.None"
                   Alt="Movie poster"
                   Elevation="1"
                   Style="width: 100%; height: auto;" />
+        <MudPaper Elevation="0" Style="position: absolute; top: 8px; right: 8px;">
+            <BookmarkMovie MovieId="MovieId" />
+        </MudPaper>
     </MudItem>
     <MudItem lg="6" md="6" xs="12">
         <MudGrid Class="align-center">

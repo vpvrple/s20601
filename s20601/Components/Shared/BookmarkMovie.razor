@@ -1,0 +1,50 @@
+﻿@using System.Security.Claims
+@using s20601.Data.Models
+@inject IDialogService DialogService
+
+<MudIconButton Icon="@Icons.Material.Filled.Bookmark" OnClick="OpenBookmarkMovieToCollectionDialog" Color="Color.Dark"/>
+
+@code
+{
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    [Parameter] public required int MovieId { get; set; }
+
+    private Color bookmarkColor = Color.Dark;
+    
+    private string userId = null!;
+    private bool isLoading = true;
+    private bool bookmarked = false;
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            
+        }
+        isLoading = false;
+    }
+    
+    private async Task OpenBookmarkMovieToCollectionDialog()
+    {
+        var parameters = new DialogParameters<BookmarkMovieToCollectionDialog>
+        {
+            { x => x.MovieId, MovieId }
+        };
+
+        var dialog = await DialogService.ShowAsync<BookmarkMovieToCollectionDialog>("Add to collection", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is MovieCollection movieCollection)
+        {
+            StateHasChanged();
+        }
+    }
+}

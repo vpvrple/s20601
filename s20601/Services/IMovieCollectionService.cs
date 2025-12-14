@@ -22,4 +22,7 @@ public interface IMovieCollectionService
     Task<Dictionary<ApplicationUser, CollectionRole>> GetCollectionMembers(int collectionId);
     Task UpdateCollectionMembers(int collectionId, IDictionary<ApplicationUser, CollectionRole> membersRoles);
     Task AddMemberToCollectionAsync(int collectionId, string userId, CollectionRole role);
+    Task<CollectionRole?> GetUserCollectionRole(int collectionId, string userId);
+    Task<List<MovieCollection>> GetUserCollectionsContainingMovie(string userId, int movieId);
+    Task LeaveCollectionAsync(int collectionId, string userId);
 }

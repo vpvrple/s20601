@@ -8,7 +8,7 @@
 @inject IMovieService MovieSvc
 @inject IRatingService RatingSvc
 
-@if (_loading == true)
+@if (_loading)
 {
     <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
 }
@@ -23,8 +23,10 @@ else
                       Elevation="1"
                       Style="width: 100%; height: auto;"/>
             <AuthorizeView>
-                <MudIconButton Style="position: absolute; top: 25px; right: 0px;" Icon="@Icons.Material.Filled.Bookmark"
-                               Color="Color.Secondary"/>
+                <MudPaper Elevation="0" Style="position: absolute; top: 25px; right: 0px;">
+                    <BookmarkMovie MovieId="movieOfTheDay.Id" />
+                </MudPaper>
+                
             </AuthorizeView>
         </MudItem>
         <MudItem lg="6" md="6" xs="12">
@@ -79,7 +81,7 @@ else
                 <MudFlexBreak/>
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6">Directors</MudText>
-                    <MudStack Row="true" Justify="Justify.Center" Spacing="7">
+                    <MudStack Row="true" Spacing="7">
                         @if (crew is null || crew.Count == 0)
                         {
                             <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the directors
@@ -102,7 +104,7 @@ else
                 <MudFlexBreak/>
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6">Writers</MudText>
-                    <MudStack Row="true" Justify="Justify.Center" Spacing="7">
+                    <MudStack Row="true" Spacing="7">
                         @if (crew is null || crew.Count == 0)
                         {
                             <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the writers
@@ -125,7 +127,7 @@ else
                 <MudFlexBreak/>
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6">Cast</MudText>
-                    <MudStack Row="true" Justify="Justify.Center" Spacing="7">
+                    <MudStack Row="true" Spacing="7">
                         @if (crew is null || crew.Count == 0)
                         {
                             <MudText Typo="Typo.subtitle1" Color="Color.Dark">We have no information about the actors
