@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
@@ -7,6 +8,7 @@ using s20601.Components;
 using s20601.Components.Account;
 using s20601.Data;
 using s20601.Data.Models;
+using s20601.Hubs;
 using s20601.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -92,7 +94,23 @@ builder.Services
 builder.Services
     .AddScoped<ISearchService, SearchService>();
 
+builder.Services
+    .AddScoped<IFriendService, FriendService>();
+
+builder.Services
+    .AddScoped<IChatService, ChatService>();
+
+builder.Services.AddSignalR();
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        [ "application/octet-stream" ]);
+});
+
 var app = builder.Build();
+
+app.UseResponseCompression();
+app.MapHub<ChatHub>("/chathub");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

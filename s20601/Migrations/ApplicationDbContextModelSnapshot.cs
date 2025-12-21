@@ -174,7 +174,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Name")
                         .HasColumnType("int");
@@ -277,7 +280,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -318,7 +324,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Crew", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BirthYear")
                         .HasColumnType("int");
@@ -347,7 +356,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Genre", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -364,7 +376,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Group", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasMaxLength(100)
@@ -408,7 +423,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Message", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -416,12 +434,8 @@ namespace s20601.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(2500)");
 
-                    b.Property<int>("Created")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeliverTime")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("IdRecipient")
                         .IsRequired()
@@ -431,7 +445,7 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("IdStatus")
+                    b.Property<int>("MessageStatus")
                         .HasColumnType("int");
 
                     b.HasKey("Id")
@@ -440,8 +454,6 @@ namespace s20601.Migrations
                     b.HasIndex(new[] { "IdRecipient" }, "IX_Message_IdRecipient");
 
                     b.HasIndex(new[] { "IdSender" }, "IX_Message_IdSender");
-
-                    b.HasIndex(new[] { "IdStatus" }, "IX_Message_IdStatus");
 
                     b.ToTable("Message", (string)null);
                 });
@@ -575,7 +587,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.MovieCrew", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CharacterName")
                         .HasMaxLength(100)
@@ -607,7 +622,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.MovieGenre", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Genre_Id")
                         .HasColumnType("int");
@@ -686,7 +704,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.MovieUpdateRequest", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasPrecision(2)
@@ -721,7 +742,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Post", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -835,7 +859,10 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.SocialActivityLog", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ActivityAt")
                         .HasPrecision(2)
@@ -858,23 +885,6 @@ namespace s20601.Migrations
                     b.ToTable("SocialActivityLog", (string)null);
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.Status", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("Id")
-                        .HasName("Status_pk");
-
-                    b.ToTable("Status", (string)null);
-                });
-
             modelBuilder.Entity("s20601.Data.Models.UserRelationship", b =>
                 {
                     b.Property<string>("IdUser")
@@ -883,11 +893,10 @@ namespace s20601.Migrations
                     b.Property<string>("IdRelatedUser")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
+                    b.Property<int>("Type")
                         .HasMaxLength(50)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("int");
 
                     b.HasKey("IdUser", "IdRelatedUser")
                         .HasName("UserRelationship_pk");
@@ -1022,17 +1031,9 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasConstraintName("Message_Sender");
 
-                    b.HasOne("s20601.Data.Models.Status", "IdStatusNavigation")
-                        .WithMany("Messages")
-                        .HasForeignKey("IdStatus")
-                        .IsRequired()
-                        .HasConstraintName("Message_Status");
-
                     b.Navigation("IdRecipientNavigation");
 
                     b.Navigation("IdSenderNavigation");
-
-                    b.Navigation("IdStatusNavigation");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.MovieCollectionMovie", b =>
@@ -1343,11 +1344,6 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Review", b =>
                 {
                     b.Navigation("ReviewRates");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.Status", b =>
-                {
-                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

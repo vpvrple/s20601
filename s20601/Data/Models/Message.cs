@@ -1,6 +1,6 @@
 ﻿namespace s20601.Data.Models;
 
-public partial class Message
+public class Message
 {
     public int Id { get; set; }
 
@@ -8,17 +8,20 @@ public partial class Message
 
     public string IdRecipient { get; set; } = null!;
 
-    public int Created { get; set; }
+    public DateTime Created { get; set; }
 
     public string Content { get; set; } = null!;
 
-    public int IdStatus { get; set; }
-
-    public DateTime? DeliverTime { get; set; }
+    public MessageStatus MessageStatus { get; set; }
 
     public virtual ApplicationUser IdRecipientNavigation { get; set; } = null!;
 
     public virtual ApplicationUser IdSenderNavigation { get; set; } = null!;
+}
 
-    public virtual Status IdStatusNavigation { get; set; } = null!;
+public enum MessageStatus
+{
+    Sent,
+    Read,
+    Unread
 }

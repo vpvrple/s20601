@@ -46,9 +46,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public virtual DbSet<ReviewRate> ReviewRates { get; set; }
 
     public virtual DbSet<SocialActivityLog> SocialActivityLogs { get; set; }
-
-    public virtual DbSet<Status> Statuses { get; set; }
-
     public virtual DbSet<UserRelationship> UserRelationships { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,16 +57,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ToTable("ActivityType");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
         });
-
+        
         modelBuilder.Entity<Comment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Comment_pk");
 
             entity.ToTable("Comment");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Content)
                 .HasMaxLength(500)
                 .IsUnicode(false);
@@ -97,7 +92,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ToTable("Crew");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.FirstName)
                 .HasMaxLength(100)
                 .IsUnicode(false);
@@ -112,7 +106,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ToTable("Genre");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -124,7 +117,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ToTable("Group");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Description)
                 .HasMaxLength(100)
                 .IsUnicode(false);
@@ -161,15 +153,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(e => e.IdRecipient, "IX_Message_IdRecipient");
 
             entity.HasIndex(e => e.IdSender, "IX_Message_IdSender");
-
-            entity.HasIndex(e => e.IdStatus, "IX_Message_IdStatus");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            
             entity.Property(e => e.Content)
                 .HasMaxLength(2500)
                 .IsUnicode(false);
-            entity.Property(e => e.DeliverTime).HasPrecision(2);
-
+            
             entity.HasOne(d => d.IdRecipientNavigation).WithMany(p => p.MessageIdRecipientNavigations)
                 .HasForeignKey(d => d.IdRecipient)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -179,11 +167,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasForeignKey(d => d.IdSender)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Message_Sender");
-
-            entity.HasOne(d => d.IdStatusNavigation).WithMany(p => p.Messages)
-                .HasForeignKey(d => d.IdStatus)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Message_Status");
         });
 
         modelBuilder.Entity<Movie>(entity =>
@@ -270,7 +253,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasIndex(e => e.Movie_Id, "IX_MovieCrew_Movie_Id");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CharacterName)
                 .HasMaxLength(100)
                 .IsUnicode(false);
@@ -298,8 +280,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(e => e.Genre_Id, "IX_MovieGenre_Genre_Id");
 
             entity.HasIndex(e => new { e.Movie_Id, e.Genre_Id }, "IX_MovieGenre_Movie_Id_Genre_Id").IsUnique();
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
 
             entity.HasOne(d => d.Genre).WithMany(p => p.MovieGenres)
                 .HasForeignKey(d => d.Genre_Id)
@@ -361,7 +341,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasIndex(e => e.Movie_Id, "IX_MovieUpdateRequest_Movie_Id");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasPrecision(2);
             entity.Property(e => e.Description)
                 .HasMaxLength(2500)
@@ -388,7 +367,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasIndex(e => e.IdUser, "IX_Post_IdUser");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Content)
                 .HasMaxLength(5000)
                 .IsUnicode(false);
@@ -467,7 +445,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.HasIndex(e => e.IdUser, "IX_SocialActivityLog_IdUser");
 
-            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.ActivityAt).HasPrecision(2);
 
             entity.HasOne(d => d.IdActivityTypeNavigation).WithMany(p => p.SocialActivityLogs)
@@ -481,22 +458,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasConstraintName("ActivityLog_User");
         });
 
-        modelBuilder.Entity<Status>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("Status_pk");
-
-            entity.ToTable("Status");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.Type)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-        });
-
         modelBuilder.Entity<ApplicationUser>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("User_pk");
-            entity.Property(e => e.Id).ValueGeneratedNever();
 
             entity.ToTable("User");
 

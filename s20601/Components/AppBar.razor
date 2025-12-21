@@ -1,12 +1,4 @@
-﻿@using s20601.Data
-@using s20601.Data.Models
-@using s20601.Services
-
-@inject IUserService UserSvc
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager NavigationManager
-
-<MudSpacer />
+﻿<MudSpacer />
 <MudBlazor.StaticInput.MudStaticTextField T="string"
 Label="Search"
 Variant="Variant.Outlined"
@@ -24,7 +16,7 @@ AdornmentColor="Color.Primary" />
                 <MudMenuItem Href="@($"user/{username}")">My profile</MudMenuItem>
                 <MudMenuItem Href="@($"movie-collections/{username}")">My collections</MudMenuItem>
                 <MudMenuItem Href="@($"community-collections/")">Community collections</MudMenuItem>
-                <MudMenuItem>Friends</MudMenuItem>
+                <MudMenuItem Href="@($"friends/")">Friends</MudMenuItem>
                 <MudMenuItem>Inbox</MudMenuItem>
                 <MudMenuItem>
                     <form action="Account/Logout" method="post">

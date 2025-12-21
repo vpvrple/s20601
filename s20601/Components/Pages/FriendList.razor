@@ -1,0 +1,229 @@
+﻿@page "/friends/{Username?}"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.SignalR
+@using s20601.Data.Models
+@using s20601.Services
+@inject NavigationManager Navigation
+@inject IUserService UserSvc
+@inject IChatService ChatSvc
+@inject IFriendService FriendSvc
+@inject IHubContext<ChatHub> HubContext
+
+@using Microsoft.AspNetCore.SignalR.Client
+@using s20601.Hubs
+@implements IAsyncDisposable
+
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudGrid Style="height: calc(100vh - 100px); overflow: hidden;" Class="mt-6">
+        <MudItem xs="4" Style="height: 100%; overflow-y: auto;" Class="border-r mud-border-lines-default">
+            <MudTabs>
+                <MudTabPanel Text="Friends">
+                    <MudStack Class="ma-2">
+                        @foreach (var friend in _friends)
+                        {
+                            <MudPaper Class="pa-2" Elevation="0" Style="cursor: pointer;"
+                                      @onclick="() => SelectedFriend(friend)" Width="100%">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="Color.Primary">@friend.UserName[0]</MudAvatar>
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body1">@friend.UserName</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudTabPanel>
+                <MudTabPanel Text="Friend requests">
+                    <MudStack Class="ma-2">
+                        @foreach (var request in _friendRequests)
+                        {
+                            <MudPaper Class="pa-2" Elevation="0">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="Color.Primary">@request.UserName?[0]</MudAvatar>
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body1">@request.UserName</MudText>
+                                        <MudStack Row="true">
+                                            <MudButton StartIcon="@Icons.Material.Filled.CheckCircle"
+                                                       Color="Color.Success">Add
+                                            </MudButton>
+                                            <MudButton StartIcon="@Icons.Material.Filled.RemoveCircle"
+                                                       Color="Color.Error">Ignore
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudTabPanel>
+            </MudTabs>
+        </MudItem>
+        <MudItem xs="8" Class="d-flex flex-column" Style="height: 100%;">
+            @if (!string.IsNullOrEmpty(username))
+            {
+                <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-4" Elevation="0">
+                    <MudText Typo="Typo.caption" Align="Align.Center" Class="mb-4">Start of conversation with @username</MudText>
+                    @foreach (var message in _conversation)
+                    {
+                        <MudChat ChatPosition="@(message.IdSender == _authenticatedUserId ? ChatBubblePosition.End : ChatBubblePosition.Start)">
+                            <MudAvatar>@message.IdSender[0]</MudAvatar>
+                            <MudChatHeader Name="@message.IdSender" Time="@message.Created.ToString()"></MudChatHeader>
+                            <MudChatBubble>
+                                @message.Content
+                            </MudChatBubble>
+                        </MudChat>
+                    }
+                </MudPaper>
+
+                <MudPaper Elevation="0" Class="pa-2 mt-auto">
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudTextField @bind-Value="_inputMessage" Variant="Variant.Outlined" Placeholder="Message..." Margin="Margin.Dense" FullWidth="true" Immediate="true" OnKeyDown="HandleEnter" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Send" Color="Color.Primary" OnClick="() => SendClick()" />
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Class="d-flex flex-column flex-grow-1 justify-center align-center" Elevation="0">
+                    <MudText Typo="Typo.body1" Color="Color.Dark">Select a friend to start chatting</MudText>
+                </MudPaper>
+            }
+        </MudItem>
+    </MudGrid>
+}
+
+
+@code {
+    [Parameter] public string? username { get; set; }
+
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    private string _authenticatedUserId;
+    private ApplicationUser? _authenticatedUser;
+    private bool _loading;
+    private List<ApplicationUser> _friendRequests;
+    private List<ApplicationUser> _friends;
+    private List<Message> _conversation = new();
+    private string? _inputMessage;
+    private string? _friendId;
+    private string? _loadedFriendUsername;
+
+
+    private HubConnection? hubConnection;
+    private bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _authenticatedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            _authenticatedUser = await UserSvc.GetUserByIdAsync(_authenticatedUserId);
+
+            _friends = await FriendSvc.GetFriends(_authenticatedUserId);
+            _friendRequests = await FriendSvc.GetFriendRequests(_authenticatedUserId);
+            
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri($"/chathub?userId={_authenticatedUserId}"))
+                .WithAutomaticReconnect()
+                .Build();
+            
+            hubConnection.On<string, string>("ReceiveMessage", (senderId, messageText) =>
+            {
+                if (_friendId == senderId)
+                {
+                    _conversation.Add(new Message 
+                    { 
+                        IdSender = senderId, 
+                        Content = messageText, 
+                        Created = DateTime.UtcNow 
+                    });
+                    
+                    InvokeAsync(StateHasChanged);
+                }
+            });
+
+            await hubConnection.StartAsync();
+        }
+
+        _loading = false;
+    }
+
+    private async Task LoadConversation()
+    {
+        if (!string.IsNullOrEmpty(_friendId) && !string.IsNullOrEmpty(_authenticatedUserId))
+        {
+            _conversation = await ChatSvc.GetConversation(_authenticatedUserId, _friendId);
+        }
+        else
+        {
+            _conversation = new List<Message>();
+        }
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        if (username != _loadedFriendUsername)
+        {
+            if (!string.IsNullOrEmpty(username))
+            {
+                var user = await UserSvc.GetUserByUsernameAsync(username);
+                _friendId = user?.Id;
+                _loadedFriendUsername = username;
+            }
+            else
+            {
+                _friendId = null;
+                _loadedFriendUsername = null;
+            }
+        }
+        
+        await LoadConversation();
+    }
+
+    private void SelectedFriend(ApplicationUser friend)
+    {
+        username = friend.UserName;
+        _friendId = friend.Id;
+        _loadedFriendUsername = friend.UserName;
+
+        Navigation.NavigateTo($"/friends/{username}");
+    }
+    
+    private async Task SendClick()
+    {
+        if (!string.IsNullOrWhiteSpace(_inputMessage) && !string.IsNullOrWhiteSpace(_friendId))
+        {
+            var msg = await ChatSvc.SaveMessage(_authenticatedUserId, _friendId, _inputMessage);
+            
+            _conversation.Add(msg);
+            
+            await HubContext.Clients.Group(_friendId).SendAsync("ReceiveMessage", _authenticatedUserId, _inputMessage);
+
+            _inputMessage = "";
+        }
+    }
+    
+    private async Task HandleEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SendClick();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

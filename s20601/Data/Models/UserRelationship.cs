@@ -6,9 +6,16 @@ public partial class UserRelationship
 
     public string IdRelatedUser { get; set; } = null!;
 
-    public string Type { get; set; } = null!;
+    public RelationshipType Type { get; set; }
 
     public virtual ApplicationUser IdRelatedUserNavigation { get; set; } = null!;
 
     public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
+}
+
+public enum RelationshipType
+{
+    Pending,
+    Friends,
+    Blocked
 }
