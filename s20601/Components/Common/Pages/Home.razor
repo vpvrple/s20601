@@ -1,9 +1,10 @@
 ﻿@page "/"
 
-@using s20601.Components.Shared
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @using s20601.Services
+@using s20601.Components.Common.Components
+@using s20601.Components.MovieCollections.Dialogs
 
 @inject IMovieService MovieSvc
 @inject IRatingService RatingSvc
@@ -24,7 +25,7 @@ else
                       Style="width: 100%; height: auto;"/>
             <AuthorizeView>
                 <MudPaper Elevation="0" Style="position: absolute; top: 25px; right: 0px;">
-                    <BookmarkMovie MovieId="movieOfTheDay.Id" />
+                    <BookmarkMovie MovieId="_movieOfTheDay.Id" />
                 </MudPaper>
                 
             </AuthorizeView>
@@ -32,28 +33,28 @@ else
         <MudItem lg="6" md="6" xs="12">
             <MudGrid Class="align-center">
                 <MudItem xs="12">
-                    @if (movieOfTheDay is null)
+                    @if (_movieOfTheDay is null)
                     {
                         <MudText Typo="Typo.subtitle1">No movie of the day yet!</MudText>
                     }
                     else
                     {
-                        <MudLink Href="@($"movie/{movieOfTheDay.Id}")" Typo="Typo.h5">
-                            @movieOfTheDay.Title
-                            <MudText Typo="Typo.subtitle1">(@movieOfTheDay.StartYear)</MudText>
+                        <MudLink Href="@($"movie/{_movieOfTheDay.Id}")" Typo="Typo.h5">
+                            @_movieOfTheDay.Title
+                            <MudText Typo="Typo.subtitle1">(@_movieOfTheDay.StartYear)</MudText>
                         </MudLink>
                     }
                 </MudItem>
                 <MudFlexBreak/>
                 <MudItem>
                     <MudText Typo="Typo.h6">Genres</MudText>
-                    @if (movieGenres is null || movieGenres.Count == 0)
+                    @if (_movieGenres is null || _movieGenres.Count == 0)
                     {
                         <MudText Typo="Typo.subtitle1" Color="Color.Dark">No genres defined yet</MudText>
                     }
                     else
                     {
-                        foreach (var genre in movieGenres)
+                        foreach (var genre in _movieGenres)
                         {
                             <MudChipSet T="Color" Class="d-inline-flex">
                                 <MudChip>@genre.Name</MudChip>
@@ -64,13 +65,13 @@ else
                 <MudFlexBreak/>
                 <MudItem>
                     <MudText Typo="Typo.h6">Community rating</MudText>
-                    @if (movieRating is null)
+                    @if (_movieRating is null)
                     {
                         <MudText Typo="Typo.subtitle1" Color="Color.Dark">No community rating yet!</MudText>
                     }
                     else
                     {
-                        <MovieRatingExtended MovieId="@movieOfTheDay.Id" Size="Size.Medium" Typo="Typo.body1"/>
+                        <MovieRatingExtended MovieId="@_movieOfTheDay.Id" Size="Size.Medium" Typo="Typo.body1"/>
                     }
                 </MudItem>
                 <MudFlexBreak/>
@@ -193,14 +194,14 @@ else
 
 
 @code {
-    Movie? movieOfTheDay = null!;
-    MovieRatingSummary? movieRating = null!;
-    List<Genre> movieGenres = null!;
+    Movie? _movieOfTheDay;
+    MovieRatingSummary? _movieRating;
+    List<Genre> _movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> crew = null!;
-    MovieRate movieRate = null!;
+    MovieRate _movieRate = null!;
 
     List<Movie> pastPicks = null!;
-    List<s20601.Data.Models.MovieCollection> trendingMovieCollections = null!;
+    List<MovieCollection> trendingMovieCollections = null!;
 
     private bool _loading;
 
@@ -208,13 +209,13 @@ else
     {
         _loading = true;
 
-        movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
-        if (movieOfTheDay is not null)
+        _movieOfTheDay = await MovieSvc.GetMovieOfTheDayAsync();
+        if (_movieOfTheDay is not null)
         {
-            var movieOfTheDayId = movieOfTheDay.Id;
+            var movieOfTheDayId = _movieOfTheDay.Id;
 
-            movieRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(movieOfTheDayId);
-            movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
+            _movieRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(movieOfTheDayId);
+            _movieGenres = await MovieSvc.GetMovieGenresByIdAsync(movieOfTheDayId);
             crew = await MovieSvc.GetMovieCrewByMovieIdAsync(movieOfTheDayId);
         }
 

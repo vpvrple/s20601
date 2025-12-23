@@ -1,18 +1,21 @@
-﻿@page "/trending"
-@using s20601.Components.Shared
+﻿@page "/top100"
+
 @using Services
+@using s20601.Components.Common.Components
+
 @using s20601.Data.Models.DTOs
+
 @inject IRatingService RatingSvc
 
-<MudText Class="mt-6" Typo="Typo.h4">Trending movies</MudText>
+<MudText Class="mt-6" Typo="Typo.h4">Top 100 movies of all time</MudText>
 <MudGrid>
-    @if (trendingMovies is null)
+    @if (topMoviesByRating is null)
     {
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
     }
     else
     {
-        @foreach (var movie in trendingMovies)
+        @foreach (var movie in topMoviesByRating)
         {
             <MudItem>
                 <MudCard>
@@ -25,12 +28,13 @@
                     <MudCardContent>
                         <MudStack>
                             <MudText Typo="Typo.h6" Align="Align.Center">
-                                @movie.Title
+                                @(topMoviesByRating.IndexOf(movie) + 1). @movie.Title
                                 <MudText Typo="Typo.subtitle2">(@movie.StartYear) @(movie.Runtime / 60) hours @(movie.Runtime % 60) minutes</MudText>
                             </MudText>
 
                             <MudDivider />
                             <MudStack Row="true" Class="justify-center">
+                                @* <MovieRatingExtended RateCount="movie.MovieRatingSummary.RateCount" AvgRating="movie.MovieRatingSummary.AvgRating" Size="Size.Small" Typo="Typo.subtitle2" /> *@
                                 <MovieRatingExtended MovieId="movie.Id" Size="Size.Medium" Typo="Typo.body1" />
                             </MudStack>
                         </MudStack>
@@ -39,18 +43,13 @@
             </MudItem>
         }
     }
-
 </MudGrid>
 
-
 @code {
-    List<MovieWithRating> trendingMovies = null!;
-    int currentPage = 1;
-    int pageSize = 10;
-    int totalMovies = 0;
+    List<MovieWithRating> topMoviesByRating = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        trendingMovies = await RatingSvc.GetTopMoviesByRatingAsync(100);
+        topMoviesByRating = await RatingSvc.GetTopMoviesByRatingAsync(100);
     }
 }

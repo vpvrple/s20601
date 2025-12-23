@@ -2,9 +2,11 @@
 
 @using System.Security.Claims
 @using s20601.Services
-@using s20601.Components.Shared
+@using s20601.Components.Common.Components
 @using s20601.Data.Models
 @using System.Linq.Expressions
+@using s20601.Components.Common.Components
+@using s20601.Components.MovieCollections.Dialogs
 @using s20601.Data.Models.DTOs
 
 @inject IMovieCollectionService MovieCollectionSvc
@@ -80,7 +82,7 @@
                                                                     Delete
                                                                 </MudMenuItem>
                                                             }
-                                                            else
+                                                            else if (collection.Type == CollectionType.Custom)
                                                             {
                                                                 <MudMenuItem Class="d-flex align-items-center"
                                                                              Icon="@Icons.Material.Filled.ExitToApp"
@@ -312,8 +314,10 @@
 
         if (result != null && !result.Canceled)
         {
-            await MovieCollectionSvc.LeaveCollectionAsync(collection.Id, _processedUserId);
-            await LoadMovieCollectionsAsync(_processedUserId);
+
+                await MovieCollectionSvc.LeaveCollectionAsync(collection.Id, _processedUserId);
+                await LoadMovieCollectionsAsync(_processedUserId);
+            
         }
     }
     

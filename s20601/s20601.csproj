@@ -30,7 +30,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\MovieCollections\Components\" />
+    <Folder Include="Data\Migrations\" />
     <Folder Include="Events\Queries\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Components\Common\Layout\MainLayout.razor" />
+    <AdditionalFiles Include="Components\Common\Layout\StaticMainLayout.razor" />
   </ItemGroup>
 
 </Project>
