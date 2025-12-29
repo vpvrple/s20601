@@ -8,46 +8,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     : IdentityDbContext<ApplicationUser>(options)
 {
     public virtual DbSet<ActivityType> ActivityTypes { get; set; }
-
     public virtual DbSet<Comment> Comments { get; set; }
-
     public virtual DbSet<Crew> Crews { get; set; }
-
     public virtual DbSet<Genre> Genres { get; set; }
-
-    public virtual DbSet<Group> Groups { get; set; }
-
-    public virtual DbSet<GroupMembership> GroupMemberships { get; set; }
-
     public virtual DbSet<Message> Messages { get; set; }
-
     public virtual DbSet<Movie> Movies { get; set; }
-
     public virtual DbSet<MovieCollection> MovieCollections { get; set; }
-
     public virtual DbSet<MovieCollectionMovie> MovieCollectionMovies { get; set; }
-
     public virtual DbSet<MovieCollectionUser> MovieCollectionUsers { get; set; }
-
     public virtual DbSet<MovieCrew> MovieCrews { get; set; }
-
     public virtual DbSet<MovieGenre> MovieGenres { get; set; }
-
     public virtual DbSet<MovieOfTheDay> MovieOfTheDays { get; set; }
-
     public virtual DbSet<MovieRate> MovieRates { get; set; }
-
     public virtual DbSet<MovieUpdateRequest> MovieUpdateRequests { get; set; }
-
-    public virtual DbSet<Post> Posts { get; set; }
-
+    public virtual DbSet<MovieUpdateRequestCrew> MovieUpdateRequestCrews { get; set; }
     public virtual DbSet<Review> Reviews { get; set; }
-
     public virtual DbSet<ReviewRate> ReviewRates { get; set; }
-
     public virtual DbSet<SocialActivityLog> SocialActivityLogs { get; set; }
     public virtual DbSet<UserRelationship> UserRelationships { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
@@ -57,33 +35,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.ToTable("ActivityType");
 
-        });
-        
-        modelBuilder.Entity<Comment>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("Comment_pk");
-
-            entity.ToTable("Comment");
-
-            entity.Property(e => e.Content)
-                .HasMaxLength(500)
-                .IsUnicode(false);
-            entity.Property(e => e.CreatedAt).HasPrecision(2);
-            entity.Property(e => e.LastModifiedAt).HasPrecision(2);
-
-            entity.HasOne(d => d.IdCommentNavigation).WithMany(p => p.InverseIdCommentNavigation)
-                .HasForeignKey(d => d.IdComment)
-                .HasConstraintName("Comment_Comment");
-
-            entity.HasOne(d => d.IdPostNavigation).WithMany(p => p.Comments)
-                .HasForeignKey(d => d.IdPost)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Comment_Post");
-
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.Comments)
-                .HasForeignKey(d => d.IdUser)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Comment_User");
         });
 
         modelBuilder.Entity<Crew>(entity =>
@@ -109,39 +60,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-        });
-
-        modelBuilder.Entity<Group>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("Group_pk");
-
-            entity.ToTable("Group");
-
-            entity.Property(e => e.Description)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.Image).HasMaxLength(100);
-        });
-
-        modelBuilder.Entity<GroupMembership>(entity =>
-        {
-            entity.HasKey(e => new { e.IdUser, e.IdGroup }).HasName("GroupMembership_pk");
-
-            entity.ToTable("GroupMembership");
-
-            entity.HasIndex(e => e.IdGroup, "IX_GroupMembership_IdGroup");
-
-            entity.Property(e => e.JoinedAt).HasPrecision(2);
-
-            entity.HasOne(d => d.IdGroupNavigation).WithMany(p => p.GroupMemberships)
-                .HasForeignKey(d => d.IdGroup)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("GroupMembership_Group");
-
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.GroupMemberships)
-                .HasForeignKey(d => d.IdUser)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("GroupMembership_User");
         });
 
         modelBuilder.Entity<Message>(entity =>
@@ -355,36 +273,43 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasForeignKey(d => d.Movie_Id)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("MovieUpdateRequest_Movie");
-        });
 
-        modelBuilder.Entity<Post>(entity =>
+            entity.HasMany(d => d.NewGenres).WithMany(p => p.MovieUpdateRequests)
+                .UsingEntity<Dictionary<string, object>>(
+                    "MovieUpdateRequestGenre",
+                    r => r.HasOne<Genre>().WithMany()
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("MovieUpdateRequestGenre_Genre"),
+                    l => l.HasOne<MovieUpdateRequest>().WithMany()
+                        .HasForeignKey("MovieUpdateRequestId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("MovieUpdateRequestGenre_MovieUpdateRequest"),
+                    j =>
+                    {
+                        j.HasKey("MovieUpdateRequestId", "GenreId").HasName("MovieUpdateRequestGenre_pk");
+                        j.ToTable("MovieUpdateRequestGenre");
+                        j.HasIndex(new[] { "GenreId" }, "IX_MovieUpdateRequestGenre_GenreId");
+                    });
+        });
+        
+        modelBuilder.Entity<MovieUpdateRequestCrew>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("Post_pk");
+            entity.HasKey(e => e.Id).HasName("MovieUpdateRequestCrew_pk");
+            entity.ToTable("MovieUpdateRequestCrew");
+            
+            entity.Property(e => e.FirstName).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.LastName).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.Job).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.CharacterName).HasMaxLength(100).IsUnicode(false);
 
-            entity.ToTable("Post");
-
-            entity.HasIndex(e => e.IdGroup, "IX_Post_IdGroup");
-
-            entity.HasIndex(e => e.IdUser, "IX_Post_IdUser");
-
-            entity.Property(e => e.Content)
-                .HasMaxLength(5000)
-                .IsUnicode(false);
-            entity.Property(e => e.CreatedAt).HasPrecision(2);
-            entity.Property(e => e.Title)
-                .HasMaxLength(150)
-                .IsUnicode(false);
-
-            entity.HasOne(d => d.IdGroupNavigation).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.IdGroup)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Post_Group");
-
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.Posts)
-                .HasForeignKey(d => d.IdUser)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Post_User");
+            entity.HasOne(d => d.MovieUpdateRequest)
+                .WithMany(p => p.NewCrew)
+                .HasForeignKey(d => d.MovieUpdateRequestId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("MovieUpdateRequestCrew_MovieUpdateRequest");
         });
+        
 
         modelBuilder.Entity<Review>(entity =>
         {
@@ -473,24 +398,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(e => e.ProfileDescription)
                 .HasMaxLength(500)
                 .IsUnicode(false);
-
-            entity.HasMany(d => d.IdGroups).WithMany(p => p.IdOwners)
-                .UsingEntity<Dictionary<string, object>>(
-                    "GroupOwnership",
-                    r => r.HasOne<Group>().WithMany()
-                        .HasForeignKey("IdGroup")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("GroupOwnership_Group"),
-                    l => l.HasOne<ApplicationUser>().WithMany()
-                        .HasForeignKey("IdOwner")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("GroupOwnership_User"),
-                    j =>
-                    {
-                        j.HasKey("IdOwner", "IdGroup").HasName("GroupOwnership_pk");
-                        j.ToTable("GroupOwnership");
-                        j.HasIndex(new[] { "IdGroup" }, "IX_GroupOwnership_IdGroup");
-                    });
         });
 
         modelBuilder.Entity<UserRelationship>(entity =>

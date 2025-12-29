@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace s20601.Data.Models;
 
-public partial class Comment
+public class Comment
 {
     public int Id { get; set; }
     public int IdPost { get; set; }
@@ -13,9 +13,7 @@ public partial class Comment
     public DateTime? LastModifiedAt { get; set; }
     public string Content { get; set; } = null!;
 
-    // Navigation properties
     public virtual Comment? IdCommentNavigation { get; set; }
     public virtual ICollection<Comment> InverseIdCommentNavigation { get; set; } = new HashSet<Comment>();
-    public virtual Post IdPostNavigation { get; set; } = null!;
     public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 }

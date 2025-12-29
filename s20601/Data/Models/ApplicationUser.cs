@@ -2,7 +2,7 @@
 
 namespace s20601.Data.Models;
 
-public partial class ApplicationUser : IdentityUser
+public class ApplicationUser : IdentityUser
 {
     public DateTime CreatedAt { get; set; }
 
@@ -16,8 +16,6 @@ public partial class ApplicationUser : IdentityUser
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
-    public virtual ICollection<GroupMembership> GroupMemberships { get; set; } = new List<GroupMembership>();
-
     public virtual ICollection<Message> MessageIdRecipientNavigations { get; set; } = new List<Message>();
 
     public virtual ICollection<Message> MessageIdSenderNavigations { get; set; } = new List<Message>();
@@ -27,8 +25,6 @@ public partial class ApplicationUser : IdentityUser
     public virtual ICollection<MovieRate> MovieRates { get; set; } = new List<MovieRate>();
 
     public virtual ICollection<MovieUpdateRequest> MovieUpdateRequests { get; set; } = new List<MovieUpdateRequest>();
-
-    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     public virtual ICollection<ReviewRate> ReviewRates { get; set; } = new List<ReviewRate>();
 
@@ -40,5 +36,4 @@ public partial class ApplicationUser : IdentityUser
 
     public virtual ICollection<UserRelationship> UserRelationshipIdUserNavigations { get; set; } = new List<UserRelationship>();
 
-    public virtual ICollection<Group> IdGroups { get; set; } = new List<Group>();
 }
