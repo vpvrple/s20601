@@ -6,6 +6,8 @@ public partial class UserRelationship
 
     public string IdRelatedUser { get; set; } = null!;
 
+    public string? Message { get; set; }
+
     public RelationshipType Type { get; set; }
 
     public virtual ApplicationUser IdRelatedUserNavigation { get; set; } = null!;
