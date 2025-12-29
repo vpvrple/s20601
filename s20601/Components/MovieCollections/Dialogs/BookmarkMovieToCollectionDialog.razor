@@ -94,7 +94,7 @@
             return _userMovieCollections.Take(10).OrderBy(x => x.CreatedAt);
         }
 
-        return _userMovieCollections.Where(x => x.Name.Contains(collectionName, StringComparison.InvariantCultureIgnoreCase));
+        return  _userMovieCollections.Where(x => x.Name.Contains(collectionName, StringComparison.InvariantCultureIgnoreCase));
     }
 
     private void Cancel() => MudDialog.Cancel();
