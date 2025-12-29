@@ -1,4 +1,6 @@
-﻿<MudSpacer />
+﻿@using System.Security.Claims
+
+<MudSpacer />
 <MudBlazor.StaticInput.MudStaticTextField T="string"
 Label="Search"
 Variant="Variant.Outlined"
@@ -12,37 +14,29 @@ AdornmentColor="Color.Primary" />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/account/register">Register</MudButton>
     </NotAuthorized>
     <Authorized>
-            <MudMenu Label="@username" Variant=Variant.Filled Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
-                <MudMenuItem Href="@($"user/{username}")">My profile</MudMenuItem>
-                <MudMenuItem Href="@($"movie-collections/{username}")">My collections</MudMenuItem>
-                <MudMenuItem Href="@($"community-collections/")">Community collections</MudMenuItem>
-                <MudMenuItem Href="@($"friends/")">Friends</MudMenuItem>
-                <MudMenuItem>Inbox</MudMenuItem>
-                <MudMenuItem>
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" />
-                        <button type="submit">
-                            Logout
-                        </button>
-                    </form>
-                </MudMenuItem>
-            </MudMenu>
-    </Authorized>
-
-</AuthorizeView>
-@code
-{
-    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-
-    private string username = string.Empty;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthenticationStateTask;
-        if (authState.User.Identity.IsAuthenticated)
-        {
-            username = authState.User.Identity.Name!;
+        @{
+        var username = context.User.FindFirstValue(ClaimTypes.Name);
         }
-    }
-}
+        <MudMenu Label="@username" Variant="Variant.Filled" Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopCenter">
+            <AuthorizeView Roles="Admin" Context="adminContext">
+                <Authorized>
+                    <MudMenuItem Href="@($"admin-request-center")">Admin</MudMenuItem>
+                </Authorized>
+            </AuthorizeView>
+            <MudMenuItem Href="@($"user/{username}")">My profile</MudMenuItem>
+            <MudMenuItem Href="@($"movie-collections/{username}")">My collections</MudMenuItem>
+            <MudMenuItem Href="@($"community-collections/")">Community collections</MudMenuItem>
+            <MudMenuItem Href="@($"friends/")">Friends</MudMenuItem>
+            <MudMenuItem Href="@($"request-center")">Movie Request Center</MudMenuItem>
+            <MudMenuItem>
+                <form action="Account/Logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" />
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Error" FullWidth="true" DropShadow="false">
+                        Sign Out
+                    </MudButton>
+                </form>
+            </MudMenuItem>
+        </MudMenu>
+    </Authorized>
+</AuthorizeView>

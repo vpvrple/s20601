@@ -1,0 +1,594 @@
+﻿@using System.Security.Claims
+@using s20601.Data.Models
+@using s20601.Data.Models.DTOs
+@using s20601.Services
+
+@inject IMovieService MovieSvc
+@inject ISnackbar Snackbar
+
+<style>
+    .file-upload-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 10;
+        opacity: 0;
+    }
+</style>
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors" Spacing="2">
+            <MudStepper @bind-ActiveIndex="_index" ShowResetButton>
+                <ChildContent>
+                    <MudStep Title="Poster">
+                        <MudStack Style="width: 100%">
+                            <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                                           @ref="@_fileUpload"
+                                           OnFilesChanged="OnInputFileChanged"
+                                           AppendMultipleFiles
+                                           Hidden="@false"
+                                           InputClass="file-upload-input"
+                                           tabindex="-1"
+                                           @ondrop="@ClearDragClass"
+                                           @ondragenter="@SetDragClass"
+                                           @ondragleave="@ClearDragClass"
+                                           @ondragend="@ClearDragClass">
+                                <ActivatorContent>
+                                    <MudPaper Height="300px"
+                                              Outlined="true"
+                                              Class="@_dragClass"
+                                              Style="margin: 8px">
+                                        <MudText Typo="Typo.h6">
+                                            Drag and drop poster here or click
+                                        </MudText>
+                                        @foreach (var file in _fileNames)
+                                        {
+                                            <MudChip T="string"
+                                                     Color="Color.Dark"
+                                                     Text="@file"
+                                                     tabindex="-1"/>
+                                        }
+                                    </MudPaper>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            <MudToolBar Gutters="@false"
+                                        Class="relative d-flex justify-end gap-4">
+                                <MudButton Color="Color.Primary"
+                                           OnClick="@OpenFilePickerAsync"
+                                           Variant="Variant.Filled">
+                                    Open file picker
+                                </MudButton>
+                                <MudButton Color="Color.Primary"
+                                           Disabled="@(!_fileNames.Any())"
+                                           OnClick="@Upload"
+                                           Variant="Variant.Filled">
+                                    Upload
+                                </MudButton>
+                                <MudButton Color="Color.Error"
+                                           Disabled="@(!_fileNames.Any())"
+                                           OnClick="@ClearAsync"
+                                           Variant="Variant.Filled">
+                                    Clear
+                                </MudButton>
+                            </MudToolBar>
+                        </MudStack>
+
+                    </MudStep>
+                    <MudStep Title="General movie information">
+
+                        <MudTextField @bind-Value="_title" Label="Title"/>
+                        <MudTextField @bind-Value="_originalTitle" Label="Original Title"/>
+                        <MudNumericField @bind-Value="_startYear" Label="Start Year"/>
+                        <MudNumericField @bind-Value="_endYear" Label="End Year"/>
+                        <MudNumericField @bind-Value="_runtimeMinutes" Label="Runtime (minutes)"/>
+                        <MudTextField @bind-Value="_titleType" Label="Type"/>
+
+                        <MudAutocomplete T="Genre" Label="Genres" @ref="_autocomplete" Value="_selectedGenreToAdd"
+                                         ValueChanged="OnGenreSelected" SearchFunc="@SearchGenre"
+                                         ToStringFunc="@(g => g?.Name)"
+                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
+                            <ItemTemplate Context="genre">
+                                <MudText>
+                                    @(genre.Name)
+                                </MudText>
+                            </ItemTemplate>
+                        </MudAutocomplete>
+                        <div class="d-flex flex-wrap mt-2">
+                            @foreach (var genre in _selectedGenres)
+                            {
+                                <MudChip T="Genre" OnClose="@(() => RemoveGenre(genre))">@genre.Name</MudChip>
+                            }
+                        </div>
+
+                        <MudTextField @bind-Value="_description" Label="Request description"
+                                      HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"/>
+
+                    </MudStep>
+                    <MudStep Title="Crew">
+
+
+                        <MudTable Items="@_crew" Hover="true" CanCancelEdit="true"
+                                  @bind-SelectedItem="@_selectedCrew" SortLabel="Sort By"
+                                  CommitEditTooltip="Commit Edit"
+                                  OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))"
+                                  RowEditPreview="@BackupItem" RowEditCancel="@ResetItemToOriginalValues"
+                                  RowEditCommit="@ItemHasBeenCommitted" IsEditRowSwitchingBlocked="false"
+                                  ApplyButtonPosition="TableApplyButtonPosition.End"
+                                  EditButtonPosition="TableEditButtonPosition.End"
+                                  EditTrigger="@TableEditTrigger.EditButton">
+                            <ToolBarContent>
+                                
+                                <MudStack Row="true" AlignItems="AlignItems.Baseline" Style="width: 100%">
+                                    <MudText Typo="Typo.h6">Movie crew</MudText>
+                                    <MudAutocomplete T="GetMovieCrewMemberWithDetails" Label="Search existing crew"
+                                                     Value="_selectedCrewToAdd"
+                                                     ValueChanged="OnCrewSelected" SearchFunc="@SearchCrew"
+                                                     ToStringFunc="@(c => c == null ? null : $"{c.FirstName} {c.LastName} ({c.BirthYear})")"
+                                                     ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
+                                        <ItemTemplate Context="crew">
+                                            <MudText>
+                                                @($"{crew.FirstName} {crew.LastName} ({crew.BirthYear})")
+                                            </MudText>
+                                        </ItemTemplate>
+                                    </MudAutocomplete>
+                                    <MudButton StartIcon="@Icons.Material.Filled.Add"
+                                               OnClick=@(() => OnAddCrewMember())>Add new crew member
+                                    </MudButton>
+                                </MudStack>
+
+                            </ToolBarContent>
+                            <HeaderContent>
+                                <MudTh>
+                                    <MudTableSortLabel
+                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.FirstName)">
+                                        FirstName
+                                    </MudTableSortLabel>
+                                </MudTh>
+                                <MudTh>
+                                    <MudTableSortLabel
+                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.LastName)">LastName
+                                    </MudTableSortLabel>
+                                </MudTh>
+                                <MudTh>
+                                    <MudTableSortLabel
+                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.BirthYear)">
+                                        BirthYear
+                                    </MudTableSortLabel>
+                                </MudTh>
+                                <MudTh>
+                                    <MudTableSortLabel
+                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.DeathYear)">
+                                        DeathYear
+                                    </MudTableSortLabel>
+                                </MudTh>
+                                <MudTh>
+                                    <MudTableSortLabel
+                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.Job)">Job
+                                    </MudTableSortLabel>
+                                </MudTh>
+                                <MudTh>
+                                    <MudTableSortLabel
+                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.CharacterName)">
+                                        CharacterName
+                                    </MudTableSortLabel>
+                                </MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+                                <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+                                <MudTd DataLabel="Birth Year">@context.BirthYear</MudTd>
+                                <MudTd DataLabel="Death Year">@context.DeathYear</MudTd>
+                                <MudTd DataLabel="Job">@context.Job</MudTd>
+                                <MudTd DataLabel="Character Name">@context.CharacterName</MudTd>
+                            </RowTemplate>
+                            <RowEditingTemplate>
+                                <MudTd DataLabel="First Name">
+                                    <MudTextField @bind-Value="context.FirstName"/>
+                                </MudTd>
+                                <MudTd DataLabel="Last Name">
+                                    <MudTextField @bind-Value="context.LastName"/>
+                                </MudTd>
+                                <MudTd DataLabel="Birth Year">
+                                    <MudNumericField @bind-Value="context.BirthYear"/>
+                                </MudTd>
+                                <MudTd DataLabel="Death Year">
+                                    <MudNumericField @bind-Value="context.DeathYear"/>
+                                </MudTd>
+                                <MudTd DataLabel="Job">
+                                    <MudTextField @bind-Value="context.Job"/>
+                                </MudTd>
+                                <MudTd DataLabel="Character Name">
+                                    <MudTextField @bind-Value="context.CharacterName"/>
+                                </MudTd>
+                            </RowEditingTemplate>
+                            <PagerContent>
+                                <MudTablePager/>
+                            </PagerContent>
+                            <EditButtonContent Context="button">
+                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0"
+                                               OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
+                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.DeleteOutline"
+                                               Class="pa-0"
+                                               OnClick="@(() => OnRemoveCrew((GetMovieCrewMemberWithDetails)button.Item))"
+                                               Disabled="@button.ButtonDisabled"/>
+                            </EditButtonContent>
+                        </MudTable>
+                    </MudStep>
+                </ChildContent>
+                <ConnectorTemplate Context="step">
+                    <div class="mud-stepper-nav-connector">
+                        @{
+                            int value = step.Completed ? 100 : 0;
+                            <MudProgressLinear Striped Value="value" Min="0" Max="100"
+                                               Color="Color.Primary"
+                                               Style="height: 2px; background-color: #d4ddeb; border-radius: 2px;"/>
+                        }
+                    </div>
+                </ConnectorTemplate>
+                <LabelTemplate>
+                    @if (context.IsActive) {
+                        <MudIcon Icon="@Icons.Material.Filled.EditLocationAlt" Color="Color.Primary"></MudIcon>
+                    }
+                </LabelTemplate>
+                <ActionContent Context="stepper">
+                    <MudButton OnClick="@(() => stepper.ResetAsync())">Reset</MudButton>
+                    @if (!_completed)
+                    {
+                        <MudButton OnClick="@(() => stepper.PreviousStepAsync())"
+                                   StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary"
+                                   Disabled="@(_index <= 0)">Previous</MudButton>
+                        <MudSpacer/>
+                        @if (stepper.Steps[_index].Skippable == true)
+                        {
+                            <MudButton OnClick="@(() => stepper.SkipCurrentStepAsync())"
+                                       EndIcon="@stepper.SkipButtonIcon" Color="Color.Primary">Skip</MudButton>
+                        }
+
+                        @if (_index < stepper.Steps.Count - 1)
+                        {
+                            <MudButton OnClick="@(() => stepper.NextStepAsync())"
+                                       EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary">Next</MudButton>
+                        }
+                    }
+                </ActionContent>
+            </MudStepper>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@Submit">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private bool _success;
+    private string[] _errors = [];
+    private MudForm _form;
+    private MudAutocomplete<Genre> _autocomplete;
+    private int _index;
+    private bool _completed;
+
+    private string _title = "";
+    private string _originalTitle = "";
+    private int? _startYear;
+    private int? _endYear;
+    private int? _runtimeMinutes;
+    private string _titleType = "";
+    private string _description = "";
+
+    [Parameter] public Movie Movie { get; set; } = null!;
+
+    private List<Genre> _allGenres = new();
+    private HashSet<Genre> _selectedGenres = new();
+    private List<Genre> _originalGenres = new();
+    private Genre? _selectedGenreToAdd;
+
+    private GetMovieCrewMemberWithDetails? _selectedCrewToAdd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allGenres = await MovieSvc.GetAllGenresAsync();
+        if (Movie.Id != 0)
+        {
+            _title = Movie.Title;
+            _originalTitle = Movie.OriginalTitle;
+            _startYear = Movie.StartYear;
+            _endYear = Movie.EndYear;
+            _runtimeMinutes = Movie.RuntimeMinutes;
+            _titleType = Movie.TitleType;
+            _originalGenres = await MovieSvc.GetMovieGenresByIdAsync(Movie.Id);
+            _selectedGenres = _allGenres.Where(g => _originalGenres.Any(og => og.Id == g.Id)).ToHashSet();
+            _crew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
+        }
+        else
+        {
+            _crew = new List<GetMovieCrewMemberWithDetails>();
+        }
+    }
+
+    private async Task Submit()
+    {
+        var request = new MovieUpdateRequest
+        {
+            Movie_Id = Movie.Id != 0 ? Movie.Id : null
+        };
+
+        var changes = new List<string>();
+        var hasChanges = false;
+
+        if (_title != Movie.Title)
+        {
+            request.NewTitle = _title;
+            changes.Add($"Title: {_title}");
+            hasChanges = true;
+        }
+
+        if (_originalTitle != Movie.OriginalTitle)
+        {
+            request.NewOriginalTitle = _originalTitle;
+            changes.Add($"OriginalTitle: {_originalTitle}");
+            hasChanges = true;
+        }
+
+        if (_startYear != Movie.StartYear)
+        {
+            request.NewStartYear = _startYear;
+            changes.Add($"StartYear: {_startYear}");
+            hasChanges = true;
+        }
+
+        if (_endYear != Movie.EndYear)
+        {
+            request.NewEndYear = _endYear;
+            changes.Add($"EndYear: {_endYear}");
+            hasChanges = true;
+        }
+
+        if (_runtimeMinutes != Movie.RuntimeMinutes)
+        {
+            request.NewRuntimeMinutes = _runtimeMinutes;
+            changes.Add($"RuntimeMinutes: {_runtimeMinutes}");
+            hasChanges = true;
+        }
+
+        if (_titleType != Movie.TitleType)
+        {
+            request.NewTitleType = _titleType;
+            changes.Add($"TitleType: {_titleType}");
+            hasChanges = true;
+        }
+
+        var selectedGenreIds = _selectedGenres.Select(g => g.Id).OrderBy(id => id).ToList();
+        var originalGenreIds = _originalGenres.Select(g => g.Id).OrderBy(id => id).ToList();
+
+        if (!selectedGenreIds.SequenceEqual(originalGenreIds))
+        {
+            request.NewGenres = _selectedGenres.ToList();
+            changes.Add("Genres updated");
+            hasChanges = true;
+        }
+
+        var newCrewList = _crew.Select(c => new MovieUpdateRequestCrew
+        {
+            FirstName = c.FirstName,
+            LastName = c.LastName,
+            BirthYear = c.BirthYear,
+            DeathYear = c.DeathYear,
+            Job = c.Job,
+            CharacterName = c.CharacterName,
+            CrewId = c.Id != 0 ? c.Id : null
+        }).ToList();
+
+        var originalCrew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
+
+        bool crewChanged = false;
+        if (_crew.Count != originalCrew.Count)
+        {
+            crewChanged = true;
+        }
+        else
+        {
+            for (int i = 0; i < _crew.Count; i++)
+            {
+                var c1 = _crew[i];
+                var match = originalCrew.FirstOrDefault(oc => oc.Id == c1.Id && oc.FirstName == c1.FirstName && oc.LastName == c1.LastName && oc.BirthYear == c1.BirthYear && oc.DeathYear == c1.DeathYear && oc.Job == c1.Job && oc.CharacterName == c1.CharacterName);
+                if (match == null)
+                {
+                    crewChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (crewChanged)
+        {
+            request.NewCrew = newCrewList;
+            changes.Add("Crew updated");
+            hasChanges = true;
+        }
+
+        if (!hasChanges)
+        {
+            Cancel();
+            return;
+        }
+
+        request.Description = _description;
+
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId != null)
+        {
+            request.IdUser = userId;
+            await MovieSvc.AddMovieUpdateRequest(request);
+            Snackbar.Add("Movie request submitted successfully", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private async Task OnGenreSelected(Genre genre)
+    {
+        if (genre == null) return;
+
+        if (_selectedGenres.All(g => g.Id != genre.Id))
+        {
+            _selectedGenres.Add(genre);
+        }
+
+        _selectedGenreToAdd = null;
+        await _autocomplete.ClearAsync();
+    }
+
+    private void RemoveGenre(Genre genre)
+    {
+        _selectedGenres.Remove(genre);
+    }
+
+    private Task<IEnumerable<Genre>> SearchGenre(string genre, CancellationToken token)
+    {
+        var availableGenres = _allGenres.Where(z => _selectedGenres.All(y => y.Id != z.Id));
+
+        if (string.IsNullOrEmpty(genre))
+        {
+            return Task.FromResult(availableGenres.Take(10).OrderBy(x => x.Name).AsEnumerable());
+        }
+
+        return Task.FromResult(availableGenres.Where(x => x.Name.Contains(genre, StringComparison.InvariantCultureIgnoreCase)));
+    }
+
+    private async Task<IEnumerable<GetMovieCrewMemberWithDetails>> SearchCrew(string query, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(query))
+        {
+            return new List<GetMovieCrewMemberWithDetails>();
+        }
+
+        var results = await MovieSvc.SearchCrewAsync(query, Movie.Id != 0 ? Movie.Id : null);
+
+        return results;
+    }
+
+    private void OnCrewSelected(GetMovieCrewMemberWithDetails crew)
+    {
+        if (crew == null) return;
+
+        var newItem = new GetMovieCrewMemberWithDetails
+        {
+            Id = crew.Id,
+            FirstName = crew.FirstName,
+            LastName = crew.LastName,
+            BirthYear = crew.BirthYear,
+            DeathYear = crew.DeathYear,
+            Job = crew.Job ?? "",
+            CharacterName = crew.CharacterName ?? ""
+        };
+
+        _crew.Add(newItem);
+
+        _selectedCrewToAdd = null;
+        BackupItem(newItem);
+        StateHasChanged();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
+    private string _dragClass = DefaultDragClass;
+    private readonly List<string> _fileNames = new();
+    private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
+
+    private async Task ClearAsync()
+    {
+        await (_fileUpload?.ClearAsync() ?? Task.CompletedTask);
+        _fileNames.Clear();
+        ClearDragClass();
+    }
+
+    private Task OpenFilePickerAsync()
+        => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
+
+    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        ClearDragClass();
+        var files = e.GetMultipleFiles();
+        foreach (var file in files)
+        {
+            _fileNames.Add(file.Name);
+        }
+    }
+
+    private void Upload()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        Snackbar.Add("TODO: Upload your files!");
+    }
+
+    private void SetDragClass()
+        => _dragClass = $"{DefaultDragClass} mud-border-primary";
+
+    private void ClearDragClass()
+        => _dragClass = DefaultDragClass;
+
+
+    private List<string> editEvents = new();
+    private List<GetMovieCrewMemberWithDetails> _crew;
+    private GetMovieCrewMemberWithDetails _selectedCrew;
+    private GetMovieCrewMemberWithDetails _selectedCrewBeforeEdit;
+    private MudTable<GetMovieCrewMemberWithDetails> _table;
+
+    private void OnAddCrewMember()
+    {
+        _crew.Add(new GetMovieCrewMemberWithDetails());
+    }
+
+    private void OnRemoveCrew(GetMovieCrewMemberWithDetails crew)
+    {
+        _crew.Remove(crew);
+        StateHasChanged();
+    }
+
+    private void AddEditionEvent(string message)
+    {
+        editEvents.Add(message);
+        StateHasChanged();
+    }
+
+    private void ItemHasBeenCommitted(object element)
+    {
+        AddEditionEvent($"RowEditCommit event: Changes to Element {((GetMovieCrewMemberWithDetails)element).FirstName + " " + ((GetMovieCrewMemberWithDetails)element).LastName} committed");
+    }
+
+    private void BackupItem(object element)
+    {
+        _selectedCrewBeforeEdit = new()
+        {
+            FirstName = ((GetMovieCrewMemberWithDetails)element).FirstName,
+            LastName = ((GetMovieCrewMemberWithDetails)element).LastName,
+            BirthYear = ((GetMovieCrewMemberWithDetails)element).BirthYear,
+            DeathYear = ((GetMovieCrewMemberWithDetails)element).DeathYear,
+            Job = ((GetMovieCrewMemberWithDetails)element).Job,
+            CharacterName = ((GetMovieCrewMemberWithDetails)element).CharacterName
+        };
+        AddEditionEvent($"RowEditPreview event: made a backup of Element {((GetMovieCrewMemberWithDetails)element).FirstName + " " + ((GetMovieCrewMemberWithDetails)element).LastName}");
+    }
+
+    private void ResetItemToOriginalValues(object element)
+    {
+        ((GetMovieCrewMemberWithDetails)element).FirstName = _selectedCrewBeforeEdit.FirstName;
+        ((GetMovieCrewMemberWithDetails)element).LastName = _selectedCrewBeforeEdit.LastName;
+        ((GetMovieCrewMemberWithDetails)element).BirthYear = _selectedCrewBeforeEdit.BirthYear;
+        ((GetMovieCrewMemberWithDetails)element).DeathYear = _selectedCrewBeforeEdit.DeathYear;
+        ((GetMovieCrewMemberWithDetails)element).Job = _selectedCrewBeforeEdit.Job;
+        ((GetMovieCrewMemberWithDetails)element).CharacterName = _selectedCrewBeforeEdit.CharacterName;
+        AddEditionEvent($"RowEditCancel event: Editing of Element {((GetMovieCrewMemberWithDetails)element).FirstName + " " + ((GetMovieCrewMemberWithDetails)element).LastName} canceled");
+    }
+
+}

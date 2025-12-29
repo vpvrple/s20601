@@ -1,0 +1,25 @@
+﻿@using s20601.Data.Models
+
+@inject IDialogService DialogService
+
+<AuthorizeView>
+    <Authorized>
+        <MudButton EndIcon="@Icons.Material.Filled.Edit" OnClick="@OpenMovieRequestDialog">Edit</MudButton>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter]
+    public required Movie Movie { get; set; }
+    
+    private async Task OpenMovieRequestDialog()
+    {
+        var parameters = new DialogParameters<MovieRequestDialog>
+        {
+            { x => x.Movie, Movie }
+        };
+
+        await DialogService.ShowAsync<MovieRequestDialog>("Create movie data update request", parameters);
+    }
+}

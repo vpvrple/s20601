@@ -17,6 +17,8 @@ public partial class Movie : INavigable
     public int RuntimeMinutes { get; set; }
 
     public string TitleType { get; set; } = null!;
+    
+    public string? PosterPath { get; set; }
 
     public virtual ICollection<MovieCollectionMovie> MovieCollectionMovies { get; set; } = new List<MovieCollectionMovie>();
 
