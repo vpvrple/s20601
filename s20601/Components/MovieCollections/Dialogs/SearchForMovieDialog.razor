@@ -1,10 +1,8 @@
 ﻿@using Services
-@using System.Security.Claims
+@using s20601.Data.Models
 
-@inject IMovieCollectionService MovieCollectionSvc
 @inject ISearchService SearchSvc
 @inject IMovieService MovieSvc
-
 
 <AuthorizeView>
     <Authorized>
@@ -13,7 +11,7 @@
                 <MudText Typo="Typo.h6">Search for movies</MudText>
             </TitleContent>
             <DialogContent>
-                <MudAutocomplete T="Data.Models.Movie"
+                <MudAutocomplete T="Movie"
                                  Label="Movies"
                                  @bind-Value="SelectedMovie"
                                  SearchFunc="SearchMovieByTitle"
@@ -23,8 +21,8 @@
                                  ProgressIndicatorColor="Color.Primary" />
             </DialogContent>
             <DialogActions>
-                <MudButton OnClick="Cancel">Cancel</MudButton>
-                <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+                <MudButton OnClick="@Cancel">Cancel</MudButton>
+                <MudButton Color="Color.Primary" OnClick="@Submit">OK</MudButton>
             </DialogActions>
         </MudDialog>
     </Authorized>
@@ -32,37 +30,14 @@
 
 @code {
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
-
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-
-
-    private string userId = null!;
-    private bool isLoading = true;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        isLoading = true;
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-        }
-        isLoading = false;
-    }
+    private IMudDialogInstance? MudDialog { get; set; }
 
     private void Submit()
     {
-        if (SelectedMovie != null)
-        {
-            MudDialog.Close(DialogResult.Ok(SelectedMovie.Id));
-        }
+        MudDialog?.Close(DialogResult.Ok(SelectedMovie.Id));
     }
 
-    private async Task<IEnumerable<Data.Models.Movie>> SearchMovieByTitle(string title, CancellationToken token)
+    private async Task<IEnumerable<Movie>> SearchMovieByTitle(string title, CancellationToken token)
     {
         // if text is null or empty, show trending movie list, NEEDS TO BE REVISITED AS THIS SHOULD RESULT IN MOVIES
         // RELATED TO THE CURRENT MOVIE COLLECTION
@@ -76,8 +51,8 @@
         return movies.Take(10);
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private void Cancel() => MudDialog?.Cancel();
 
-    public required Data.Models.Movie SelectedMovie { get; set; } = default!;
+    public required Movie SelectedMovie { get; set; } = null!;
 
 }

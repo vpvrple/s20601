@@ -5,7 +5,7 @@
 @inject IMovieCollectionService MovieCollectionSvc
 @inject ISearchService SearchSvc
 
-@if (isLoading)
+@if (_loading)
 {
     <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
 }
@@ -15,7 +15,7 @@ else
     <TitleContent>
         <MudStack Row="true" AlignItems="AlignItems.Baseline">
             <MudText Typo="Typo.h6">Collection members</MudText>
-            @if (isOwner)
+            @if (_isOwner)
             {
                 <MudAutocomplete @bind-Value="_userToAdd"
                                  T="ApplicationUser"
@@ -30,7 +30,7 @@ else
         </MudStack>
     </TitleContent>
     <DialogContent>
-        <MudTable Items="@membersRoles" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@isLoading" LoadingProgressColor="Color.Info">
+        <MudTable Items="@_membersRoles" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
             <HeaderContent>
                 <MudTh>Username</MudTh>
                 <MudTh>Role</MudTh>
@@ -41,7 +41,7 @@ else
                 <MudTd DataLabel="Role">
                     <MudMenu>
                         <ActivatorContent>
-                            <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowDropDown" Color="Color.Primary" Disabled="!isOwner">@context.Value</MudButton>
+                            <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowDropDown" Color="Color.Primary" Disabled="!_isOwner">@context.Value</MudButton>
                         </ActivatorContent>
                         <ChildContent>
                             @foreach (var role in Enum.GetValues<CollectionRole>())
@@ -49,8 +49,8 @@ else
                                 @if (role != context.Value)
                                 {
                                     // Disable demotion for the last owner
-                                    var isSelfDemotion = context.Key.Id == userId && context.Value == CollectionRole.Owner && role != CollectionRole.Owner;
-                                    var isLastOwner = membersRoles.Count(r => r.Value == CollectionRole.Owner) <= 1;
+                                    var isSelfDemotion = context.Key.Id == _userId && context.Value == CollectionRole.Owner && role != CollectionRole.Owner;
+                                    var isLastOwner = _membersRoles.Count(r => r.Value == CollectionRole.Owner) <= 1;
                                     var demotionDisabled = isSelfDemotion && isLastOwner;
 
                                     <MudMenuItem OnClick="@(() => ChangeRole(context.Key, role))" Disabled="@demotionDisabled">@role.ToString()</MudMenuItem>
@@ -60,7 +60,7 @@ else
                     </MudMenu>
                 </MudTd>
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Disabled="@(!isOwner || context.Key.Id == userId)" OnClick="@(() => RemoveMember(context.Key))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Disabled="@(!_isOwner || context.Key.Id == _userId)" OnClick="@(() => RemoveMember(context.Key))" />
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -79,54 +79,57 @@ else
     [CascadingParameter]
     public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
-    [Parameter] public int CollectionId { get; set; }
+    [Parameter] 
+    public int CollectionId { get; set; }
 
-    private string userId = null!;
-    private bool isLoading = true;
-    private IDictionary<ApplicationUser, CollectionRole> membersRoles = new Dictionary<ApplicationUser, CollectionRole>();
-    private bool isOwner = false;
+    private string _userId = null!;
+    private bool _loading = true;
+    private IDictionary<ApplicationUser, CollectionRole> _membersRoles = new Dictionary<ApplicationUser, CollectionRole>();
+    private bool _isOwner;
     private ApplicationUser? _userToAdd;
+    public required string CollectionTitle { get; set; } = null!;
+    public string Description { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        isLoading = true;
+        _loading = true;
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            membersRoles = await MovieCollectionSvc.GetCollectionMembers(CollectionId);
-            var currentUserRole = membersRoles.FirstOrDefault(x => x.Key.Id == userId);
+            _userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            _membersRoles = await MovieCollectionSvc.GetCollectionMembers(CollectionId);
+            var currentUserRole = _membersRoles.FirstOrDefault(x => x.Key.Id == _userId);
             if (currentUserRole.Key != null && currentUserRole.Value == CollectionRole.Owner)
             {
-                isOwner = true;
+                _isOwner = true;
             }
         }
         
-        isLoading = false;
+        _loading = false;
     }
 
     private void ChangeRole(ApplicationUser user, CollectionRole newRole)
     {
-        if (membersRoles.ContainsKey(user))
+        if (_membersRoles.ContainsKey(user))
         {
-            membersRoles[user] = newRole;
+            _membersRoles[user] = newRole;
         }
     }
 
     private void RemoveMember(ApplicationUser user)
     {
-        if (membersRoles.ContainsKey(user))
+        if (_membersRoles.ContainsKey(user))
         {
-            membersRoles.Remove(user);
+            _membersRoles.Remove(user);
         }
     }
 
     private async Task Submit()
     {
-        await MovieCollectionSvc.UpdateCollectionMembers(CollectionId, membersRoles);
-        MudDialog.Close(DialogResult.Ok(membersRoles));
+        await MovieCollectionSvc.UpdateCollectionMembers(CollectionId, _membersRoles);
+        MudDialog.Close(DialogResult.Ok(_membersRoles));
     }
 
     private void Cancel() => MudDialog.Cancel();
@@ -138,7 +141,7 @@ else
             return Enumerable.Empty<ApplicationUser>();
         }
         var foundUsers = await SearchSvc.SearchUsersByUsernameAsync(username);
-        var existingMemberIds = membersRoles.Keys.Select(u => u.Id).ToHashSet();
+        var existingMemberIds = _membersRoles.Keys.Select(u => u.Id).ToHashSet();
         return foundUsers.Where(u => !existingMemberIds.Contains(u.Id));
     }
 
@@ -146,17 +149,13 @@ else
     {
         if (user != null)
         {
-            if (!membersRoles.Keys.Any(existingUser => existingUser.Id == user.Id))
+            if (!_membersRoles.Keys.Any(existingUser => existingUser.Id == user.Id))
             {
                 await MovieCollectionSvc.AddMemberToCollectionAsync(CollectionId, user.Id, CollectionRole.Viewer);
-                membersRoles[user] = CollectionRole.Viewer;
+                _membersRoles[user] = CollectionRole.Viewer;
                 StateHasChanged();
             }
         }
         _userToAdd = null;
     }
-    
-    public required string CollectionTitle { get; set; } = null!;
-
-    public string Description { get; set; } = null!;
 }

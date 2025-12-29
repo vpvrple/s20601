@@ -1,62 +1,63 @@
 ﻿@using System.Security.Claims
 @using s20601.Data.Models
 @using s20601.Services
-@using s20601.Data.Models.DTOs
 
 @inject IMovieCollectionService MovieCollectionSvc
 
-<MudDialog Class="d-flex justify-start">
-    <TitleContent>
-        Create movie list
-    </TitleContent>
-    <DialogContent>
-        <MudTextField @bind-Value="CollectionTitle" Label="Collection title" Variant="Variant.Text"></MudTextField>
-        <MudTextField @bind-Value="Description" Label="Description" Lines="2" AutoGrow="true" MaxLines="10" Variant="Variant.Text"></MudTextField>
-        <MudSwitch Class="ma-2"
-                   @bind-Value="Visibility"
-                   LabelPlacement="Placement.Start"
-                   Converter="@(new VisibilityConverter())"
-                   ThumbIcon="@(Visibility == CollectionVisibility.Private ? @Icons.Material.Filled.Lock : @Icons.Material.Filled.LockOpen)"
-                   ThumbIconColor="@(Visibility == CollectionVisibility.Private ? Color.Error : Color.Success)">
-            @(Visibility)
-        </MudSwitch>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
-    </DialogActions>
-</MudDialog>
+<AuthorizeView>
+    <Authorized>
+        <MudDialog Class="d-flex justify-start">
+            <TitleContent>
+                Create movie list
+            </TitleContent>
+            <DialogContent>
+                <MudTextField @bind-Value="CollectionTitle" Label="Collection title" Variant="Variant.Text"></MudTextField>
+                <MudTextField @bind-Value="Description" Label="Description" Lines="2" AutoGrow="true" MaxLines="10" Variant="Variant.Text"></MudTextField>
+                <MudSwitch Class="ma-2"
+                           @bind-Value="Visibility"
+                           LabelPlacement="Placement.Start"
+                           Converter="@(new VisibilityConverter())"
+                           ThumbIcon="@(Visibility == CollectionVisibility.Private ? @Icons.Material.Filled.Lock : @Icons.Material.Filled.LockOpen)"
+                           ThumbIconColor="@(Visibility == CollectionVisibility.Private ? Color.Error : Color.Success)">
+                    @(Visibility)
+                </MudSwitch>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="Cancel">Cancel</MudButton>
+                <MudButton Color="Color.Primary" OnClick="@Submit">OK</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
+
+
 @code {
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    private IMudDialogInstance? MudDialog { get; set; }
 
     [CascadingParameter]
     public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    
+    private string _userId = null!;
 
-
-    private string userId = null!;
-    private bool isLoading = true;
-
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        isLoading = true;
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            _userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
         }
-        isLoading = false;
     }
 
     private async Task Submit()
     {
-        var newCollection = await MovieCollectionSvc.CreateMovieCollection(CollectionTitle, Description, userId, Visibility);
-        MudDialog.Close(DialogResult.Ok(newCollection));
+        var newCollection = await MovieCollectionSvc.CreateMovieCollection(CollectionTitle, Description, _userId, Visibility);
+        MudDialog?.Close(DialogResult.Ok(newCollection));
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private void Cancel() => MudDialog?.Cancel();
 
     public required string CollectionTitle { get; set; } = null!;
 

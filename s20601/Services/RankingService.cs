@@ -18,4 +18,22 @@ public class RankingService : IRankingService
                .OrderByDescending(x => x.ReputationPoints)
                .ToListAsync();
     }
+    
+    public async Task IncrementPoints(string userId, int points)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        await context.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.ReputationPoints, u => u.ReputationPoints + points));
+    }
+    
+    public async Task DecrementPoints(string userId, int points)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        await context.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.ReputationPoints, u => u.ReputationPoints - points));
+    }
 }

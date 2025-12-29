@@ -1,6 +1,5 @@
 ﻿@page "/movie-collection/{MovieCollectionId:int}"
 
-@using Microsoft.AspNetCore.Identity
 @using s20601.Components.MovieCollections.Dialogs
 @using s20601.Components.Common.Components
 @using s20601.Data.Models
@@ -125,8 +124,8 @@ else
         StateHasChanged();
     }
 
-    private bool _loading = false;
-    private bool _canEdit = false;
+    private bool _loading;
+    private bool _canEdit;
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,7 +156,7 @@ else
 
     private async Task OpenAddMovieToCollectionDialogAsync()
     {
-        var dialog = await DialogService.ShowAsync<AddMovieToCollectionDialog>("AddMovieToCollectionDialog");
+        var dialog = await DialogService.ShowAsync<SearchForMovieDialog>("AddMovieToCollectionDialog");
 
         var result = await dialog.Result;
         if (result?.Data is int movieId)

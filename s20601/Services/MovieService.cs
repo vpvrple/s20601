@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
 using s20601.Data;
@@ -114,6 +115,12 @@ public class MovieService : IMovieService
         return genres ?? [];
     }
 
+    public async Task<List<Genre>> GetAllGenresAsync()
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        return await context.Genres.ToListAsync();
+    }
+
     public async Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -126,11 +133,278 @@ public class MovieService : IMovieService
                 Id = x.IdCrewNavigation.Id,
                 FirstName = x.IdCrewNavigation.FirstName,
                 LastName = x.IdCrewNavigation.LastName,
+                BirthYear = x.IdCrewNavigation.BirthYear,
+                DeathYear = x.IdCrewNavigation.DeathYear,
                 Job = x.Job,
                 CharacterName = x.CharacterName,
             })
             .ToListAsync();
 
         return crew ?? [];
+    }
+
+    public async Task AddMovieUpdateRequest(MovieUpdateRequest request)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        request.CreatedAt = DateTime.UtcNow;
+        request.Status = MovieUpdateRequestStatus.Open;
+
+        if (request.NewGenres != null && request.NewGenres.Any())
+        {
+            var genreIds = request.NewGenres.Select(g => g.Id).ToList();
+            var existingGenres = await context.Genres.Where(g => genreIds.Contains(g.Id)).ToListAsync();
+            request.NewGenres = existingGenres;
+        }
+        
+        context.MovieUpdateRequests.Add(request);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<MovieUpdateRequest?> GetMovieUpdateRequest(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        return await context.MovieUpdateRequests
+            .Include(x => x.Movie)
+            .Include(x => x.NewGenres)
+            .Include(x => x.NewCrew)
+            .Include(x => x.IdUserNavigation)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task<List<MovieUpdateRequest>> GetMovieUpdateRequests(Expression<Func<MovieUpdateRequest, bool>>? predicate = null)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var query = context.MovieUpdateRequests.AsQueryable();
+
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return await query.ToListAsync();
+    }
+
+    public async Task UpdateMovie(Movie movie)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        var movieToUpdate = context.Movies.Where(x => x. Id == movie.Id);
+        
+        
+        context.Movies.Update(movie);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<GetMovieCrewMemberWithDetails>> SearchCrewAsync(string query, int? movieId = null)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        IQueryable<Crew> queryable = context.Crews;
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            queryable = queryable.Where(c => c.FirstName.Contains(query) || c.LastName.Contains(query));
+        }
+
+        var crewList = await queryable.Take(10).ToListAsync();
+        var result = new List<GetMovieCrewMemberWithDetails>();
+
+        foreach (var c in crewList)
+        {
+            var dto = new GetMovieCrewMemberWithDetails
+            {
+                Id = c.Id,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                BirthYear = c.BirthYear,
+                DeathYear = c.DeathYear,
+                Job = "",
+                CharacterName = ""
+            };
+
+            if (movieId.HasValue)
+            {
+                var movieCrew = await context.MovieCrews
+                    .FirstOrDefaultAsync(mc => mc.IdCrew == c.Id && mc.Movie_Id == movieId.Value);
+                
+                if (movieCrew != null)
+                {
+                    dto.Job = movieCrew.Job;
+                    dto.CharacterName = movieCrew.CharacterName;
+                }
+            }
+
+            result.Add(dto);
+        }
+
+        return result;
+    }
+
+    public async Task ApproveMovieUpdateRequest(int requestId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var request = await context.MovieUpdateRequests
+            .Include(x => x.Movie)
+            .Include(x => x.NewGenres)
+            .Include(x => x.NewCrew)
+            .FirstOrDefaultAsync(x => x.Id == requestId);
+
+        if (request == null || request.Status != MovieUpdateRequestStatus.Open)
+        {
+            return;
+        }
+
+        if (request.Movie_Id.HasValue)
+        {
+            // Update existing movie
+            var movie = await context.Movies
+                .Include(m => m.MovieGenres)
+                .Include(m => m.MovieCrews)
+                .FirstOrDefaultAsync(m => m.Id == request.Movie_Id);
+
+            if (movie != null)
+            {
+                if (request.NewTitle != null) movie.Title = request.NewTitle;
+                if (request.NewOriginalTitle != null) movie.OriginalTitle = request.NewOriginalTitle;
+                if (request.NewStartYear.HasValue) movie.StartYear = request.NewStartYear.Value;
+                if (request.NewEndYear.HasValue) movie.EndYear = request.NewEndYear.Value;
+                if (request.NewRuntimeMinutes.HasValue) movie.RuntimeMinutes = request.NewRuntimeMinutes.Value;
+                if (request.NewTitleType != null) movie.TitleType = request.NewTitleType;
+
+                // Update Genres
+                if (request.NewGenres.Any())
+                {
+                    context.MovieGenres.RemoveRange(movie.MovieGenres);
+                    foreach (var genre in request.NewGenres)
+                    {
+                        context.MovieGenres.Add(new MovieGenre
+                        {
+                            Movie_Id = movie.Id,
+                            Genre_Id = genre.Id
+                        });
+                    }
+                }
+
+                // Update Crew
+                if (request.NewCrew.Any())
+                {
+                    context.MovieCrews.RemoveRange(movie.MovieCrews);
+                    foreach (var crewRequest in request.NewCrew)
+                    {
+                        if (crewRequest.CrewId.HasValue)
+                        {
+                            context.MovieCrews.Add(new MovieCrew
+                            {
+                                Movie_Id = movie.Id,
+                                IdCrew = crewRequest.CrewId.Value,
+                                Job = crewRequest.Job,
+                                CharacterName = crewRequest.CharacterName
+                            });
+                        }
+                        else
+                        {
+                            // Create new crew member if needed, though typically we expect CrewId to be populated for existing crew
+                            // If CrewId is null, it implies a new person needs to be created first.
+                            // Assuming for now we only link existing crew or create new crew if names provided
+                            var newCrew = new Crew
+                            {
+                                FirstName = crewRequest.FirstName,
+                                LastName = crewRequest.LastName,
+                                BirthYear = crewRequest.BirthYear ?? 0,
+                                DeathYear = crewRequest.DeathYear
+                            };
+                            context.Crews.Add(newCrew);
+                            await context.SaveChangesAsync(); // Save to get ID
+
+                            context.MovieCrews.Add(new MovieCrew
+                            {
+                                Movie_Id = movie.Id,
+                                IdCrew = newCrew.Id,
+                                Job = crewRequest.Job,
+                                CharacterName = crewRequest.CharacterName
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Create new movie
+            var newMovie = new Movie
+            {
+                Title = request.NewTitle ?? "Untitled",
+                OriginalTitle = request.NewOriginalTitle ?? "Untitled",
+                StartYear = request.NewStartYear ?? DateTime.UtcNow.Year,
+                EndYear = request.NewEndYear,
+                RuntimeMinutes = request.NewRuntimeMinutes ?? 0,
+                TitleType = request.NewTitleType ?? "Movie"
+            };
+
+            context.Movies.Add(newMovie);
+            await context.SaveChangesAsync(); // Save to get ID
+
+            // Add Genres
+            foreach (var genre in request.NewGenres)
+            {
+                context.MovieGenres.Add(new MovieGenre
+                {
+                    Movie_Id = newMovie.Id,
+                    Genre_Id = genre.Id
+                });
+            }
+
+            // Add Crew
+            foreach (var crewRequest in request.NewCrew)
+            {
+                 if (crewRequest.CrewId.HasValue)
+                {
+                    context.MovieCrews.Add(new MovieCrew
+                    {
+                        Movie_Id = newMovie.Id,
+                        IdCrew = crewRequest.CrewId.Value,
+                        Job = crewRequest.Job,
+                        CharacterName = crewRequest.CharacterName
+                    });
+                }
+                else
+                {
+                    var newCrew = new Crew
+                    {
+                        FirstName = crewRequest.FirstName,
+                        LastName = crewRequest.LastName,
+                        BirthYear = crewRequest.BirthYear ?? 0,
+                        DeathYear = crewRequest.DeathYear
+                    };
+                    context.Crews.Add(newCrew);
+                    await context.SaveChangesAsync();
+
+                    context.MovieCrews.Add(new MovieCrew
+                    {
+                        Movie_Id = newMovie.Id,
+                        IdCrew = newCrew.Id,
+                        Job = crewRequest.Job,
+                        CharacterName = crewRequest.CharacterName
+                    });
+                }
+            }
+        }
+
+        request.Status = MovieUpdateRequestStatus.Approved;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task RejectMovieUpdateRequest(int requestId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var request = await context.MovieUpdateRequests.FindAsync(requestId);
+
+        if (request != null && request.Status == MovieUpdateRequestStatus.Open)
+        {
+            request.Status = MovieUpdateRequestStatus.Rejected;
+            await context.SaveChangesAsync();
+        }
     }
 }

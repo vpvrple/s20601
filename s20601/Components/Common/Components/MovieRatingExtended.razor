@@ -1,95 +1,107 @@
-﻿@using Services
-@using s20601.Data
+﻿@using System.Security.Claims
+@using Services
 @using s20601.Data.Models.DTOs
 @using s20601.Data.Models
 
 @inject IRatingService RatingSvc
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-@inject IUserService UserSvc
 
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+        <AuthorizeView>
+            <NotAuthorized>
+                <MudRating
+                           SelectedValue="@((int)Math.Round(AvgRating))"
+                           Size="@Size"
+                           SelectedValueChanged="NavigateToLoginPage"/>
+            </NotAuthorized>
+            <Authorized>
+                <MudRating
+                           SelectedValue="@(_currentUserMovieRating?.Rating ?? 0)"
+                           Size="@Size"
+                           SelectedValueChanged="OnRatingChanged"/>
+            </Authorized>
+        </AuthorizeView>
 
-<MudStack Row="true">
-    <AuthorizeView>
-        <NotAuthorized>
-            <MudRating SelectedValue="@((int)Math.Round(AvgRating))"
-                       Size="@Size"
-                       SelectedValueChanged="NavigateToLoginPage" />
-        </NotAuthorized>
-        <Authorized>
-            <MudRating SelectedValue="@(currentUserMovieRating?.Rating ?? 0)"
-                       Size="@Size"
-                       SelectedValueChanged="OnRatingChanged" />
-        </Authorized>
-    </AuthorizeView>
+        <MudText Typo="Typo.body1">@Math.Round(AvgRating, 1)/5</MudText>
+        <MudText Typo="Typo.body1">(@RateCount)</MudText>
+    </MudStack>
+}
 
-    @if (ratingSummary is null)
-    {
-        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-    }
-    else
-    {
-        <MudText Typo="@Typo">@Math.Round(AvgRating, 1)</MudText>
-        <MudText Typo="@Typo">(@RateCount)</MudText>
-    }
-
-</MudStack>
 
 @code {
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
-    [Parameter]
-    public Typo Typo { get; set; } = Typo.subtitle2;
+    [Parameter] public Size Size { get; set; } = Size.Small;
 
-    [Parameter]
-    public Size Size { get; set; } = Size.Small;
+    [Parameter] public required int MovieId { get; set; }
 
-    [Parameter]
-    public required int MovieId { get; set; }
-
-    private MovieRate currentUserMovieRating = null!;
+    private MovieRate? _currentUserMovieRating;
 
     private double AvgRating { get; set; }
 
-    private double RateCount { get; set; }
+    private int RateCount { get; set; }
 
-    private string userId = null!;
+    private string _userId = null!;
 
-    MovieRatingSummary ratingSummary = null!;
+    MovieRatingSummary _ratingSummary = null!;
+
+    private bool _loading;
 
     protected override async Task OnInitializedAsync()
     {
-        ratingSummary = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
+        _loading = true;
+        _ratingSummary = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
 
-        AvgRating = ratingSummary.AvgRating;
-        RateCount = ratingSummary.RateCount;
+        AvgRating = _ratingSummary.AvgRating;
+        RateCount = _ratingSummary.RateCount;
 
         var authState = await AuthenticationStateTask;
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            var username = user.Identity?.Name;
-            userId = authState.User.Claims.First().Value;
-            currentUserMovieRating = await RatingSvc.GetUserMovieRating(userId, MovieId);
+            _userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            _currentUserMovieRating = await RatingSvc.GetUserMovieRating(_userId, MovieId);
         }
+        
+        _loading = false;
     }
 
     private async Task OnRatingChanged(int newRating)
     {
-            await RatingSvc.RateMovieAsync(MovieId, userId, newRating);
+        await RatingSvc.RateMovieAsync(MovieId, _userId, newRating);
 
-            var updatedRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
-            if (updatedRating is null)
+        var updatedRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
+        if (updatedRating is null)
+        {
+            return;
+        }
+
+        AvgRating = updatedRating.AvgRating;
+        RateCount = updatedRating.RateCount;
+
+        if (_currentUserMovieRating is null)
+        {
+            _currentUserMovieRating = new MovieRate
             {
-                return;
-            }
-            AvgRating = updatedRating.AvgRating;
-            RateCount = updatedRating.RateCount;
-            StateHasChanged();
+                Movie_Id = MovieId,
+                IdUser = _userId,
+                Rating = newRating
+            };
+        }
+        else
+        {
+            _currentUserMovieRating.Rating = newRating;
+        }
+        
+        StateHasChanged();
     }
 
     private void NavigateToLoginPage() => NavigationManager.NavigateTo("account/login", true);
 }
-
