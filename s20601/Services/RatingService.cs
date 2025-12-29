@@ -76,37 +76,45 @@ public class RatingService : IRatingService
         };
     }
 
-    public async Task RateMovieAsync(int movieId, string userId, int rating)
+    public async Task RateMovieAsync(int movieId, string userId, int? rating)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var currentRating = await context.MovieRates
             .FirstOrDefaultAsync(x => x.Movie_Id == movieId && x.IdUser == userId);
 
-        if (rating == 0 && currentRating is not null)
+        if (rating is null or 0)
         {
-            context.MovieRates.Remove(currentRating);
-            await _mediator.Publish(new MovieUnratedCommand(movieId, userId));
-        }
-        else if (currentRating is not null)
-        {
-            currentRating.Rating = rating;
-            currentRating.RatedAt = DateTime.UtcNow;
-            context.Update(currentRating);
+            if (currentRating is not null)
+            {
+                context.MovieRates.Remove(currentRating);
+                await context.SaveChangesAsync();
+                await _mediator.Publish(new MovieUnratedCommand(movieId, userId));
+            }
         }
         else
         {
-            var newRating = new MovieRate
+            if (currentRating is not null)
             {
-                Movie_Id = movieId,
-                Rating = rating,
-                RatedAt = DateTime.UtcNow,
-                IdUser = userId
-            };
-            context.MovieRates.Add(newRating);
-            await _mediator.Publish(new MovieRatedCommand(movieId, userId));
+                currentRating.Rating = rating.Value;
+                currentRating.RatedAt = DateTime.UtcNow;
+                context.Update(currentRating);
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                var newRating = new MovieRate
+                {
+                    Movie_Id = movieId,
+                    Rating = rating.Value,
+                    RatedAt = DateTime.UtcNow,
+                    IdUser = userId
+                };
+                context.MovieRates.Add(newRating);
+                await context.SaveChangesAsync();
+                await _mediator.Publish(new MovieRatedCommand(movieId, userId));
+            }
         }
-        await context.SaveChangesAsync();
     }
 
     public async Task<MovieRatingSummary?> GetMovieRatingSummaryByIdAsync(int id)
@@ -128,7 +136,7 @@ public class RatingService : IRatingService
         };
     }
 
-    public async Task<MovieRate> GetUserMovieRating(string userId, int movieId)
+    public async Task<MovieRate?> GetUserMovieRating(string userId, int movieId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 

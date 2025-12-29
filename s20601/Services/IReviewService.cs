@@ -11,8 +11,8 @@ public interface IReviewService
     Task<bool> AlreadyReviewed(int movieId, string authorId);
     Task<GetMovieReviewWithRating> GetUserMovieReviewWithRating(string userId, int movieId);
     Task RemoveReviewAsync(int reviewId, string userId);
-    Task VoteReview(int reviewId, string userId, int vote);
-    Task<ReviewRate> GetUserVoteByReview(int reviewId, string userId);
-    Task RemoveVote(int reviewId, string userId);
+    Task VoteReview(int reviewId, string userId, ReviewRateType? vote);
+    Task<ReviewRateType?> GetUserVoteByReview(int reviewId, string userId);
+    // Task RemoveVote(int reviewId, string userId);
 }
 

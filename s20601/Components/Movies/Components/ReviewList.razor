@@ -26,23 +26,15 @@
     }
 </AuthorizeView>
 
-@if (reviews is null)
+@if (_loading)
 {
-    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
 }
 else
 {
     @foreach (var review in reviews)
     {
-        <Review Id="@review.Id"
-        AuthorId="@review.AuthorId"
-        CurrentUserId="@userId"
-        Avatar="@(review.Username.FirstOrDefault().ToString())"
-        Username="@review.Username"
-        Content="@review.Content"
-        CreatedAt="@review.CreatedAt"
-        LikeRating="@review.LikeRating"
-        DislikeRating="@review.DislikeRating"
+        <Review ReviewParam="@review"
         OnRemove="RemoveFromList"
         OnVote="OnVote" />
     }
@@ -54,35 +46,37 @@ else
     public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
     [Parameter]
-    public int MovieId { get; set; }
+    public Movie Movie { get; set; }
 
     private string reviewContent = string.Empty;
     private bool _processing = false;
 
+    private bool _loading;
     private bool userReviewed = false;
     private string userId = null!;
     private List<GetMovieReviewWithRating?> reviews = null!;
 
     protected override async Task OnInitializedAsync()
     {
+        _loading = true;
         var authState = await AuthenticationStateTask;
 
         if (authState.User.Identity.IsAuthenticated)
         {
             userId = authState.User.Claims.First().Value;
-            userReviewed = await ReviewSvc.AlreadyReviewed(MovieId, userId);
+            userReviewed = await ReviewSvc.AlreadyReviewed(Movie.Id, userId);
         }
-        reviews = await ReviewSvc.GetMovieReviewsWithRating(MovieId);
-
+        reviews = await ReviewSvc.GetMovieReviewsWithRating(Movie.Id);
+        _loading = false;
     }
 
     private async Task PostReview(string review)
     {
         _processing = true;
 
-        await ReviewSvc.AddReviewAsync(review, MovieId, userId);
+        await ReviewSvc.AddReviewAsync(review, Movie.Id, userId);
 
-        reviews = await ReviewSvc.GetMovieReviewsWithRating(MovieId);
+        reviews = await ReviewSvc.GetMovieReviewsWithRating(Movie.Id);
 
         userReviewed = true;
 
@@ -98,22 +92,40 @@ else
         await Task.CompletedTask;
     }
 
-    private async Task OnVote((int reviewId, int newVote, int previousVote) vote)
+    private async Task OnVote(VoteReviewChange vote)
     {
-        var review = reviews.FirstOrDefault(x => x?.Id == vote.reviewId);
+        var review = reviews.FirstOrDefault(x => x?.Id == vote.ReviewId);
         if (review != null)
         {
-            if (vote.previousVote == 1)
+            if (vote.PreviousVote == ReviewRateType.Like)
                 review.LikeRating--;
-            else if (vote.previousVote == -1)
+            else if (vote.PreviousVote == ReviewRateType.Dislike)
                 review.DislikeRating--;
 
-            if (vote.newVote == 1)
+            if (vote.CurrentVote == ReviewRateType.Like)
                 review.LikeRating++;
-            else if (vote.newVote == -1)
+            else if (vote.CurrentVote == ReviewRateType.Dislike)
                 review.DislikeRating++;
 
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
         }
+        await Task.CompletedTask;
+    }
+
+    
+    public class VoteReviewChange
+    {
+        
+        public int ReviewId { get; set; }
+        public ReviewRateType? PreviousVote { get; set; }
+        public ReviewRateType? CurrentVote { get; set; }
+
+        public VoteReviewChange(int reviewId, ReviewRateType? previousVote, ReviewRateType? currentVote)
+        {
+            ReviewId = reviewId;
+            PreviousVote = previousVote;
+            CurrentVote = currentVote;
+        }
+
     }
 }

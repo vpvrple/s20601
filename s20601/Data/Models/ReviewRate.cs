@@ -8,11 +8,17 @@ public partial class ReviewRate
 
     public int Review_Id { get; set; }
 
-    public int Rating { get; set; }
+    public ReviewRateType ReviewRateType { get; set; }
 
     public DateTime RatedAt { get; set; }
 
     public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
 
     public virtual Review Review { get; set; } = null!;
+}
+
+public enum ReviewRateType
+{
+    Like,
+    Dislike
 }

@@ -1,16 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
+using s20601.Events.Commands;
 
 namespace s20601.Services;
 
 public class ReviewService : IReviewService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    public ReviewService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+    private readonly IMediator _mediator;
+    public ReviewService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator)
     {
         _dbContextFactory = dbContextFactory;
+        _mediator = mediator;
     }
 
     public async Task<GetMovieReviewWithRating> GetMovieReviewWithRatingByIdAsync(int id)
@@ -27,8 +31,8 @@ public class ReviewService : IReviewService
                 Username = x.IdAuthorNavigation.UserName,
                 CreatedAt = x.CreatedAt,
                 Content = x.Content,
-                LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
-                DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == -1)
+                LikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Like),
+                DislikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Dislike)
             })
             .FirstOrDefaultAsync();
 
@@ -50,8 +54,8 @@ public class ReviewService : IReviewService
                 Username = x.IdAuthorNavigation.UserName,
                 CreatedAt = x.CreatedAt,
                 Content = x.Content,
-                LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
-                DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == -1)
+                LikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Like),
+                DislikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Dislike)
             })
             .ToListAsync();
 
@@ -73,8 +77,8 @@ public class ReviewService : IReviewService
                 Username = x.IdAuthorNavigation.UserName,
                 CreatedAt = x.CreatedAt,
                 Content = x.Content,
-                LikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == 1),
-                DislikeRating = x.ReviewRates.Select(x => x.Rating).Count(x => x == -1)
+                LikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Like),
+                DislikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Dislike)
             })
             .FirstOrDefaultAsync();
 
@@ -128,7 +132,7 @@ public class ReviewService : IReviewService
     }
 
 
-    public async Task VoteReview(int reviewId, string userId, int vote)
+    public async Task VoteReview(int reviewId, string userId, ReviewRateType? vote)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -136,45 +140,65 @@ public class ReviewService : IReviewService
             .Where(x => x.Review_Id == reviewId && x.IdUser == userId)
             .FirstOrDefaultAsync();
 
-        if (currentVote is null)
+        if (vote is null)
         {
-            context?.ReviewRates.Add(new ReviewRate
+            if (currentVote is not null)
             {
-                IdUser = userId,
-                Review_Id = reviewId,
-                Rating = vote,
-                RatedAt = DateTime.UtcNow
-            });
+                context.ReviewRates.Remove(currentVote);
+                await _mediator.Publish(new ReviewUnratedCommand(userId, currentVote.ReviewRateType, 1));
+            }
         }
         else
         {
-            if (currentVote.Rating != vote)
+            if (currentVote is null)
             {
-                currentVote.Rating = vote;
+                context.ReviewRates.Add(new ReviewRate
+                {
+                    IdUser = userId,
+                    Review_Id = reviewId,
+                    ReviewRateType = vote.Value,
+                    RatedAt = DateTime.UtcNow
+                });
+                await _mediator.Publish(new ReviewLikedCommand(userId, 1));
+            }
+            else if (currentVote.ReviewRateType != vote.Value)
+            {
+                currentVote.ReviewRateType = vote.Value;
+                currentVote.RatedAt = DateTime.UtcNow;
                 context.ReviewRates.Update(currentVote);
+                if (currentVote.ReviewRateType == ReviewRateType.Like)
+                {
+                    await _mediator.Publish(new ReviewLikedCommand(userId, 1));
+                }
+                else if (currentVote.ReviewRateType == ReviewRateType.Dislike)
+                {
+                    await _mediator.Publish(new ReviewDislikedCommand(userId, -1));
+                }
             }
         }
 
         await context.SaveChangesAsync();
     }
 
-    public async Task RemoveVote(int reviewId, string userId)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-        var vote = await context.ReviewRates
-            .Where(x => x.Review_Id == reviewId && x.IdUser == userId)
-            .FirstOrDefaultAsync();
-        if (vote is not null)
-        {
-            context.ReviewRates.Remove(vote);
-            await context.SaveChangesAsync();
-        }
-    }
+    // public async Task RemoveVote(int reviewId, string userId)
+    // {
+    //     using var context = await _dbContextFactory.CreateDbContextAsync();
+    //     var vote = await context.ReviewRates
+    //         .Where(x => x.Review_Id == reviewId && x.IdUser == userId)
+    //         .FirstOrDefaultAsync();
+    //     if (vote is not null)
+    //     {
+    //         context.ReviewRates.Remove(vote);
+    //         await context.SaveChangesAsync();
+    //     }
+    // }
 
-    public async Task<ReviewRate> GetUserVoteByReview(int reviewId, string userId)
+    public async Task<ReviewRateType?> GetUserVoteByReview(int reviewId, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.ReviewRates
-            .FirstOrDefaultAsync(x => x.IdUser == userId && x.Review_Id == reviewId);
+            .Where(x => x.IdUser == userId && x.Review_Id == reviewId)
+            .Select(x => (ReviewRateType?)x.ReviewRateType)
+            .FirstOrDefaultAsync();
     }
 }
