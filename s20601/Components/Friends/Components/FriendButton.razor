@@ -1,0 +1,103 @@
+﻿@using System.Security.Claims
+@using s20601.Data.Models
+@using s20601.Services
+@inject IDialogService DialogService
+@inject IFriendService FriendSvc
+
+<AuthorizeView>
+    <Authorized>
+        @if (_relationshipType == RelationshipType.Pending)
+        {
+            <MudButton EndIcon="@Icons.Material.Filled.AccessTime"
+                        Variant="Variant.Filled"
+                       Color="Color.Warning"
+                       Size="Size.Small"
+                       OnClick="@CancelFriendRequest">
+                Pending
+            </MudButton>
+        }
+        else if (_relationshipType is null)
+        {
+            <MudButton EndIcon="@Icons.Material.Filled.PersonAddAlt1"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       OnClick="@OpenAddFriendDialog">
+                Add friend
+            </MudButton>
+        }
+        else if (_relationshipType == RelationshipType.Friends)
+        {
+            <MudButton EndIcon="@Icons.Material.Filled.PersonRemoveAlt1"
+                       Variant="Variant.Filled"
+                       Color="Color.Success"
+                       Size="Size.Small"
+                       OnClick="@Unfriend">
+                Unfriend
+            </MudButton>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    [Parameter] public required string FriendId { get; set; }
+    [Parameter] public EventCallback OnFriendshipChange { get; set; }
+
+    private string? _userId;
+    private RelationshipType? _relationshipType;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (_userId != null)
+            {
+                _relationshipType = await FriendSvc.GetUsersRelationshipType(_userId, FriendId);
+            }
+        }
+    }
+
+    private async Task OpenAddFriendDialog()
+    {
+        if (_userId == null) return;
+            
+        var parameters = new DialogParameters<AddFriendDialog>
+        {
+            { x => x.RequesterId, _userId },
+            { x => x.FriendId, FriendId }
+        };
+
+        var dialog = await DialogService.ShowAsync<AddFriendDialog>("Send friend request", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: true })
+        {
+            _relationshipType = RelationshipType.Pending;
+            await OnFriendshipChange.InvokeAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Unfriend()
+    {
+        await FriendSvc.RemoveFriend(_userId, FriendId);
+        _relationshipType = null;
+        await OnFriendshipChange.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task CancelFriendRequest()
+    {
+        await FriendSvc.DeclineFriendRequest(FriendId, _userId);
+        _relationshipType = null;
+        await OnFriendshipChange.InvokeAsync();
+        StateHasChanged();
+    }
+}

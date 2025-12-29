@@ -1,14 +1,16 @@
 ﻿@page "/user/{username}"
 
 @using System.Security.Claims
+@using s20601.Components.Common.Components
+@using s20601.Components.Friends.Components
 @using s20601.Services
-@using s20601.Data
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 
 @inject IUserService UserSvc
 @inject IRatingService RatingSvc
 @inject IMovieCollectionService MovieCollectionSvc
+@inject IFriendService FriendSvc
 
 <AuthorizeView>
     <MudContainer MaxWidth="MaxWidth.Medium">
@@ -28,23 +30,28 @@
                 </MudImage>
                 <MudStack AlignItems="AlignItems.Start" Spacing="0">
                     <MudText Typo="Typo.h5">@Username</MudText>
-                    <MudText Typo="Typo.subtitle1">points @User.ReputationPoints</MudText>
-                    <MudText Typo="Typo.subtitle2">Joined: @User.CreatedAt.ToShortDateString()</MudText>
+                    <MudText Typo="Typo.subtitle1">points @_user.ReputationPoints</MudText>
+                    <MudText Typo="Typo.subtitle2">Joined: @_user.CreatedAt.ToShortDateString()</MudText>
                     <MudText Typo="Typo.body1"
-                             Class="mt-3 mb-3">@(User.ProfileDescription ?? "No description available.")</MudText>
+                             Class="mt-3 mb-3">@(_user.ProfileDescription ?? "No description available.")</MudText>
                 </MudStack>
                 <MudSpacer/>
 
-                @if (isLoggedInUser == true)
+                @if (_isLoggedInUser)
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.Settings"
                                    Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    Size="Size.Small"/>
                 }
+                else if (_relationshipType == RelationshipType.Friends)
+                {
+                    <MessageFriend />
+                    <FriendButton FriendId="@_user?.Id" OnFriendshipChange="RefreshRelationshipStatus"/>
+                }
                 else
                 {
-                    <FriendsComponent/>
+                    <FriendButton FriendId="@_user?.Id" OnFriendshipChange="RefreshRelationshipStatus"/>
                 }
 
 
@@ -65,15 +72,15 @@
                            DateFormat="yyyy"
                            Color="Color.Primary">
 
-                @* //TODO later *@
-                @* <PickerActions Context="MudDatePicker">
-                    <MudButton Class="mr-auto align-self-end" OnClick="AllYears">All years</MudButton>
-                </PickerActions> *@
+                
+                @* <PickerActions Context="MudDatePicker"> *@
+                @*     <MudButton Class="mr-auto align-self-end" OnClick="AllYears">All years</MudButton> *@
+                @* </PickerActions> *@
             </MudDatePicker>
         </MudStack>
 
         <MudStack Row="true" AlignItems="AlignItems.Start" Justify="Justify.Center">
-            @if (ratingData.Length == 0)
+            @if (_ratingData.Length == 0)
             {
                 @code
                 {
@@ -92,13 +99,13 @@
             else
             {
                 <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
-                          InputData="@ratingData" InputLabels="@labels">
+                          InputData="@_ratingData" InputLabels="@_labels">
                 </MudChart>
             }
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Average</MudText>
 
-                @if (UserRatingSummary is null)
+                @if (_userRatingSummary is null)
                 {
                     <MudText Typo="Typo.h4"
                              Align="Align.Center">0</MudText>
@@ -106,13 +113,13 @@
                 else
                 {
                     <MudText Typo="Typo.h4"
-                             Align="Align.Center">@(Math.Round(UserRatingSummary.AvgMovieRating, 1))</MudText>
+                             Align="Align.Center">@(Math.Round(_userRatingSummary.AvgMovieRating, 1))</MudText>
                 }
             </MudPaper>
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Median</MudText>
 
-                @if (UserRatingSummary is null)
+                @if (_userRatingSummary is null)
                 {
                     <MudText Typo="Typo.h4"
                              Align="Align.Center">0</MudText>
@@ -120,39 +127,39 @@
                 else
                 {
                     <MudText Typo="Typo.h4" Align="Align.Center">
-                        @(Math.Round(UserRatingSummary.MedMovieRating, 1))
+                        @(Math.Round(_userRatingSummary.MedMovieRating, 1))
                     </MudText>
                 }
             </MudPaper>
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Total ratings</MudText>
 
-                @if (UserRatingSummary is null)
+                @if (_userRatingSummary is null)
                 {
                     <MudText Typo="Typo.h4"
                              Align="Align.Center">0</MudText>
                 }
                 else
                 {
-                    <MudText Typo="Typo.h4" Align="Align.Center">@UserRatingSummary.TotalRatings</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center">@_userRatingSummary.TotalRatings</MudText>
                 }
             </MudPaper>
             <MudPaper Class="pa-6" Elevation="0">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">Total reviews</MudText>
-                @if (UserRatingSummary is null)
+                @if (_userRatingSummary is null)
                 {
                     <MudText Typo="Typo.h4"
                              Align="Align.Center">0</MudText>
                 }
                 else
                 {
-                    <MudText Typo="Typo.h4" Align="Align.Center">@UserRatingSummary.TotalReviews</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center">@_userRatingSummary.TotalReviews</MudText>
                 }
             </MudPaper>
         </MudStack>
         <MudFlexBreak/>
         <MudItem>
-            <MudText Class="mt-3" Typo="Typo.h6">Recently updated collections</MudText>
+            <MudText Class="mt-3" Typo="Typo.h6" GutterBottom="true">Recently updated collections</MudText>
             <MudCarouselWithPagination Items=@_userMovieCollections itemsPerCarousel="3"></MudCarouselWithPagination>
             <div class="d-flex justify-end">
                 <MudLink Href="@($"movie-collections/{Username}")">See more...</MudLink>
@@ -170,16 +177,18 @@
 
         [Parameter] public required string Username { get; set; }
 
-        private ApplicationUser? User = null;
-        private UserRatingSummary? UserRatingSummary = null;
-        private List<s20601.Data.Models.MovieCollection> _userMovieCollections = null;
+        private ApplicationUser? _user;
+        private UserRatingSummary? _userRatingSummary;
+        private List<MovieCollection>? _userMovieCollections;
 
-        private string[] labels = null!;
-        private double[] ratingData = null!;
-        private bool isLoggedInUser = true;
+        private string[] _labels = null!;
+        private double[] _ratingData = null!;
+        private bool _isLoggedInUser = true;
 
-        private bool _loading = false;
-        private bool _pickerInitialized = false;
+        private bool _loading;
+        private bool _pickerInitialized;
+
+        private RelationshipType? _relationshipType;
         
         
         private DateTime? _month = DateTime.Now;
@@ -189,9 +198,9 @@
 
         protected override void OnAfterRender(bool firstRender)
         {
-            if (!_pickerInitialized && _picker is not null && User is not null)
+            if (!_pickerInitialized && _picker is not null && _user is not null)
             {
-                _minDate = User.CreatedAt;
+                _minDate = _user.CreatedAt;
                 _picker.GoToDate();
                 _pickerInitialized = true;
                 StateHasChanged();
@@ -210,26 +219,42 @@
 
             if (user.Identity?.IsAuthenticated == true)
             {
-                User = await UserSvc.GetUserByUsernameAsync(Username);
-                UserRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(User.Id);
-                var ratingCount = UserRatingSummary.RatingDistribution.Count;
+                _user = await UserSvc.GetUserByUsernameAsync(Username);
+                _userRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(_user.Id);
+                var ratingCount = _userRatingSummary.RatingDistribution.Count;
 
-                if (user.Identity.Name != User.UserName)
-                    isLoggedInUser = false;
+                if (user.Identity.Name != _user.UserName)
+                {
+                    _isLoggedInUser = false;
+                    await RefreshRelationshipStatus();
+                }
+                    
 
-                labels = new string[ratingCount];
-                ratingData = new double[ratingCount];
+                _labels = new string[ratingCount];
+                _ratingData = new double[ratingCount];
 
                 var index = 0;
-                foreach (var rating in UserRatingSummary.RatingDistribution)
+                foreach (var rating in _userRatingSummary.RatingDistribution)
                 {
-                    labels[index] = rating.RatingValue.ToString() + " stars";
-                    ratingData[index] = rating.Frequency;
+                    _labels[index] = rating.RatingValue.ToString() + " stars";
+                    _ratingData[index] = rating.Frequency;
                     index++;
                 }
 
-                _userMovieCollections = await MovieCollectionSvc.GetNRecentUserMovieColletions(User.Id, 10);
+                _userMovieCollections = await MovieCollectionSvc.GetNRecentUserMovieColletions(_user.Id, 10);
                 _loading = false;
+            }
+        }
+
+        private async Task RefreshRelationshipStatus()
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+            if (user.Identity?.IsAuthenticated == true && _user != null)
+            {
+                var authenticatedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                _relationshipType = await FriendSvc.GetUsersRelationshipType(authenticatedUserId, _user.Id);
+                StateHasChanged();
             }
         }
         

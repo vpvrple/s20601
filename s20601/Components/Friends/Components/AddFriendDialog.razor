@@ -1,0 +1,43 @@
+﻿@using s20601.Services
+@inject IFriendService FriendSvc
+
+<MudDialog Class="d-flex justify-start">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Send Friend Request</MudText>
+        <MudText Typo="Typo.body1">Add optional message to introduce yourself.</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField AutoGrow T="string" Label="@_defaultRequestMessage" Variant="Variant.Outlined" @bind-Value="@_requestMessage" Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@Submit">Send</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    
+    [Parameter]
+    public required string RequesterId { get; init; }
+    
+    [Parameter]
+    public required string FriendId { get; init; }
+
+    private readonly string _defaultRequestMessage = "Hi! I would like to add you to my friend list!";
+    private string _requestMessage = null!;
+    
+    private async Task Submit()
+    {
+        if (string.IsNullOrEmpty(_requestMessage))
+        {
+            _requestMessage = _defaultRequestMessage;
+        }
+        await FriendSvc.SendFriendRequest(RequesterId, FriendId, _requestMessage);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+    
+    private void Cancel() =>  MudDialog.Cancel();
+}

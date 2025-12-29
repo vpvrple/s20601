@@ -1,0 +1,31 @@
+﻿<MudPaper Class="pa-2" Elevation="0" @onclick="SelectRequest" Style="cursor: pointer;">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudAvatar Color="Color.Primary">@RequesterAvatar</MudAvatar>
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.body1">@RequesterUsername</MudText>
+            <MudStack Row="true">
+                <AcceptFriendRequestButton RequesterId="@RequesterId" OnRequestAccepted="OnRequestProcessed"></AcceptFriendRequestButton>
+                <DeclineFriendRequestButton RequesterId="@RequesterId" OnRequestDeclined="OnRequestProcessed"></DeclineFriendRequestButton>
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public required char RequesterAvatar { get; set; }
+    [Parameter]
+    public required string RequesterUsername { get; set; }
+    [Parameter]
+    public required string RequesterId { get; set; }
+    [Parameter]
+    public EventCallback OnRequestProcessed { get; set; }
+    [Parameter]
+    public EventCallback OnRequestSelected { get; set; }
+
+    private async Task SelectRequest()
+    {
+        await OnRequestSelected.InvokeAsync();
+    }
+}

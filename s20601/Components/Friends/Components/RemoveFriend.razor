@@ -1,0 +1,19 @@
+﻿<MudIconButton Icon="@Icons.Material.Filled.PersonRemoveAlt1"
+               Variant="Variant.Filled"
+               Color="Color.Error"
+               OnClick="Unfriend"
+               Size="Size.Small"/>
+
+@code {
+
+    [Inject] private IDialogService DialogService { get; set; }
+
+    private async Task Unfriend()
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning",
+            "Are you sure you want to remove this person from your friend list?",
+            yesText: "Unfriend", cancelText: "Cancel");
+        StateHasChanged();
+    }            
+}

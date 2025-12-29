@@ -1,0 +1,31 @@
+﻿@using System.Security.Claims
+@using s20601.Services
+
+@inject IFriendService FriendSvc
+
+<AuthorizeView>
+    <Authorized>
+        <MudButton OnClick="@AcceptRequest" EndIcon="@Icons.Material.Filled.Check">Accept</MudButton>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    [Parameter] public required string RequesterId { get; set; }
+    [Parameter] public EventCallback OnRequestAccepted { get; set; }
+    
+    private async Task AcceptRequest()
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            await FriendSvc.AcceptFriendRequest(userId, RequesterId);
+            await OnRequestAccepted.InvokeAsync();
+        }
+    }
+}
