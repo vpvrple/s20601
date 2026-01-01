@@ -1,61 +1,68 @@
 ﻿using s20601.Data;
 using s20601.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 
 namespace s20601.Services;
 
 public class FriendService : IFriendService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    public FriendService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+    private readonly IUserService _userService;
+    public FriendService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IUserService userService)
     {
         _dbContextFactory = dbContextFactory;
+        _userService = userService;
     }
     
-    public async Task<List<ApplicationUser>> GetFriendRequests(string userId)
+    public async Task<List<ApplicationUser>> GetFriendRequests()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        // Return users who sent a request TO the current user (userId)
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
         return await context.UserRelationships
             .Include(x => x.IdUserNavigation)
-            .Where(x => x.IdRelatedUser == userId && x.Type == RelationshipType.Pending)
+            .Where(x => x.IdRelatedUser == authenticatedUserId && x.Type == RelationshipType.Pending)
             .Select(x => x.IdUserNavigation)
             .ToListAsync();
     }
     
-    public async Task<List<ApplicationUser>> GetFriends(string userId)
+    public async Task<List<ApplicationUser>> GetFriends()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
         var friendsAsUser = await context.UserRelationships
             .Include(x => x.IdRelatedUserNavigation)
-            .Where(x => x.IdUser == userId && x.Type == RelationshipType.Friends)
+            .Where(x => x.IdUser == authenticatedUserId && x.Type == RelationshipType.Friends)
             .Select(x => x.IdRelatedUserNavigation)
             .ToListAsync();
 
         var friendsAsRelated = await context.UserRelationships
             .Include(x => x.IdUserNavigation)
-            .Where(x => x.IdRelatedUser == userId && x.Type == RelationshipType.Friends)
+            .Where(x => x.IdRelatedUser == authenticatedUserId && x.Type == RelationshipType.Friends)
             .Select(x => x.IdUserNavigation)
             .ToListAsync();
 
         return friendsAsUser.Concat(friendsAsRelated).ToList();
     }
 
-    public async Task<RelationshipType?> GetUsersRelationshipType(string userId, string friendId)
+    public async Task<RelationshipType?> GetUsersRelationshipType(string friendId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
         var relationship = await context.UserRelationships.FirstOrDefaultAsync(ur =>
-            (ur.IdUser == userId && ur.IdRelatedUser == friendId) ||
-            (ur.IdUser == friendId && ur.IdRelatedUser == userId));
+            (ur.IdUser == authenticatedUserId && ur.IdRelatedUser == friendId) ||
+            (ur.IdUser == friendId && ur.IdRelatedUser == authenticatedUserId));
 
         return relationship?.Type;
     }
 
-    public async Task SendFriendRequest(string requesterId, string receiverId, string message)
+    public async Task SendFriendRequest(string receiverId, string message)
     {
-        if (requesterId == receiverId)
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        if (authenticatedUserId == receiverId)
         {
             return;
         }
@@ -63,8 +70,8 @@ public class FriendService : IFriendService
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
         var relationshipExists = await context.UserRelationships.AnyAsync(ur =>
-            (ur.IdUser == requesterId && ur.IdRelatedUser == receiverId) ||
-            (ur.IdUser == receiverId && ur.IdRelatedUser == requesterId));
+            (ur.IdUser == authenticatedUserId && ur.IdRelatedUser == receiverId) ||
+            (ur.IdUser == receiverId && ur.IdRelatedUser == authenticatedUserId));
 
         if (relationshipExists)
         {
@@ -73,7 +80,7 @@ public class FriendService : IFriendService
 
         var newRequest = new UserRelationship
         {
-            IdUser = requesterId,
+            IdUser = authenticatedUserId,
             IdRelatedUser = receiverId,
             Message = message,
             Type = RelationshipType.Pending
@@ -83,42 +90,48 @@ public class FriendService : IFriendService
         await context.SaveChangesAsync();
     }
 
-    public async Task AcceptFriendRequest(string approverId, string requesterId)
+    public async Task AcceptFriendRequest(string requesterId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        // Find the request sent BY requesterId TO approverId
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
         await context.UserRelationships
-            .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == approverId && ur.Type == RelationshipType.Pending)
+            .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == authenticatedUserId && ur.Type == RelationshipType.Pending)
             .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.Type, RelationshipType.Friends));
     }
     
-    public async Task DeclineFriendRequest(string approverId, string requesterId)
+    public async Task DeclineFriendRequest(string requesterId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        // Find the request sent BY requesterId TO approverId
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
         await context.UserRelationships
-            .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == approverId && ur.Type == RelationshipType.Pending)
+            .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == authenticatedUserId && ur.Type == RelationshipType.Pending)
             .ExecuteDeleteAsync();
     }
     
-    public async Task RemoveFriend(string userId, string friendId)
+    public async Task RemoveFriend(string friendId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
         await context.UserRelationships
-            .Where(ur => ((ur.IdUser == userId && ur.IdRelatedUser == friendId) ||
-                          (ur.IdUser == friendId && ur.IdRelatedUser == userId)) && ur.Type == RelationshipType.Friends)
+            .Where(ur => ((ur.IdUser == authenticatedUserId && ur.IdRelatedUser == friendId) ||
+                          (ur.IdUser == friendId && ur.IdRelatedUser == authenticatedUserId)) && ur.Type == RelationshipType.Friends)
             .ExecuteDeleteAsync();
     }
 
-    public async Task<string?> GetFriendRequestMessage(string requesterId, string receiverId)
+    public async Task<string?> GetFriendRequestMessage(string receiverId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
         var request = await context.UserRelationships
-            .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == receiverId && ur.Type == RelationshipType.Pending)
+            .Where(ur => ur.IdUser == authenticatedUserId && ur.IdRelatedUser == receiverId && ur.Type == RelationshipType.Pending)
             .Select(ur => ur.Message)
             .FirstOrDefaultAsync();
             

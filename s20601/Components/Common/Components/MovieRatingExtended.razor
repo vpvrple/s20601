@@ -79,7 +79,7 @@ else
         if (user.Identity?.IsAuthenticated == true)
         {
             _userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            _currentUserMovieRating = await RatingSvc.GetUserMovieRating(_userId, MovieId);
+            _currentUserMovieRating = await RatingSvc.GetUserMovieRating(MovieId);
         }
         
         _loading = false;
@@ -87,7 +87,7 @@ else
 
     private async Task OnRatingChanged(int newRating)
     {
-        await RatingSvc.RateMovieAsync(MovieId, _userId, newRating);
+        await RatingSvc.RateMovieAsync(MovieId, newRating);
 
         var updatedRating = await RatingSvc.GetMovieRatingSummaryByIdAsync(MovieId);
         if (updatedRating is null)

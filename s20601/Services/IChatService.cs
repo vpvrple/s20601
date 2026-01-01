@@ -4,6 +4,6 @@ namespace s20601.Services;
 
 public interface IChatService
 {
-    Task<List<Message>> GetConversation(string userId1, string userId2);
-    Task<Message> SaveMessage(string IdSender, string IdRecipient, string message);
+    Task<List<Message>?> GetConversation(string friendId);
+    Task<Message?> SaveMessage(string idRecipient, string message);
 }

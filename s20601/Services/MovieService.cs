@@ -255,7 +255,7 @@ public class MovieService : IMovieService
             .Include(x => x.NewCrew)
             .FirstOrDefaultAsync(x => x.Id == requestId);
 
-        if (request == null || request.Status != MovieUpdateRequestStatus.Open)
+        if (request is not { Status: MovieUpdateRequestStatus.Open })
         {
             return;
         }
@@ -278,7 +278,7 @@ public class MovieService : IMovieService
                 if (request.NewTitleType != null) movie.TitleType = request.NewTitleType;
 
                 // Update Genres
-                if (request.NewGenres.Any())
+                if (request.NewGenres.Count != 0)
                 {
                     context.MovieGenres.RemoveRange(movie.MovieGenres);
                     foreach (var genre in request.NewGenres)
@@ -292,7 +292,7 @@ public class MovieService : IMovieService
                 }
 
                 // Update Crew
-                if (request.NewCrew.Any())
+                if (request.NewCrew.Count != 0)
                 {
                     context.MovieCrews.RemoveRange(movie.MovieCrews);
                     foreach (var crewRequest in request.NewCrew)

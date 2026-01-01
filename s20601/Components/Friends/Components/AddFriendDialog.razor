@@ -35,7 +35,7 @@
         {
             _requestMessage = _defaultRequestMessage;
         }
-        await FriendSvc.SendFriendRequest(RequesterId, FriendId, _requestMessage);
+        await FriendSvc.SendFriendRequest(FriendId, _requestMessage);
         MudDialog.Close(DialogResult.Ok(true));
     }
     

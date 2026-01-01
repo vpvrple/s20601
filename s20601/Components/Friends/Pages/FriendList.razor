@@ -60,10 +60,10 @@ else
         <MudItem xs="8" Class="d-flex flex-column" Style="height: 100%;">
             @if (_activeIndex == 0)
             {
-                @if (!string.IsNullOrEmpty(username))
+                @if (!string.IsNullOrEmpty(Username))
                 {
                     <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-4" Elevation="0">
-                        <MudText Typo="Typo.caption" Align="Align.Center" Class="mb-4">Start of conversation with @username</MudText>
+                        <MudText Typo="Typo.caption" Align="Align.Center" Class="mb-4">Start of conversation with @Username</MudText>
                         @foreach (var message in _conversation)
                         {
 
@@ -103,26 +103,19 @@ else
 </AuthorizeView>
 
 @code {
-    [Parameter] public string? username { get; set; }
-
+    [Parameter] public string? Username { get; set; }
     [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-
-    private string _authenticatedUserId;
-    private ApplicationUser? _authenticatedUser;
     private bool _loading;
-    private List<ApplicationUser> _friendRequests = new();
-    private List<ApplicationUser> _friends = new();
-    private List<Message> _conversation = new();
+    private List<ApplicationUser> _friendRequests = [];
+    private List<ApplicationUser> _friends = [];
+    private List<Message>? _conversation = [];
     private string? _inputMessage;
     private string? _friendId;
     private string? _loadedFriendUsername;
-    private MudTextField<string> _messageInput;
     private string? _selectedRequestMessage;
-
     private int _activeIndex;
-
-    private HubConnection? hubConnection;
-    private bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+    private HubConnection? _hubConnection;
+    private string _authenticatedUserId;
     
     protected override async Task OnInitializedAsync()
     {
@@ -133,16 +126,15 @@ else
         if (user.Identity?.IsAuthenticated == true)
         {
             _authenticatedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            _authenticatedUser = await UserSvc.GetUserByIdAsync(_authenticatedUserId);
-
+            
             await RefreshData();
             
-            hubConnection = new HubConnectionBuilder()
+            _hubConnection = new HubConnectionBuilder()
                 .WithUrl(Navigation.ToAbsoluteUri($"/chathub?userId={_authenticatedUserId}"))
                 .WithAutomaticReconnect()
                 .Build();
             
-            hubConnection.On<string, string>("ReceiveMessage", (senderId, messageText) =>
+            _hubConnection.On<string, string>("ReceiveMessage", (senderId, messageText) =>
             {
                 if (_friendId == senderId)
                 {
@@ -157,7 +149,7 @@ else
                 }
             });
 
-            await hubConnection.StartAsync();
+            await _hubConnection.StartAsync();
         }
 
         _loading = false;
@@ -165,32 +157,32 @@ else
 
     private async Task RefreshData()
     {
-        _friends = await FriendSvc.GetFriends(_authenticatedUserId);
-        _friendRequests = await FriendSvc.GetFriendRequests(_authenticatedUserId);
+        _friends = await FriendSvc.GetFriends();
+        _friendRequests = await FriendSvc.GetFriendRequests();
         StateHasChanged();
     }
 
     private async Task LoadConversation()
     {
-        if (!string.IsNullOrEmpty(_friendId) && !string.IsNullOrEmpty(_authenticatedUserId))
+        if (!string.IsNullOrEmpty(_friendId))
         {
-            _conversation = await ChatSvc.GetConversation(_authenticatedUserId, _friendId);
+            _conversation = await ChatSvc.GetConversation(_friendId);
         }
         else
         {
-            _conversation = new List<Message>();
+            _conversation = [];
         }
     }
     
     protected override async Task OnParametersSetAsync()
     {
-        if (username != _loadedFriendUsername)
+        if (Username != _loadedFriendUsername)
         {
-            if (!string.IsNullOrEmpty(username))
+            if (!string.IsNullOrEmpty(Username))
             {
-                var user = await UserSvc.GetUserByUsernameAsync(username);
+                var user = await UserSvc.GetUserByUsername(Username);
                 _friendId = user?.Id;
-                _loadedFriendUsername = username;
+                _loadedFriendUsername = Username;
             }
             else
             {
@@ -204,11 +196,11 @@ else
     
     private void SelectedFriend(ApplicationUser friend)
     {
-        username = friend.UserName;
+        Username = friend.UserName;
         _friendId = friend.Id;
         _loadedFriendUsername = friend.UserName;
 
-        Navigation.NavigateTo($"/friends/{username}");
+        Navigation.NavigateTo($"/friends/{Username}");
     }
     
     private async Task SendClick()
@@ -218,7 +210,7 @@ else
         {
             _inputMessage = string.Empty;
             
-            var msg = await ChatSvc.SaveMessage(_authenticatedUserId, _friendId, messageToSend);
+            var msg = await ChatSvc.SaveMessage(_friendId, messageToSend);
             
             _conversation.Add(msg);
 
@@ -236,14 +228,14 @@ else
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is not null)
+        if (_hubConnection is not null)
         {
-            await hubConnection.DisposeAsync();
+            await _hubConnection.DisposeAsync();
         }
     }
 
     private async Task SelectRequest(string requesterId)
     {
-        _selectedRequestMessage = await FriendSvc.GetFriendRequestMessage(requesterId, _authenticatedUserId);
+        _selectedRequestMessage = await FriendSvc.GetFriendRequestMessage(requesterId);
     }
 }

@@ -59,7 +59,7 @@
             _userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (_userId != null)
             {
-                _relationshipType = await FriendSvc.GetUsersRelationshipType(_userId, FriendId);
+                _relationshipType = await FriendSvc.GetUsersRelationshipType(FriendId);
             }
         }
     }
@@ -87,7 +87,7 @@
 
     private async Task Unfriend()
     {
-        await FriendSvc.RemoveFriend(_userId, FriendId);
+        await FriendSvc.RemoveFriend(FriendId);
         _relationshipType = null;
         await OnFriendshipChange.InvokeAsync();
         StateHasChanged();
@@ -95,7 +95,7 @@
 
     private async Task CancelFriendRequest()
     {
-        await FriendSvc.DeclineFriendRequest(FriendId, _userId);
+        await FriendSvc.DeclineFriendRequest(FriendId);
         _relationshipType = null;
         await OnFriendshipChange.InvokeAsync();
         StateHasChanged();

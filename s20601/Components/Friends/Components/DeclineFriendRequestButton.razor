@@ -24,7 +24,7 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            await FriendSvc.DeclineFriendRequest(userId, RequesterId);
+            await FriendSvc.DeclineFriendRequest(RequesterId);
             await OnRequestDeclined.InvokeAsync();
         }
     }

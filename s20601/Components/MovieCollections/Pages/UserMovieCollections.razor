@@ -219,7 +219,7 @@
         }
         else
         {
-            var userInfoByParameterUsername = await UserSvc.GetUserByUsernameAsync(Username);
+            var userInfoByParameterUsername = await UserSvc.GetUserByUsername(Username);
             if (userInfoByParameterUsername == null)
             {
                 Navigation.NavigateTo("notfound");

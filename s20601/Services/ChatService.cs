@@ -7,20 +7,29 @@ namespace s20601.Services;
 public class ChatService : IChatService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+    private readonly IUserService _userService;
     
-    public ChatService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+    public ChatService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IUserService userService)
     {
         _dbContextFactory = dbContextFactory;
+        _userService = userService;
     }
 
-    public async Task<Message> SaveMessage(string IdSender, string IdRecipient, string message)
+    public async Task<Message?> SaveMessage(string idRecipient, string message)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
 
+        if (authenticatedUserId == null)
+        {
+            return null;
+        }
+        
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
         var messageDb = new Message()
         {
-            IdSender = IdSender,
-            IdRecipient = IdRecipient,
+            IdSender = authenticatedUserId,
+            IdRecipient = idRecipient,
             Content = message,
             Created = DateTime.Now,
             MessageStatus = MessageStatus.Sent
@@ -32,12 +41,20 @@ public class ChatService : IChatService
         return messageDb;
     }
 
-    public async Task<List<Message>> GetConversation(string userId1, string userId2)
+    public async Task<List<Message>?> GetConversation(string friendId)
     {
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        
+        if (authenticatedUserId == null)
+        {
+            return null;
+        }
+        
         using var context = await _dbContextFactory.CreateDbContextAsync();
+        
         return await context.Messages
-            .Where(m => (m.IdSender == userId1 && m.IdRecipient == userId2) || 
-                        (m.IdSender == userId2 && m.IdRecipient == userId1))
+            .Where(m => (m.IdSender == authenticatedUserId && m.IdRecipient == friendId) || 
+                        (m.IdSender == friendId && m.IdRecipient == authenticatedUserId))
             .OrderBy(m => m.Created)
             .ToListAsync();
     }

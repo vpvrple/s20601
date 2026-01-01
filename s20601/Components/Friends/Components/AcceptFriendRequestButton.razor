@@ -24,7 +24,7 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            await FriendSvc.AcceptFriendRequest(userId, RequesterId);
+            await FriendSvc.AcceptFriendRequest(RequesterId);
             await OnRequestAccepted.InvokeAsync();
         }
     }

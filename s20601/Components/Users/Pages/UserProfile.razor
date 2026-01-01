@@ -219,8 +219,8 @@
 
             if (user.Identity?.IsAuthenticated == true)
             {
-                _user = await UserSvc.GetUserByUsernameAsync(Username);
-                _userRatingSummary = await RatingSvc.GetUserRatingSummaryAsync(_user.Id);
+                _user = await UserSvc.GetUserByUsername(Username);
+                _userRatingSummary = await RatingSvc.GetUserRatingSummaryAsync();
                 var ratingCount = _userRatingSummary.RatingDistribution.Count;
 
                 if (user.Identity.Name != _user.UserName)
@@ -253,7 +253,7 @@
             if (user.Identity?.IsAuthenticated == true && _user != null)
             {
                 var authenticatedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-                _relationshipType = await FriendSvc.GetUsersRelationshipType(authenticatedUserId, _user.Id);
+                _relationshipType = await FriendSvc.GetUsersRelationshipType(_user.Id);
                 StateHasChanged();
             }
         }

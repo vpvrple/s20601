@@ -12,18 +12,27 @@ public class RatingService : IRatingService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly IMediator _mediator;
-    public RatingService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator)
+    private readonly IUserService _userService;
+    public RatingService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IUserService userService, IMediator mediator)
     {
         _dbContextFactory = dbContextFactory;
         _mediator = mediator;
+        _userService = userService;
     }
 
-    public async Task<UserRatingSummary?> GetUserRatingSummaryAsync(string userId)
+    public async Task<UserRatingSummary?> GetUserRatingSummaryAsync()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
 
+        if (authenticatedUserId is null)
+        {
+            return null;
+        }
+        
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
         var ratings = await context.MovieRates
-            .Where(x => x.IdUser == userId)
+            .Where(x => x.IdUser == authenticatedUserId)
             .ToListAsync();
 
         double avgRating = ratings.Count != 0 ? ratings.Average(x => x.Rating) : 0;
@@ -53,7 +62,7 @@ public class RatingService : IRatingService
         }
 
         var totalReviews = await context.Reviews
-            .Where(x => x.IdAuthor == userId)
+            .Where(x => x.IdAuthor == authenticatedUserId)
             .CountAsync();
 
         var ratingDistribution = ratings
@@ -76,12 +85,19 @@ public class RatingService : IRatingService
         };
     }
 
-    public async Task RateMovieAsync(int movieId, string userId, int? rating)
+    public async Task RateMovieAsync(int movieId, int? rating)
     {
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
+        if (authenticatedUserId is null)
+        {
+            return;
+        }
+        
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var currentRating = await context.MovieRates
-            .FirstOrDefaultAsync(x => x.Movie_Id == movieId && x.IdUser == userId);
+            .FirstOrDefaultAsync(x => x.Movie_Id == movieId && x.IdUser == authenticatedUserId);
 
         if (rating is null or 0)
         {
@@ -89,7 +105,7 @@ public class RatingService : IRatingService
             {
                 context.MovieRates.Remove(currentRating);
                 await context.SaveChangesAsync();
-                await _mediator.Publish(new MovieUnratedCommand(movieId, userId));
+                await _mediator.Publish(new MovieUnratedCommand(movieId, authenticatedUserId));
             }
         }
         else
@@ -108,11 +124,11 @@ public class RatingService : IRatingService
                     Movie_Id = movieId,
                     Rating = rating.Value,
                     RatedAt = DateTime.UtcNow,
-                    IdUser = userId
+                    IdUser = authenticatedUserId
                 };
                 context.MovieRates.Add(newRating);
                 await context.SaveChangesAsync();
-                await _mediator.Publish(new MovieRatedCommand(movieId, userId));
+                await _mediator.Publish(new MovieRatedCommand(movieId, authenticatedUserId));
             }
         }
     }
@@ -136,11 +152,18 @@ public class RatingService : IRatingService
         };
     }
 
-    public async Task<MovieRate?> GetUserMovieRating(string userId, int movieId)
+    public async Task<MovieRate?> GetUserMovieRating(int movieId)
     {
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
+        if (authenticatedUserId is null)
+        {
+            return null;
+        }
+        
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        return await context.MovieRates.FirstOrDefaultAsync(x => x.IdUser == userId && x.Movie_Id == movieId);
+        return await context.MovieRates.FirstOrDefaultAsync(x => x.IdUser == authenticatedUserId && x.Movie_Id == movieId);
     }
 
     public async Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n)

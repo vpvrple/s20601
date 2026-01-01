@@ -5,7 +5,6 @@ namespace s20601.Hubs;
 
 public class ChatHub : Hub
 {
-    
     private readonly IChatService _chatService;
 
     public ChatHub(IChatService chatService)
@@ -13,11 +12,11 @@ public class ChatHub : Hub
         _chatService = chatService;
     }
 
-    public async Task SendMessage( string IdRecipient, string message)
+    public async Task SendMessage(string idRecipient, string message)
     {
-        var savedMessage = await _chatService.SaveMessage(Context.UserIdentifier, IdRecipient, message);
+        var savedMessage = await _chatService.SaveMessage(idRecipient, message);
 
-        await Clients.User(IdRecipient).SendAsync("ReceiveMessage", Context.UserIdentifier, message);
+        await Clients.User(idRecipient).SendAsync("ReceiveMessage", Context.UserIdentifier, message);
         
         await Clients.Caller.SendAsync("ReceiveMessage", Context.UserIdentifier, message);
     }
