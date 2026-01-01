@@ -282,7 +282,7 @@
     private string _titleType = "";
     private string _description = "";
 
-    [Parameter] public Movie Movie { get; set; } = null!;
+    [Parameter] public Movie? Movie { get; set; }
 
     private List<Genre> _allGenres = new();
     private HashSet<Genre> _selectedGenres = new();
@@ -294,7 +294,7 @@
     protected override async Task OnInitializedAsync()
     {
         _allGenres = await MovieSvc.GetAllGenresAsync();
-        if (Movie.Id != 0)
+        if (Movie is not null)
         {
             _title = Movie.Title;
             _originalTitle = Movie.OriginalTitle;
@@ -308,6 +308,7 @@
         }
         else
         {
+            Movie = new Movie();
             _crew = new List<GetMovieCrewMemberWithDetails>();
         }
     }

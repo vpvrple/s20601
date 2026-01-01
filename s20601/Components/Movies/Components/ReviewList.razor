@@ -9,20 +9,35 @@
 <AuthorizeView>
     @if (!userReviewed)
     {
-        <MudPaper Class="d-flex justify-end flex-grow-1 gap-4 mt-6 mb-6" Elevation="0">
-            <MudTextField @bind-Value="reviewContent" T="string" Label="Write a review" Variant="Variant.Text" AutoGrow="true" />
-            <MudButton Disabled="@_processing" OnClick="() => PostReview(reviewContent)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Class="d-flex justify-end align-self-end">
-                @if (_processing)
-                {
-                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                    <MudText Class="ms-2">Posting</MudText>
-                }
-                else
-                {
-                    <MudText>Post</MudText>
-                }
-            </MudButton>
-        </MudPaper>
+        <AuthorizeView Policy="CanPostReview" Context="authContext">
+            <Authorized Context="innerContext">
+                <MudPaper Class="d-flex justify-end flex-grow-1 gap-4 mt-6 mb-6" Elevation="0">
+                    <MudTextField @bind-Value="reviewContent" T="string" Label="Write a review" Variant="Variant.Text" AutoGrow="true" />
+                    <MudButton Disabled="@_processing" OnClick="() => PostReview(reviewContent)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Class="d-flex justify-end align-self-end">
+                        @if (_processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Posting</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Post</MudText>
+                        }
+                    </MudButton>
+                </MudPaper>
+            </Authorized>
+            <NotAuthorized Context="innerContext">
+                
+                    @if (innerContext.User.HasClaim(c => c.Type == "ReviewLimitReached"))
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-6 mb-6">You have already posted a review in the last 24 hours. Please wait before posting another one.</MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mt-6 mb-6">You need at least 1 reputation point to post a review. If you have between 1 and 21 points, you can only post one review every 24 hours.</MudAlert>
+                    }
+            </NotAuthorized>
+        </AuthorizeView>
     }
 </AuthorizeView>
 

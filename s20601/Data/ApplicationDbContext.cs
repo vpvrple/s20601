@@ -394,7 +394,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasMaxLength(150)
                 .IsUnicode(false);
             entity.Property(e => e.LastLogin).HasPrecision(2);
-            entity.Property(e => e.Nickname).HasDefaultValue("");
+            entity.Property(e => e.LastDailyLogin).HasPrecision(2);
             entity.Property(e => e.ProfileDescription)
                 .HasMaxLength(500)
                 .IsUnicode(false);

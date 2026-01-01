@@ -7,7 +7,6 @@
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
-@inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject UserManager<ApplicationUser> UserManager
 
@@ -116,6 +115,7 @@
                 user.LastLogin = DateTime.UtcNow;
                 await UserManager.UpdateAsync(user);
             }
+            
             Logger.LogInformation("User logged in.");
             RedirectManager.RedirectTo(ReturnUrl);
         }

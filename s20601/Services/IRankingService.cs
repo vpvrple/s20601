@@ -7,4 +7,5 @@ public interface IRankingService
     Task<List<ApplicationUser>> GetTopUsersByPoints();
     Task IncrementPoints(string userId, int points);
     Task DecrementPoints(string userId, int points);
+    Task<int> GetUserPointsById(string userId);
 }

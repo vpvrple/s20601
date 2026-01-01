@@ -36,4 +36,14 @@ public class RankingService : IRankingService
             .Where(u => u.Id == userId)
             .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.ReputationPoints, u => u.ReputationPoints - points));
     }
+
+    public async Task<int> GetUserPointsById(string userId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        return await context.Users
+            .Where(u => u.Id == userId)
+            .Select(x => x.ReputationPoints)
+            .FirstOrDefaultAsync();
+    }
 }

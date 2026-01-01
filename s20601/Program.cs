@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -6,6 +7,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using s20601.Components;
 using s20601.Components.Account;
+using s20601.Components.Account.Policies;
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Hubs;
@@ -34,12 +36,31 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 
 builder.Services
     .AddCascadingAuthenticationState();
+
 builder.Services
     .AddScoped<IdentityUserAccessor>();
 builder.Services
     .AddScoped<IdentityRedirectManager>();
 builder.Services
     .AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddSingleton<IAuthorizationHandler, MinimumPointsHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ReviewFrequencyHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("PointsAtLeast1", policy =>
+        policy.Requirements.Add(new MinimumPointsRequirement(1)));
+    
+    options.AddPolicy("PointsAtLeast21", policy =>
+        policy.Requirements.Add(new MinimumPointsRequirement(21)));
+    
+    options.AddPolicy("CanPostReview", policy =>
+    {
+        policy.Requirements.Add(new MinimumPointsRequirement(1));
+        policy.Requirements.Add(new ReviewFrequencyRequirement(1, 21, TimeSpan.FromHours(24)));
+    });
+});
 
 builder.Services.AddAuthentication(options =>
     {

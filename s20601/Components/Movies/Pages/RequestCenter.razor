@@ -40,9 +40,9 @@
                     </MudStack>
                 </MudItem>
                 <MudItem xs="9">
-                    <MudButton Style="justify-self: end" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" OnClick="@OpenRequestMovieDialog" Color="Color.Primary">
-                        New movie request
-                    </MudButton>
+                    
+                    <MovieEditRequestButton ButtonText="New movie request" DialogTitle="Create movie request"></MovieEditRequestButton>
+
                     @if (_selectedRequestId.HasValue)
                     {
                         <MudCard Elevation="0">
@@ -261,15 +261,5 @@
             NewValue = newValue;
             IsChanged = isChanged;
         }
-    }
-
-    
-    private async Task OpenRequestMovieDialog()
-    {
-        var parameters = new DialogParameters<MovieRequestDialog>
-        {
-            { x => x.Movie, new Movie() }
-        };
-        await DialogService.ShowAsync<MovieRequestDialog>("Create movie request", parameters);
     }
 }

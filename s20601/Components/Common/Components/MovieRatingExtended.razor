@@ -21,10 +21,22 @@ else
                            SelectedValueChanged="NavigateToLoginPage"/>
             </NotAuthorized>
             <Authorized>
-                <MudRating
-                           SelectedValue="@(_currentUserMovieRating?.Rating ?? 0)"
-                           Size="@Size"
-                           SelectedValueChanged="OnRatingChanged"/>
+                <AuthorizeView Policy="PointsAtLeast1" Context="authContext">
+                    <Authorized Context="innerContext">
+                        <MudRating
+                                   SelectedValue="@(_currentUserMovieRating?.Rating ?? 0)"
+                                   Size="@Size"
+                                   SelectedValueChanged="OnRatingChanged"/>
+                    </Authorized>
+                    <NotAuthorized Context="innerContext">
+                        <MudTooltip Text="You need at least 1 reputation point to rate movies">
+                            <MudRating
+                                       SelectedValue="@((int)Math.Round(AvgRating))"
+                                       Size="@Size"
+                                       ReadOnly="true"/>
+                        </MudTooltip>
+                    </NotAuthorized>
+                </AuthorizeView>
             </Authorized>
         </AuthorizeView>
 

@@ -2,9 +2,9 @@
 
 @inject IDialogService DialogService
 
-<AuthorizeView>
+<AuthorizeView Policy="PointsAtLeast21">
     <Authorized>
-        <MudButton EndIcon="@Icons.Material.Filled.Edit" OnClick="@OpenMovieRequestDialog">Edit</MudButton>
+        <MudButton Color="@Color" Variant="@Variant" EndIcon="@Icons.Material.Filled.Edit" OnClick="@OpenMovieRequestDialog">@ButtonText</MudButton>
     </Authorized>
 </AuthorizeView>
 
@@ -12,6 +12,12 @@
 @code {
     [Parameter]
     public required Movie Movie { get; set; }
+    [Parameter]
+    public required string DialogTitle { get; set; }
+    [Parameter]
+    public required string ButtonText { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Filled;
+    [Parameter] public Color Color { get; set; } = Color.Primary;
     
     private async Task OpenMovieRequestDialog()
     {
@@ -20,6 +26,6 @@
             { x => x.Movie, Movie }
         };
 
-        await DialogService.ShowAsync<MovieRequestDialog>("Create movie data update request", parameters);
+        await DialogService.ShowAsync<MovieRequestDialog>(DialogTitle, parameters);
     }
 }

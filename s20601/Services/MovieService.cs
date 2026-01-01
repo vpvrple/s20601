@@ -1,17 +1,21 @@
 ﻿using System.Linq.Expressions;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
 using s20601.Data;
+using s20601.Events.Commands;
 
 namespace s20601.Services;
 
 public class MovieService : IMovieService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    public MovieService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+    private readonly IMediator _mediator;
+    public MovieService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator)
     {
         _dbContextFactory = dbContextFactory;
+        _mediator = mediator;
     }
 
     public async Task<Movie?> GetMovieOfTheDayAsync()
@@ -393,6 +397,7 @@ public class MovieService : IMovieService
         }
 
         request.Status = MovieUpdateRequestStatus.Approved;
+        await _mediator.Publish(new MovieRequestApprovedCommand(request.IdUser, 10));
         await context.SaveChangesAsync();
     }
 

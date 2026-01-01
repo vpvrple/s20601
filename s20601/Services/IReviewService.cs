@@ -13,6 +13,4 @@ public interface IReviewService
     Task RemoveReviewAsync(int reviewId, string userId);
     Task VoteReview(int reviewId, string userId, ReviewRateType? vote);
     Task<ReviewRateType?> GetUserVoteByReview(int reviewId, string userId);
-    // Task RemoveVote(int reviewId, string userId);
 }
-
