@@ -1,0 +1,48 @@
+@using s20601.Data.Models
+@using s20601.Services
+
+@inject IMovieService MovieSvc
+@inject ISearchService SearchSvc
+@inject NavigationManager NavManager
+
+<MudAutocomplete T="Movie"
+    @ref="_searchAutocomplete"
+    Label="Search Movies"
+    Variant="Variant.Outlined"
+    Adornment="Adornment.End"
+    AdornmentIcon="@Icons.Material.Filled.Search"
+    AdornmentColor="Color.Primary"
+    ToStringFunc="@(movie => movie == null ? null : $"{movie.Title} ({movie.StartYear})")"
+    SearchFunc="SearchMovieByTitle"
+    MinCharacters="0"
+    Clearable="true"
+    CoerceText="true"
+    Dense="true"
+    ResetValueOnEmptyText="true" 
+    ValueChanged="MovieSelected" />
+
+@code
+{
+    private MudAutocomplete<Movie> _searchAutocomplete = null!;
+
+    private async Task<IEnumerable<Movie>> SearchMovieByTitle(string title, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(title))
+        {
+            var trendingMovies = await MovieSvc.GetTrendingMovies(10);
+            return trendingMovies.Take(10);
+        }
+
+        var movies = await SearchSvc.SearchMovieByTitle(title);
+        return movies.Take(10);
+    }
+
+    private async Task MovieSelected(Movie selectedMovie)
+    {
+        if (selectedMovie is not null)
+        {
+            NavManager.NavigateTo(selectedMovie.GetUrl());
+            await _searchAutocomplete.ClearAsync();
+        }
+    }
+}

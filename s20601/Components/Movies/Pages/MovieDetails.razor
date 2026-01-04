@@ -108,7 +108,7 @@ else
     private string? _poster;
     private string? _overview;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         _loading = true;
         _movie = await MovieSvc.GetMovieByIdAsync(MovieId);
