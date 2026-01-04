@@ -1,0 +1,119 @@
+@using Services
+@using s20601.Data.Models
+@using s20601.Data.Models.DTOs
+
+@inject IMovieService MovieSvc
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    @if (_crew.Count == 0)
+    {
+        <MudText Typo="Typo.body1" GutterBottom="true">We don't have information about movie crew for this title. Help us figure this out by editing this page!</MudText>
+    }
+    else
+    {
+        <MudPaper Elevation="0">
+            @{
+                var directors = _crew.Where(m =>
+                m.Job.Equals("director", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            }
+            @if (directors.Count != 0)
+            {
+                <MudText Typo="Typo.h5" GutterBottom="true">Directors</MudText>
+                <MudStack Row="true">
+                    @foreach (var director in directors)
+                    {
+                        <MudLink Href="@($"/persona/{@director.Id}")">@director.FirstName @director.LastName</MudLink>
+                    }
+                </MudStack>
+            }
+
+            <MudPaper Class="mt-3" Elevation="0">
+                @{
+                    var writers = _crew.Where(m =>
+                    m.Job.Equals("writer", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                }
+                @if (writers.Count != 0)
+                {
+                    <MudText Typo="Typo.h5" GutterBottom="true">Writers</MudText>
+                    <MudStack Row="true">
+                        @foreach (var writer in writers)
+                        {
+                            <MudLink Href="@($"/persona/{@writer.Id}")">@writer.FirstName @writer.LastName</MudLink>
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+            <MudPaper Class="mt-3" Elevation="0">
+                @{
+                    var actors = _crew.Where(m =>
+                    m.Job.Equals("Actor", StringComparison.OrdinalIgnoreCase) ||
+                    m.Job.Equals("Actress", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                }
+
+                @if (actors.Count != 0)
+                {
+                    <MudText Typo="Typo.h5" GutterBottom="true">Actors</MudText>
+                    <MudFlexBreak />
+                    <MudStack Row="true">
+                        @foreach (var member in actors)
+                        {
+                            <MudPaper Elevation="0">
+                                <MudLink Href="@($"/persona/{@member.Id}")">@member.FirstName @member.LastName</MudLink>
+                                <MudText Typo="Typo.subtitle2"
+                                         Color="Color.Dark">@member.CharacterName</MudText>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+            <MudPaper Class="mt-3" Elevation="0">
+                @{
+                    var excludedCrewTypes = new[] { "Actor", "Actress", "Director", "Writer" };
+                    var otherCrew = _crew
+                    .Where(member => !excludedCrewTypes.Contains(member.Job, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+                }
+
+                @if (otherCrew.Count != 0)
+                {
+                    <MudText Typo="Typo.h5" GutterBottom="true">Other Crew</MudText>
+                    <MudStack Row="true">
+                        @foreach (var crew in otherCrew)
+                        {
+                            <MudPaper Elevation="0">
+                                <MudLink Href="@($"/persona/{@crew.Id}")">@crew.FirstName @crew.LastName</MudLink>
+                                <MudText Typo="Typo.subtitle2"
+                                         Color="Color.Dark">@crew.Job</MudText>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudPaper>
+    }
+}
+
+
+@code
+{
+    private List<GetMovieCrewMemberWithDetails> _crew = null!;
+    private bool _loading;
+
+    [Parameter]
+    public required Movie Movie { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _crew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
+        _loading = false;
+    }
+}

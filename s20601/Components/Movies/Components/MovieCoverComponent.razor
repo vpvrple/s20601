@@ -1,0 +1,35 @@
+﻿@using s20601.Components.MovieCollections.Dialogs
+@using s20601.Services
+
+@inject IMovieService MovieSvc
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudImage Src="@_poster"
+              ObjectFit="ObjectFit.Cover"
+              Alt="Movie poster"
+              Elevation="1"
+              Style="width: 100%; height: auto;"
+              Class="align-content-center" />
+    <MudPaper Elevation="0" Style="position: absolute; top: 8px; right: 8px;">
+        <BookmarkMovie MovieId="MovieId" />
+    </MudPaper>
+}
+
+
+@code {
+    [Parameter] public required int MovieId { get; set; }
+    private string? _poster;
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _poster = await MovieSvc.GetMoviePosterById(MovieId);
+        _loading = false;
+    }
+}
