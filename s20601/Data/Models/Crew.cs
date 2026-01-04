@@ -3,14 +3,10 @@
 public partial class Crew
 {
     public int Id { get; set; }
-
+    public string IMDBId { get; set; } = null!;
     public string FirstName { get; set; } = null!;
-
     public string LastName { get; set; } = null!;
-
     public int BirthYear { get; set; }
-
     public int? DeathYear { get; set; }
-
     public virtual ICollection<MovieCrew> MovieCrews { get; set; } = new List<MovieCrew>();
 }

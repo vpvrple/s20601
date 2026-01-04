@@ -23,4 +23,7 @@ public interface IMovieService
     
     Task ApproveMovieUpdateRequest(int requestId);
     Task RejectMovieUpdateRequest(int requestId);
+
+    Task<string> GetMoviePosterById(int id);
+    Task<string> GetMovieOverviewById(int id);
 }

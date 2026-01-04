@@ -339,6 +339,10 @@ namespace s20601.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<string>("IMDBId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -420,11 +424,18 @@ namespace s20601.Migrations
                     b.Property<int?>("EndYear")
                         .HasColumnType("int");
 
+                    b.Property<string>("IMDBId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OriginalTitle")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(1000)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Overview")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PosterPath")
                         .HasColumnType("nvarchar(max)");
@@ -437,15 +448,15 @@ namespace s20601.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(1000)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<string>("TitleType")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(100)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("Id")
                         .HasName("Movie_pk");

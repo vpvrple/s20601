@@ -19,6 +19,11 @@ public class ReviewRemovedEventHandler
     public async Task Handle(ReviewRemovedCommand command, CancellationToken cancellationToken)
     {
         var review = await _reviewService.GetMovieReviewWithRatingByIdAsync(command.reviewId);
+        if (review == null)
+        {
+            return;
+        }
+
         var userPoints = await _rankingService.GetUserPointsById(command.userId);
         var likesCount = review.LikeRating;
 
@@ -34,6 +39,9 @@ public class ReviewRemovedEventHandler
             await _rankingService.DecrementPoints(command.userId, pointsToDeduct);
         }
 
-        await _rankingService.IncrementPoints(command.userId, command.points);
+        if (command.points > 0)
+        {
+            await _rankingService.DecrementPoints(command.userId, command.points);
+        }
     }
 }

@@ -77,35 +77,37 @@
 
                     </MudStep>
                     <MudStep Title="General movie information">
+                        <MudStack Spacing="2">
+                            <MudTextField @bind-Value="_title" Label="Title"/>
+                            <MudTextField @bind-Value="_originalTitle" Label="Original Title"/>
+                            <MudNumericField @bind-Value="_startYear" Label="Start Year"/>
+                            <MudNumericField @bind-Value="_endYear" Label="End Year"/>
+                            <MudNumericField @bind-Value="_runtimeMinutes" Label="Runtime (minutes)"/>
+                            <MudTextField @bind-Value="_titleType" Label="Type"/>
 
-                        <MudTextField @bind-Value="_title" Label="Title"/>
-                        <MudTextField @bind-Value="_originalTitle" Label="Original Title"/>
-                        <MudNumericField @bind-Value="_startYear" Label="Start Year"/>
-                        <MudNumericField @bind-Value="_endYear" Label="End Year"/>
-                        <MudNumericField @bind-Value="_runtimeMinutes" Label="Runtime (minutes)"/>
-                        <MudTextField @bind-Value="_titleType" Label="Type"/>
+                            <MudAutocomplete T="Genre" Label="Genres" @ref="_autocomplete" Value="_selectedGenreToAdd"
+                                             ValueChanged="OnGenreSelected" SearchFunc="@SearchGenre"
+                                             ToStringFunc="@(g => g?.Name)"
+                                             ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
+                                <ItemTemplate Context="genre">
+                                    <MudText>
+                                        @(genre.Name)
+                                    </MudText>
+                                </ItemTemplate>
+                            </MudAutocomplete>
+                            <div class="d-flex flex-wrap mt-2">
+                                @foreach (var genre in _selectedGenres)
+                                {
+                                    <MudChip T="Genre" OnClose="@(() => RemoveGenre(genre))">@genre.Name</MudChip>
+                                }
+                            </div>
+                            <MudTextField @bind-Value="_overview" Label="Overview" HelperText="What is this movie about? Remember - no spoilers!" Lines="3"/>
+                            <MudTextField @bind-Value="_description" Lines="2" Label="Request description"
+                                          HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"/>
 
-                        <MudAutocomplete T="Genre" Label="Genres" @ref="_autocomplete" Value="_selectedGenreToAdd"
-                                         ValueChanged="OnGenreSelected" SearchFunc="@SearchGenre"
-                                         ToStringFunc="@(g => g?.Name)"
-                                         ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
-                            <ItemTemplate Context="genre">
-                                <MudText>
-                                    @(genre.Name)
-                                </MudText>
-                            </ItemTemplate>
-                        </MudAutocomplete>
-                        <div class="d-flex flex-wrap mt-2">
-                            @foreach (var genre in _selectedGenres)
-                            {
-                                <MudChip T="Genre" OnClose="@(() => RemoveGenre(genre))">@genre.Name</MudChip>
-                            }
-                        </div>
-
-                        <MudTextField @bind-Value="_description" Label="Request description"
-                                      HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"/>
-
+                        </MudStack>
                     </MudStep>
+                    
                     <MudStep Title="Crew">
 
 
@@ -281,6 +283,7 @@
     private int? _runtimeMinutes;
     private string _titleType = "";
     private string _description = "";
+    private string _overview = "";
 
     [Parameter] public Movie? Movie { get; set; }
 
@@ -305,6 +308,7 @@
             _originalGenres = await MovieSvc.GetMovieGenresByIdAsync(Movie.Id);
             _selectedGenres = _allGenres.Where(g => _originalGenres.Any(og => og.Id == g.Id)).ToHashSet();
             _crew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
+            _overview = Movie.Overview;
         }
         else
         {
@@ -362,6 +366,13 @@
         {
             request.NewTitleType = _titleType;
             changes.Add($"TitleType: {_titleType}");
+            hasChanges = true;
+        }
+        
+        if (_overview != Movie.Overview)
+        {
+            request.NewOverview = _overview;
+            changes.Add($"Overview: {_overview}");
             hasChanges = true;
         }
 

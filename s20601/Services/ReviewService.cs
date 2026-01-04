@@ -11,10 +11,13 @@ public class ReviewService : IReviewService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly IMediator _mediator;
-    public ReviewService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator)
+    private readonly IUserService _userService;
+
+    public ReviewService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator, IUserService userService)
     {
         _dbContextFactory = dbContextFactory;
         _mediator = mediator;
+        _userService = userService;
     }
 
     public async Task<GetMovieReviewWithRating> GetMovieReviewWithRatingByIdAsync(int id)
@@ -123,13 +126,11 @@ public class ReviewService : IReviewService
     }
 
 
-
     public async Task<bool> AlreadyReviewed(int movieId, string authorId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Reviews
             .AnyAsync(x => x.Movie_Id == movieId && x.IdAuthor == authorId);
-
     }
 
 
@@ -139,7 +140,9 @@ public class ReviewService : IReviewService
 
         var review = await context.Reviews.FindAsync(reviewId);
         if (review is null) return;
-        
+
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
         var authorId = review.IdAuthor;
 
         var currentVote = await context.ReviewRates
@@ -151,7 +154,8 @@ public class ReviewService : IReviewService
             if (currentVote is not null)
             {
                 context.ReviewRates.Remove(currentVote);
-                await _mediator.Publish(new ReviewUnratedCommand(authorId, currentVote.ReviewRateType, 1));
+                if (authenticatedUserId != authorId)
+                    await _mediator.Publish(new ReviewUnratedCommand(authorId, currentVote.ReviewRateType, 1));
             }
         }
         else
@@ -165,44 +169,49 @@ public class ReviewService : IReviewService
                     ReviewRateType = vote.Value,
                     RatedAt = DateTime.UtcNow
                 });
-                
+
                 if (vote.Value == ReviewRateType.Like)
                 {
-                    await _mediator.Publish(new ReviewLikedCommand(authorId, 1));
+                    if (authenticatedUserId != authorId)
+                        await _mediator.Publish(new ReviewLikedCommand(authorId, 1));
                 }
                 else
                 {
-                    await _mediator.Publish(new ReviewDislikedCommand(authorId, 1));
+                    if (authenticatedUserId != authorId)
+                        await _mediator.Publish(new ReviewDislikedCommand(authorId, 1));
                 }
             }
             else if (currentVote.ReviewRateType != vote.Value)
             {
-                await _mediator.Publish(new ReviewUnratedCommand(authorId, currentVote.ReviewRateType, 1));
+                if (authenticatedUserId != authorId)
+                    await _mediator.Publish(new ReviewUnratedCommand(authorId, currentVote.ReviewRateType, 1));
 
                 currentVote.ReviewRateType = vote.Value;
                 currentVote.RatedAt = DateTime.UtcNow;
                 context.ReviewRates.Update(currentVote);
-                
+
                 if (currentVote.ReviewRateType == ReviewRateType.Like)
                 {
-                    await _mediator.Publish(new ReviewLikedCommand(authorId, 1));
+                    if (authenticatedUserId != authorId)
+                        await _mediator.Publish(new ReviewLikedCommand(authorId, 1));
                 }
                 else if (currentVote.ReviewRateType == ReviewRateType.Dislike)
                 {
-                    await _mediator.Publish(new ReviewDislikedCommand(authorId, 1));
+                    if (authenticatedUserId != authorId)
+                        await _mediator.Publish(new ReviewDislikedCommand(authorId, 1));
                 }
             }
         }
+    await context.SaveChangesAsync();
+}
 
-        await context.SaveChangesAsync();
-    }
+public async Task<ReviewRateType?> GetUserVoteByReview(int reviewId, string userId)
+{
+    using var context = await _dbContextFactory.CreateDbContextAsync();
+    return await context.ReviewRates
+        .Where(x => x.IdUser == userId && x.Review_Id == reviewId)
+        .Select(x => (ReviewRateType?)x.ReviewRateType)
+        .FirstOrDefaultAsync();
+}
 
-    public async Task<ReviewRateType?> GetUserVoteByReview(int reviewId, string userId)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.ReviewRates
-            .Where(x => x.IdUser == userId && x.Review_Id == reviewId)
-            .Select(x => (ReviewRateType?)x.ReviewRateType)
-            .FirstOrDefaultAsync();
-    }
 }

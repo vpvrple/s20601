@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CurrieTechnologies.Razor.Clipboard" Version="1.6.0" />
     <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="3.2.1" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.10" />
@@ -26,7 +27,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.11" />
     <PackageReference Include="MudBlazor" Version="8.9.0" />
+    <PackageReference Include="TMDbLib" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +37,6 @@
     <Folder Include="Components\MovieCollections\Components\" />
     <Folder Include="Components\Users\Components\" />
     <Folder Include="Data\Migrations\" />
-    <Folder Include="Events\Queries\" />
   </ItemGroup>
 
   <ItemGroup>

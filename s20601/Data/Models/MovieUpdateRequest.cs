@@ -14,6 +14,7 @@ public class MovieUpdateRequest
     public int? NewEndYear { get; set; }
     public int? NewRuntimeMinutes { get; set; }
     public string? NewTitleType { get; set; }
+    public string? NewOverview { get; set; }
     public virtual ApplicationUser IdUserNavigation { get; set; } = null!;
     public virtual Movie? Movie { get; set; }
     public virtual ICollection<Genre> NewGenres { get; set; } = new List<Genre>();

@@ -84,6 +84,8 @@
     {
         var user = CreateUser();
         user.CreatedAt = DateTime.UtcNow;
+        user.ReputationPoints = 1;
+        
         var myRatingsCollection = new MovieCollection
         {
             Name = "My Ratings",
@@ -91,10 +93,12 @@
             CreatedAt = DateTime.UtcNow,
             Type = CollectionType.MyRatings
         };
+        
         user.MovieCollectionUsers.Add(new MovieCollectionUser
         {
             IdMovieCollectionNavigation = myRatingsCollection
         });
+        
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

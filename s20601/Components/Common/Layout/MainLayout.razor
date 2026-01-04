@@ -19,13 +19,13 @@
     FullWidth="true"/>
 <MudSnackbarProvider />
 
-<MudLayout>
+<MudLayout Class="d-flex flex-column" Style="min-height: 100vh">
     <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="false">
         <Menu />
         <AppBar />
     </MudAppBar>
 
-    <MudMainContent Class="pa-2" Style="min-height: 100vh;">
+    <MudMainContent Class="pa-2 flex-grow-1">
         <MudContainer Class="mt-6">
             @Body
         </MudContainer>

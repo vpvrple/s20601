@@ -94,13 +94,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.ToTable("Movie");
 
             entity.Property(e => e.OriginalTitle)
-                .HasMaxLength(100)
+                .HasMaxLength(1000)
                 .IsUnicode(false);
             entity.Property(e => e.Title)
-                .HasMaxLength(100)
+                .HasMaxLength(1000)
                 .IsUnicode(false);
             entity.Property(e => e.TitleType)
-                .HasMaxLength(50)
+                .HasMaxLength(100)
                 .IsUnicode(false);
         });
 

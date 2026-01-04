@@ -1,0 +1,21 @@
+﻿@using s20601.Data.Models
+@using CurrieTechnologies.Razor.Clipboard
+
+@inject ClipboardService Clipboard
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+
+<MudButton Class="d-flex" Color="Color.Primary" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Share" OnClick="@(CopyToClipboard)">Share</MudButton>
+
+@code {
+    [Parameter] public required Movie Movie { get; set; }
+
+    private async Task CopyToClipboard()
+    {
+        var uri = NavManager.ToAbsoluteUri(Movie.GetUrl());
+        var absoluteUri = uri.AbsoluteUri;
+        await Clipboard.WriteTextAsync(absoluteUri);
+
+        Snackbar.Add("Copied to clipboard!", Severity.Success);
+    }
+}

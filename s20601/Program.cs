@@ -1,3 +1,4 @@
+using CurrieTechnologies.Razor.Clipboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +11,7 @@ using s20601.Components.Account;
 using s20601.Components.Account.Policies;
 using s20601.Data;
 using s20601.Data.Models;
+using s20601.ExternalServices;
 using s20601.Hubs;
 using s20601.Services;
 
@@ -72,7 +74,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddIdentityCore<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
@@ -121,6 +123,14 @@ builder.Services
 
 builder.Services
     .AddScoped<IChatService, ChatService>();
+
+builder.Services.AddClipboard();
+
+builder.Services.AddHttpClient<ITmdbLibClient, TmdbLibClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.themoviedb.org/3/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 builder.Services.AddSignalR();
 builder.Services.AddResponseCompression(opts =>

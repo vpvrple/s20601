@@ -1,10 +1,11 @@
-﻿using System.Linq.Expressions;
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
+using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
-using s20601.Data;
 using s20601.Events.Commands;
+using s20601.Events.Queries;
+using System.Linq.Expressions;
 
 namespace s20601.Services;
 
@@ -12,13 +13,14 @@ public class MovieService : IMovieService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly IMediator _mediator;
+
     public MovieService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator)
     {
         _dbContextFactory = dbContextFactory;
         _mediator = mediator;
     }
 
-    public async Task<Movie?> GetMovieOfTheDayAsync()
+    public async Task<Data.Models.Movie?> GetMovieOfTheDayAsync()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Movies
@@ -27,7 +29,7 @@ public class MovieService : IMovieService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<Movie>> GetPastMoviesOfTheDay(int n)
+    public async Task<List<Data.Models.Movie>> GetPastMoviesOfTheDay(int n)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -54,7 +56,7 @@ public class MovieService : IMovieService
         return movieCollections ?? [];
     }
 
-    public async Task<List<Movie>> GetTrendingMovies(int n)
+    public async Task<List<Data.Models.Movie>> GetTrendingMovies(int n)
     {
         //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -66,14 +68,42 @@ public class MovieService : IMovieService
         return movies ?? [];
     }
 
-    public async Task<Movie?> GetMovieByIdAsync(int id)
+    public async Task<Data.Models.Movie?> GetMovieByIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Movies
+        var movie = await context.Movies
             .Where(x => x.Id == id)
             .FirstOrDefaultAsync();
+
+        var ovierview = await _mediator.Send(new GetMovieOverviewQuery(movie.IMDBId));
+        movie.Overview = ovierview;
+        return movie;
     }
-    
+
+    public async Task<string> GetMoviePosterById(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var movie = await context.Movies
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync();
+
+        var posterUrl = await _mediator.Send(new GetMoviePosterQuery(movie.IMDBId));
+
+        return posterUrl;
+    }
+
+    public async Task<string> GetMovieOverviewById(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var movie = await context.Movies
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync();
+
+        var overview = await _mediator.Send(new GetMovieOverviewQuery(movie.IMDBId));
+
+        return overview;
+    }
+
     public async Task<MovieWithRating?> GetMovieWithRatingById(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -150,7 +180,7 @@ public class MovieService : IMovieService
     public async Task AddMovieUpdateRequest(MovieUpdateRequest request)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        
+
         request.CreatedAt = DateTime.UtcNow;
         request.Status = MovieUpdateRequestStatus.Open;
 
@@ -160,7 +190,7 @@ public class MovieService : IMovieService
             var existingGenres = await context.Genres.Where(g => genreIds.Contains(g.Id)).ToListAsync();
             request.NewGenres = existingGenres;
         }
-        
+
         context.MovieUpdateRequests.Add(request);
         await context.SaveChangesAsync();
     }
@@ -190,21 +220,11 @@ public class MovieService : IMovieService
         return await query.ToListAsync();
     }
 
-    public async Task UpdateMovie(Movie movie)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-        
-        var movieToUpdate = context.Movies.Where(x => x. Id == movie.Id);
-        
-        
-        context.Movies.Update(movie);
-        await context.SaveChangesAsync();
-    }
-
+    // to refactor
     public async Task<List<GetMovieCrewMemberWithDetails>> SearchCrewAsync(string query, int? movieId = null)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        
+
         IQueryable<Crew> queryable = context.Crews;
 
         if (!string.IsNullOrWhiteSpace(query))
@@ -232,7 +252,7 @@ public class MovieService : IMovieService
             {
                 var movieCrew = await context.MovieCrews
                     .FirstOrDefaultAsync(mc => mc.IdCrew == c.Id && mc.Movie_Id == movieId.Value);
-                
+
                 if (movieCrew != null)
                 {
                     dto.Job = movieCrew.Job;
@@ -309,9 +329,6 @@ public class MovieService : IMovieService
                         }
                         else
                         {
-                            // Create new crew member if needed, though typically we expect CrewId to be populated for existing crew
-                            // If CrewId is null, it implies a new person needs to be created first.
-                            // Assuming for now we only link existing crew or create new crew if names provided
                             var newCrew = new Crew
                             {
                                 FirstName = crewRequest.FirstName,
@@ -336,8 +353,7 @@ public class MovieService : IMovieService
         }
         else
         {
-            // Create new movie
-            var newMovie = new Movie
+            var newMovie = new Data.Models.Movie
             {
                 Title = request.NewTitle ?? "Untitled",
                 OriginalTitle = request.NewOriginalTitle ?? "Untitled",
@@ -348,9 +364,8 @@ public class MovieService : IMovieService
             };
 
             context.Movies.Add(newMovie);
-            await context.SaveChangesAsync(); // Save to get ID
+            await context.SaveChangesAsync();
 
-            // Add Genres
             foreach (var genre in request.NewGenres)
             {
                 context.MovieGenres.Add(new MovieGenre
@@ -360,10 +375,9 @@ public class MovieService : IMovieService
                 });
             }
 
-            // Add Crew
             foreach (var crewRequest in request.NewCrew)
             {
-                 if (crewRequest.CrewId.HasValue)
+                if (crewRequest.CrewId.HasValue)
                 {
                     context.MovieCrews.Add(new MovieCrew
                     {
