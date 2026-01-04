@@ -188,9 +188,9 @@
         private RelationshipType? _relationshipType;
         
         
-        private DateTime? _month = DateTime.Now;
+        private DateTime? _month = DateTime.UtcNow;
         private MudDatePicker _picker;
-        private DateTime _maxDate = DateTime.Now;
+        private DateTime _maxDate = DateTime.UtcNow;
         private DateTime _minDate;
 
         protected override void OnAfterRender(bool firstRender)

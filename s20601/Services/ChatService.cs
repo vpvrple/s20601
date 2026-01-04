@@ -31,7 +31,7 @@ public class ChatService : IChatService
             IdSender = authenticatedUserId,
             IdRecipient = idRecipient,
             Content = message,
-            Created = DateTime.Now,
+            Created = DateTime.UtcNow,
             MessageStatus = MessageStatus.Sent
         };
         

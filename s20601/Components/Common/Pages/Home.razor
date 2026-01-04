@@ -7,6 +7,7 @@
 @using s20601.Components.Common.Components
 
 @inject IMovieService MovieSvc
+@inject IMovieCollectionService MovieCollectionSvc
 
 @if (_loading)
 {
@@ -201,7 +202,7 @@ else
 
         _pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
 
-        _trendingMovieCollections = await MovieSvc.GetTrendingMovieCollections(10);
+        _trendingMovieCollections = await MovieCollectionSvc.GetTrendingMovieCollections(10);
 
         _loading = false;
     }

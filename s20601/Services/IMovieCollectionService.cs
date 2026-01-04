@@ -25,4 +25,6 @@ public interface IMovieCollectionService
     Task<CollectionRole?> GetUserCollectionRole(int collectionId, string userId);
     Task<List<MovieCollection>> GetUserCollectionsContainingMovie(string userId, int movieId);
     Task LeaveCollectionAsync(int collectionId, string userId);
+    Task<List<MovieCollection>> GetTrendingMovieCollections(int n);
+
 }

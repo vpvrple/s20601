@@ -12,7 +12,6 @@ public interface IMovieService
     Task<List<Genre>> GetAllGenresAsync();
     Task<List<GetMovieCrewMemberWithDetails>> GetMovieCrewByMovieIdAsync(int id);
     Task<List<Movie>> GetPastMoviesOfTheDay(int n);
-    Task<List<MovieCollection>> GetTrendingMovieCollections(int n);
     Task<List<Movie>> GetTrendingMovies(int n);
     Task<MovieWithRating?> GetMovieWithRatingById(int id);
 

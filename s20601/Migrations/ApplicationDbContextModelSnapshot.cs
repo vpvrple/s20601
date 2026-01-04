@@ -696,6 +696,9 @@ namespace s20601.Migrations
                     b.Property<string>("NewOriginalTitle")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NewOverview")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("NewRuntimeMinutes")
                         .HasColumnType("int");
 

@@ -359,4 +359,18 @@ public class MovieCollectionService : IMovieCollectionService
             await context.SaveChangesAsync();
         }
     }
+
+    public async Task<List<MovieCollection>> GetTrendingMovieCollections(int n)
+    {
+        //needs to be revisited
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var movieCollections = await context.MovieCollections
+            .Where(x => x.Visibility == CollectionVisibility.Public)
+            .Take(n)
+            .OrderBy(m => Guid.NewGuid())
+            .ToListAsync();
+
+        return movieCollections ?? [];
+    }
 }

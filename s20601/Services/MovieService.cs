@@ -22,10 +22,11 @@ public class MovieService : IMovieService
 
     public async Task<Data.Models.Movie?> GetMovieOfTheDayAsync()
     {
+        //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Movies
             .Include(x => x.MovieOfTheDay)
-            .OrderByDescending(x => x.MovieOfTheDay.Date)
+            .OrderBy(m => Guid.NewGuid())
             .FirstOrDefaultAsync();
     }
 
@@ -44,17 +45,7 @@ public class MovieService : IMovieService
         return movies ?? [];
     }
 
-    public async Task<List<MovieCollection>> GetTrendingMovieCollections(int n)
-    {
-        //needs to be revisited
-        using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        var movieCollections = await context.MovieCollections
-            .Take(n)
-            .ToListAsync();
-
-        return movieCollections ?? [];
-    }
+    
 
     public async Task<List<Data.Models.Movie>> GetTrendingMovies(int n)
     {
