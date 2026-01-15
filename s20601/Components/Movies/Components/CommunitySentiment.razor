@@ -1,0 +1,36 @@
+﻿@using s20601.Services
+@using s20601.Services.External.Azure
+
+@inject IMovieService MovieSvc
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudText Typo="Typo.h6" Color="@(GetSentimentColor(_sentiment))">@_sentiment</MudText>
+}
+
+
+@code {
+    [Parameter]
+    public required int MovieId { get; set; }
+
+    private SentimentType _sentiment;
+    private bool _loading;
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _sentiment = await MovieSvc.GetMovieSentimentByMovieId(MovieId);
+        _loading = false;
+    }
+
+    private Color GetSentimentColor(SentimentType sentiment) => sentiment switch
+    {
+        SentimentType.Positive => Color.Success, // Green
+        SentimentType.Negative => Color.Error,   // Red
+        SentimentType.Neutral => Color.Warning, // Orange
+        _ => Color.Dark  // Black/Grey
+    };
+}
