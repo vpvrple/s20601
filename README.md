@@ -19,10 +19,10 @@ Projekt zawiera:
         - Odpowiada folderom: Migrations, Data w strukturze projektu
 
 ## C4 Model Context Diagram 
-![docs/images/c4-system-context-diagram.png](docs/images/c4-system-context-diagram.png)
+![docs/imgs/c4-system-context-diagram.png](docs/imgs/c4-system-context-diagram.png)
 
 ## C4 Model Container Diagram
-![docs/images/c4-container-diagram.png](docs/images/c4-container-diagram.png)
+![docs/imgs/c4-container-diagram.png](docs/imgs/c4-container-diagram.png)
 
 # Jak uruchomić aplikację
 
