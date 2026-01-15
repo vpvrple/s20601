@@ -9,7 +9,7 @@
 }
 else
 {
-    <MudText Typo="Typo.h6" Color="@(GetSentimentColor(_sentiment))">@_sentiment</MudText>
+    <MudText Typo="Typo.subtitle1" Color="@(GetSentimentColor(_sentiment))">@_sentiment</MudText>
 }
 
 
@@ -19,6 +19,7 @@ else
 
     private SentimentType _sentiment;
     private bool _loading;
+
     protected override async Task OnParametersSetAsync()
     {
         _loading = true;
@@ -28,9 +29,9 @@ else
 
     private Color GetSentimentColor(SentimentType sentiment) => sentiment switch
     {
-        SentimentType.Positive => Color.Success, // Green
-        SentimentType.Negative => Color.Error,   // Red
-        SentimentType.Neutral => Color.Warning, // Orange
-        _ => Color.Dark  // Black/Grey
+        SentimentType.Positive => Color.Success,
+        SentimentType.Negative => Color.Error,
+        SentimentType.Neutral => Color.Warning,
+        _ => Color.Dark
     };
 }
