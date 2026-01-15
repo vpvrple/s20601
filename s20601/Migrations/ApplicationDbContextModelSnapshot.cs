@@ -262,6 +262,9 @@ namespace s20601.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("avatar")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id")
                         .HasName("User_pk");
 
@@ -697,6 +700,9 @@ namespace s20601.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NewOverview")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewPosterPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("NewRuntimeMinutes")

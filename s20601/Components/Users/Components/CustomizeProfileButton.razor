@@ -1,0 +1,43 @@
+﻿@using s20601.Data.Models
+@inject IDialogService DialogService
+
+<AuthorizeView>
+    <Authorized>
+        <MudIconButton Icon="@Icons.Material.Filled.Settings"
+                       Variant="@Variant"
+                       Color="@Color"
+                       Size="Size.Small"
+                       OnClick="@OpenUserProfileCustomizationDialog"/>
+    </Authorized>
+</AuthorizeView>
+
+               
+               
+@code {
+    [Parameter]
+    public required ApplicationUser User { get; set; }
+    
+    [Parameter]
+    public required string DialogTitle { get; set; }
+
+    [Parameter] public Variant Variant { get; set; } = Variant.Filled;
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+    
+    [Parameter] public EventCallback OnProfileUpdated { get; set; }
+    
+    private async Task OpenUserProfileCustomizationDialog()
+    {
+        var parameters = new DialogParameters<UserProfileCustomizationDialog>
+        {
+            { x => x.User, User }
+        };
+
+        var dialog = await DialogService.ShowAsync<UserProfileCustomizationDialog>(DialogTitle, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && OnProfileUpdated.HasDelegate)
+        {
+            await OnProfileUpdated.InvokeAsync();
+        }
+    }
+}

@@ -1,0 +1,90 @@
+﻿@using s20601.Data.Models
+@using s20601.Services
+
+@inject ISnackbar Snackbar
+@inject IUserService UserSvc
+
+<MudDialog>
+    <DialogContent>
+        <MudForm>
+            <MudCard Elevation="0">
+                <MudCardContent>
+                    <MudStack>
+                        <MudStack Row="true">
+                            <MudFileUpload T="IBrowserFile" FilesChanged="@UploadFiles">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Secondary"
+                                               StartIcon="@Icons.Material.Filled.Image">
+                                        Load your avatar
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            @if (_avatar is not null)
+                            {
+                                <MudChip T="string" Color="Color.Dark" OnClose="@ClearAvatar">
+                                    @(_avatar?.Name)
+                                </MudChip>
+                            }
+                        </MudStack>
+
+                        <MudTextField @bind-Value="@_profileDescription" Label="Profile description"
+                                      HelperText="Tell something about yourself!" Variant="Variant.Outlined"/>
+                    </MudStack>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@Submit">Update
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+
+        </MudForm>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+
+    [Parameter] public ApplicationUser User { get; set; }
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
+
+    private string? _profileDescription;
+    private IBrowserFile? _avatar;
+
+    private void UploadFiles(IBrowserFile file)
+    {
+        _avatar = file;
+    }
+
+    private void ClearAvatar(MudChip<string> chip)
+    {
+        _avatar = null;
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        if (!string.IsNullOrEmpty(_profileDescription))
+        {
+            await UserSvc.UpdateUserProfileDescription(_profileDescription);
+        }
+
+        if (_avatar is not null)
+        {
+            try
+            {
+                using var stream = _avatar.OpenReadStream(5 * 1024 * 1024); // Limit to 5 MB
+                var newPosterFileName = await UserSvc.UpdateUserAvatar(stream, _avatar.Name);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Something went wrong with file upload. Please try again.", Severity.Error);
+                return;
+            }
+        }
+
+        Snackbar.Add("Your profile was updated.", Severity.Info);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+}

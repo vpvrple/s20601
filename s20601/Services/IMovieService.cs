@@ -1,6 +1,7 @@
-﻿using System.Linq.Expressions;
-using s20601.Data.Models;
+﻿using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
+using s20601.Services.External.Azure;
+using System.Linq.Expressions;
 
 namespace s20601.Services;
 
@@ -23,6 +24,11 @@ public interface IMovieService
     Task ApproveMovieUpdateRequest(int requestId);
     Task RejectMovieUpdateRequest(int requestId);
 
-    Task<string> GetMoviePosterById(int id);
-    Task<string> GetMovieOverviewById(int id);
+    Task<string?> GetMoviePosterByMovieId(int id);
+    Task<string?> GetMoviePoster(string posterPath);
+    Task<string?> GetMovieOverviewById(int id);
+
+    Task<string?> UploadMoviePoster(int movieId, Stream fileStream, string fileName);
+
+    Task<SentimentType> GetMovieSentimentByMovieId(int Id);
 }

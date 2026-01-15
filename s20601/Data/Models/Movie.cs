@@ -2,7 +2,7 @@
 
 namespace s20601.Data.Models;
 
-public partial class Movie : INavigable
+public class Movie : INavigable
 {
     public int Id { get; set; }
     public string IMDBId { get; set; } = null!;

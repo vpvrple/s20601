@@ -5,6 +5,7 @@ using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
 using s20601.Events.Commands;
 using s20601.Events.Queries;
+using s20601.Services.External.Azure;
 using System.Linq.Expressions;
 
 namespace s20601.Services;
@@ -20,7 +21,7 @@ public class MovieService : IMovieService
         _mediator = mediator;
     }
 
-    public async Task<Data.Models.Movie?> GetMovieOfTheDayAsync()
+    public async Task<Movie?> GetMovieOfTheDayAsync()
     {
         //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -30,7 +31,7 @@ public class MovieService : IMovieService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<List<Data.Models.Movie>> GetPastMoviesOfTheDay(int n)
+    public async Task<List<Movie>> GetPastMoviesOfTheDay(int n)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -47,7 +48,7 @@ public class MovieService : IMovieService
 
     
 
-    public async Task<List<Data.Models.Movie>> GetTrendingMovies(int n)
+    public async Task<List<Movie>> GetTrendingMovies(int n)
     {
         //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -59,38 +60,91 @@ public class MovieService : IMovieService
         return movies ?? [];
     }
 
-    public async Task<Data.Models.Movie?> GetMovieByIdAsync(int id)
+    public async Task<Movie?> GetMovieByIdAsync(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var movie = await context.Movies
             .Where(x => x.Id == id)
             .FirstOrDefaultAsync();
 
-        var ovierview = await _mediator.Send(new GetMovieOverviewQuery(movie.IMDBId));
+        var ovierview = await _mediator.Send(new GetTMDBMovieOverviewQuery(movie.IMDBId));
         movie.Overview = ovierview;
         return movie;
     }
 
-    public async Task<string> GetMoviePosterById(int id)
+    public async Task<string?> GetMoviePosterByMovieId(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var movie = await context.Movies
             .Where(x => x.Id == id)
+            .Select(x => new { x.Id, x.IMDBId, x.PosterPath })
             .FirstOrDefaultAsync();
 
-        var posterUrl = await _mediator.Send(new GetMoviePosterQuery(movie.IMDBId));
+        if (movie is null)
+        {
+            return null;
+        }
 
-        return posterUrl;
+        if (string.IsNullOrEmpty(movie.PosterPath))
+        {
+            return await _mediator.Send(new GetTMDBMovieImageQuery(movie.IMDBId));
+        }
+        return await _mediator.Send(new GetAzureMovieImageQuery(AzureBlobType.MovieImages, movie.PosterPath));
     }
 
-    public async Task<string> GetMovieOverviewById(int id)
+    public async Task<string?> GetMoviePoster(string posterPath)
+    {
+        if (string.IsNullOrEmpty(posterPath))
+        {
+            return null;
+        }
+        
+        return await _mediator.Send(new GetAzureMovieImageQuery(AzureBlobType.MovieImages, posterPath));
+    }
+
+    public async Task<string?> UploadMoviePoster(int movieId, Stream fileStream, string fileName)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var movie = await context.Movies
+            .Where(x => x.Id == movieId)
+            .FirstOrDefaultAsync();
+
+        var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
+        var newFileName = $"{Guid.NewGuid()}{fileExtension}";
+
+        await _mediator.Send(new UploadMoviePosterCommand(AzureBlobType.MovieImages, fileStream, newFileName));
+
+        await context.SaveChangesAsync();
+
+        return newFileName;
+    }
+
+    // public async Task<string?> UpdateMoviePoster(int movieId, string newPoster)
+    // {
+    //     using var context = await _dbContextFactory.CreateDbContextAsync();
+    //     var movie = await context.Movies
+    //         .Where(x => x.Id == movieId)
+    //         .FirstOrDefaultAsync();
+    //
+    //     if (movie != null)
+    //     {
+    //         movie.PosterPath = newPoster;
+    //     }
+    //     
+    //     await context.SaveChangesAsync();
+    //
+    //     return newPoster;
+    // }
+    
+
+    public async Task<string?> GetMovieOverviewById(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var movie = await context.Movies
             .Where(x => x.Id == id)
             .FirstOrDefaultAsync();
 
-        var overview = await _mediator.Send(new GetMovieOverviewQuery(movie.IMDBId));
+        var overview = await _mediator.Send(new GetTMDBMovieOverviewQuery(movie.IMDBId));
 
         return overview;
     }
@@ -117,6 +171,13 @@ public class MovieService : IMovieService
             })
             .FirstOrDefaultAsync();
 
+        var reviews = await context.Reviews
+            .Where(r => r.Movie_Id == id)
+            .Select(r => r.Content)
+            .ToListAsync();
+
+        ratingSummary!.Sentiment = await _mediator.Send(new GetAzureReviewsSentimentQuery(reviews));
+
         return new MovieWithRating
         {
             Id = movie.Id,
@@ -125,6 +186,17 @@ public class MovieService : IMovieService
             Runtime = movie.RuntimeMinutes,
             MovieRatingSummary = ratingSummary ?? new MovieRatingSummary()
         };
+    }
+
+    public async Task<SentimentType> GetMovieSentimentByMovieId(int movieId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var reviews = await context.Reviews
+            .Where(r => r.Movie.Id == movieId)
+            .Select(r => r.Content)
+            .ToListAsync();
+        var sentiment = await _mediator.Send(new GetAzureReviewsSentimentQuery(reviews));
+        return sentiment;
     }
 
     public async Task<List<Genre>> GetMovieGenresByIdAsync(int id)
@@ -301,7 +373,18 @@ public class MovieService : IMovieService
                         });
                     }
                 }
-
+                
+                if (request.NewPosterPath != null)
+                {
+                    // Delete old poster to save space
+                    if (!string.IsNullOrEmpty(movie.PosterPath))
+                    {
+                        await _mediator.Send(new MoviePosterUpdatedCommand(AzureBlobType.MovieImages, movie.PosterPath));
+                    }
+                    // Update poster path
+                    movie.PosterPath = request.NewPosterPath;
+                }
+                
                 // Update Crew
                 if (request.NewCrew.Count != 0)
                 {
@@ -344,14 +427,15 @@ public class MovieService : IMovieService
         }
         else
         {
-            var newMovie = new Data.Models.Movie
+            var newMovie = new Movie
             {
                 Title = request.NewTitle ?? "Untitled",
                 OriginalTitle = request.NewOriginalTitle ?? "Untitled",
                 StartYear = request.NewStartYear ?? DateTime.UtcNow.Year,
                 EndYear = request.NewEndYear,
                 RuntimeMinutes = request.NewRuntimeMinutes ?? 0,
-                TitleType = request.NewTitleType ?? "Movie"
+                TitleType = request.NewTitleType ?? "Movie",
+                PosterPath = request.NewPosterPath
             };
 
             context.Movies.Add(newMovie);
@@ -366,6 +450,8 @@ public class MovieService : IMovieService
                 });
             }
 
+            newMovie.PosterPath = request.NewPosterPath;
+            
             foreach (var crewRequest in request.NewCrew)
             {
                 if (crewRequest.CrewId.HasValue)
@@ -417,4 +503,5 @@ public class MovieService : IMovieService
             await context.SaveChangesAsync();
         }
     }
+
 }

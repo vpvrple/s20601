@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @using s20601.Components.Common.Components
 @using s20601.Components.Friends.Components
+@using s20601.Components.Users.Components
 @using s20601.Services
 @using s20601.Data.Models
 @using s20601.Data.Models.DTOs
@@ -21,8 +22,8 @@
         else
         {
             <MudStack Row="true" AlignItems="AlignItems.Start">
-                <MudImage Src="favicon.png"
-                          ObjectFit="ObjectFit.ScaleDown"
+                <MudImage Src="@_userAvatar"
+                          ObjectFit="ObjectFit.Cover"
                           Alt="User avatar"
                           Elevation="1"
                           Height="200"
@@ -39,10 +40,7 @@
 
                 @if (_isLoggedInUser)
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.Settings"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"/>
+                    <CustomizeProfileButton User="@_user" DialogTitle="Customize Profile" OnProfileUpdated="RefreshUserProfile" />
                 }
                 else if (_relationshipType == RelationshipType.Friends)
                 {
@@ -89,7 +87,7 @@
                     private ChartOptions emptyChartOptions = new ChartOptions
                     {
                         ShowToolTips = false,
-                        ChartPalette = new string[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
+                        ChartPalette = new[] { "#B0B0B0", "#B0B0B0", "#B0B0B0" }
                     };
                 }
                 <MudChart ChartType="ChartType.Pie" LegendPosition="Position.Bottom" Width="200px" Height="200px"
@@ -175,6 +173,7 @@
         [Parameter] public required string Username { get; set; }
 
         private ApplicationUser? _user;
+        private string _userAvatar;
         private UserRatingSummary? _userRatingSummary;
         private List<MovieCollection>? _userMovieCollections;
 
@@ -217,6 +216,7 @@
             if (user.Identity?.IsAuthenticated == true)
             {
                 _user = await UserSvc.GetUserByUsername(Username);
+                
                 _userRatingSummary = await RatingSvc.GetUserRatingSummaryAsync();
                 var ratingCount = _userRatingSummary.RatingDistribution.Count;
 
@@ -226,6 +226,8 @@
                     await RefreshRelationshipStatus();
                 }
                     
+                _userAvatar = await UserSvc.GetUserAvatarByUserId(_user.Id);
+                
 
                 _labels = new string[ratingCount];
                 _ratingData = new double[ratingCount];
@@ -233,7 +235,7 @@
                 var index = 0;
                 foreach (var rating in _userRatingSummary.RatingDistribution)
                 {
-                    _labels[index] = rating.RatingValue.ToString() + " stars";
+                    _labels[index] = rating.RatingValue + " stars";
                     _ratingData[index] = rating.Frequency;
                     index++;
                 }
@@ -254,7 +256,15 @@
                 StateHasChanged();
             }
         }
-        
-        
+
+        private async Task RefreshUserProfile()
+        {
+            if (_user != null)
+            {
+                _user = await UserSvc.GetUserByUsername(Username);
+                _userAvatar = await UserSvc.GetUserAvatarByUserId(_user.Id);
+                StateHasChanged();
+            }
+        }
     }
 </AuthorizeView>

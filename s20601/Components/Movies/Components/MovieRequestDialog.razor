@@ -24,10 +24,9 @@
                 <ChildContent>
                     <MudStep Title="Poster">
                         <MudStack Style="width: 100%">
-                            <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                            <MudFileUpload T="IBrowserFile"
                                            @ref="@_fileUpload"
                                            OnFilesChanged="OnInputFileChanged"
-                                           AppendMultipleFiles
                                            Hidden="@false"
                                            InputClass="file-upload-input"
                                            tabindex="-1"
@@ -58,13 +57,7 @@
                                 <MudButton Color="Color.Primary"
                                            OnClick="@OpenFilePickerAsync"
                                            Variant="Variant.Filled">
-                                    Open file picker
-                                </MudButton>
-                                <MudButton Color="Color.Primary"
-                                           Disabled="@(!_fileNames.Any())"
-                                           OnClick="@Upload"
-                                           Variant="Variant.Filled">
-                                    Upload
+                                    Pick image to upload
                                 </MudButton>
                                 <MudButton Color="Color.Error"
                                            Disabled="@(!_fileNames.Any())"
@@ -368,7 +361,7 @@
             changes.Add($"TitleType: {_titleType}");
             hasChanges = true;
         }
-        
+
         if (_overview != Movie.Overview)
         {
             request.NewOverview = _overview;
@@ -423,6 +416,24 @@
             request.NewCrew = newCrewList;
             changes.Add("Crew updated");
             hasChanges = true;
+        }
+
+        if (file != null)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream(5 * 1024 * 1024); // Limit to 5 MB
+                var newPosterFileName = await MovieSvc.UploadMoviePoster(Movie.Id, stream, file.Name);
+
+                request.NewPosterPath = newPosterFileName;
+                changes.Add("Poster updated");
+                hasChanges = true;
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Something went wrong with file upload. Please try again.", Severity.Error);
+                return;
+            }
         }
 
         if (!hasChanges)
@@ -515,7 +526,7 @@
     private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
     private string _dragClass = DefaultDragClass;
     private readonly List<string> _fileNames = new();
-    private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
+    private MudFileUpload<IBrowserFile>? _fileUpload;
 
     private async Task ClearAsync()
     {
@@ -527,20 +538,14 @@
     private Task OpenFilePickerAsync()
         => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
 
+
+    private IBrowserFile? file;
+
     private void OnInputFileChanged(InputFileChangeEventArgs e)
     {
         ClearDragClass();
-        var files = e.GetMultipleFiles();
-        foreach (var file in files)
-        {
-            _fileNames.Add(file.Name);
-        }
-    }
-
-    private void Upload()
-    {
-        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
-        Snackbar.Add("TODO: Upload your files!");
+        file = e.File;
+        _fileNames.Add(file.Name);
     }
 
     private void SetDragClass()

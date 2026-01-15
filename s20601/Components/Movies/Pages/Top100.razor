@@ -3,6 +3,7 @@
 @using Services
 @using s20601.Components.Common.Components
 
+@using s20601.Components.Movies.Components
 @using s20601.Data.Models.DTOs
 
 @inject IRatingService RatingSvc
@@ -19,12 +20,7 @@
         {
             <MudItem>
                 <MudCard>
-                    <MudImage Src="favicon.png"
-                              ObjectFit="ObjectFit.None"
-                              Alt="Movie poster"
-                              Elevation="0"
-                              Height="300"
-                              Width="280" />
+                   <MovieCoverComponent MovieId="@movie.Id" />
                     <MudCardContent>
                         <MudStack>
                             <MudText Typo="Typo.h6" Align="Align.Center">
@@ -34,7 +30,6 @@
 
                             <MudDivider />
                             <MudStack Row="true" Class="justify-center">
-                                @* <MovieRatingExtended RateCount="movie.MovieRatingSummary.RateCount" AvgRating="movie.MovieRatingSummary.AvgRating" Size="Size.Small" Typo="Typo.subtitle2" /> *@
                                 <MovieRatingExtended MovieId="movie.Id" Size="Size.Medium" />
                             </MudStack>
                         </MudStack>

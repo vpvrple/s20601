@@ -9,6 +9,7 @@ public class ApplicationUser : IdentityUser
     public DateTime? LastDailyLogin { get; set; }
     public string? ProfileDescription { get; set; }
     public int ReputationPoints { get; set; }
+    public string? avatar { get; set; }
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public virtual ICollection<Message> MessageIdRecipientNavigations { get; set; } = new List<Message>();
     public virtual ICollection<Message> MessageIdSenderNavigations { get; set; } = new List<Message>();

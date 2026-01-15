@@ -1,9 +1,11 @@
+using Azure;
 using CurrieTechnologies.Razor.Clipboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using MudBlazor;
 using MudBlazor.Services;
 using s20601.Components;
@@ -11,9 +13,10 @@ using s20601.Components.Account;
 using s20601.Components.Account.Policies;
 using s20601.Data;
 using s20601.Data.Models;
-using s20601.ExternalServices;
 using s20601.Hubs;
 using s20601.Services;
+using s20601.Services.External.Azure;
+using s20601.Services.External.TMDB;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +38,26 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection") ??
             throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.")));
+
+builder.Services.AddAzureClients(azureBuilder =>
+{
+    azureBuilder.AddBlobServiceClient(builder.Configuration.GetSection("Azure")
+        .GetConnectionString("BlobStorage") ??
+        throw new InvalidOperationException(
+                "Connection string 'BlobStorage' not found."));
+
+    var languageEndpoint = builder.Configuration["Azure:Endpoints:LanguageServices"];
+    var languageKey = builder.Configuration["Azure:Keys:LanguageServicesKey"];
+
+    if (string.IsNullOrEmpty(languageEndpoint) || string.IsNullOrEmpty(languageKey))
+    {
+        throw new InvalidOperationException("Azure Text Analytics Endpoint or Key is missing.");
+    }
+
+    azureBuilder.AddTextAnalyticsClient(new Uri(languageEndpoint), new AzureKeyCredential(languageKey));
+});
+
+builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
 
 builder.Services
     .AddCascadingAuthenticationState();
@@ -138,6 +161,9 @@ builder.Services.AddResponseCompression(opts =>
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
         [ "application/octet-stream" ]);
 });
+
+builder.Services
+    .AddScoped<IAzureSentimentAnalysisService, AzureSentimentAnalysisService>();
 
 var app = builder.Build();
 

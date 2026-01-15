@@ -77,9 +77,27 @@ else
                                     </HeaderContent>
                                     <RowTemplate Context="tableContext">
                                         <MudTd DataLabel="Field">@tableContext.FieldName</MudTd>
-                                        <MudTd DataLabel="Previous Value">@tableContext.PreviousValue</MudTd>
+                                        <MudTd DataLabel="Previous Value">
+                                            @if (tableContext.FieldName == "Poster" && tableContext.PreviousValue != "-")
+                                            {
+                                                <MudImage Src="@tableContext.PreviousValue" Height="150" ObjectFit="ObjectFit.Contain" />
+                                            }
+                                            else
+                                            {
+                                                @tableContext.PreviousValue
+                                            }
+                                        </MudTd>
                                         <MudTd DataLabel="Requested Change"
-                                               Style="@(tableContext.IsChanged ? "color:var(--mud-palette-primary);" : "")">@tableContext.NewValue</MudTd>
+                                               Style="@(tableContext.IsChanged ? "color:var(--mud-palette-primary);" : "")">
+                                            @if (tableContext.FieldName == "Poster" && tableContext.NewValue != "-")
+                                            {
+                                                <MudImage Src="@tableContext.NewValue" Height="150" ObjectFit="ObjectFit.Contain" />
+                                            }
+                                            else
+                                            {
+                                                @tableContext.NewValue
+                                            }
+                                        </MudTd>
                                     </RowTemplate>
                                 </MudTable>
                             }
@@ -189,7 +207,7 @@ else
     {
         _changes.Clear();
 
-        if (request.Movie != null)
+        if (request.Movie is not null)
         {
             AddChange("Title", request.Movie.Title, request.NewTitle ?? request.Movie.Title);
             AddChange("Original Title", request.Movie.OriginalTitle, request.NewOriginalTitle ?? request.Movie.OriginalTitle);
@@ -197,6 +215,10 @@ else
             AddChange("End Year", request.Movie.EndYear?.ToString() ?? "-", request.NewEndYear?.ToString() ?? request.Movie.EndYear?.ToString() ?? "-");
             AddChange("Runtime", request.Movie.RuntimeMinutes.ToString(), request.NewRuntimeMinutes?.ToString() ?? request.Movie.RuntimeMinutes.ToString());
             AddChange("Title Type", request.Movie.TitleType, request.NewTitleType ?? request.Movie.TitleType);
+            
+            var oldPosterUrl = request.Movie.PosterPath == null ? await MovieSvc.GetMoviePosterByMovieId(request.Movie.Id) : "-";
+            var newPosterUrl = request.NewPosterPath != null ? await MovieSvc.GetMoviePoster(request.NewPosterPath) : "-";
+            AddChange("Poster", oldPosterUrl ?? "-", newPosterUrl ?? "-");
 
             var currentGenres = await MovieSvc.GetMovieGenresByIdAsync(request.Movie.Id);
             var currentGenresString = string.Join(", ", currentGenres.OrderBy(g => g.Name).Select(g => g.Name));
@@ -240,6 +262,9 @@ else
             AddChange("End Year", "-", request.NewEndYear?.ToString() ?? "-");
             AddChange("Runtime", "-", request.NewRuntimeMinutes?.ToString() ?? "-");
             AddChange("Title Type", "-", request.NewTitleType ?? "-");
+            
+            var newPosterUrl = request.NewPosterPath != null ? await MovieSvc.GetMoviePoster(request.NewPosterPath) : "-";
+            AddChange("Poster", "-", newPosterUrl ?? "-");
 
             var newGenresString = "-";
             if (request.NewGenres != null && request.NewGenres.Any())

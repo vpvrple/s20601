@@ -1,8 +1,12 @@
 ﻿using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using s20601.Data.Models;
 using s20601.Data;
+using s20601.Events.Commands;
+using s20601.Events.Queries;
+using s20601.Services.External.Azure;
 
 namespace s20601.Services
 {
@@ -10,10 +14,12 @@ namespace s20601.Services
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
         private readonly AuthenticationStateProvider _authenticationStateProvider;
-        public UserService(IDbContextFactory<ApplicationDbContext> dbContextFactory, AuthenticationStateProvider authenticationStateProvider)
+        private readonly IMediator _mediator;
+        public UserService(IDbContextFactory<ApplicationDbContext> dbContextFactory, AuthenticationStateProvider authenticationStateProvider, IMediator mediator)
         {
             _dbContextFactory = dbContextFactory;
             _authenticationStateProvider = authenticationStateProvider;
+            _mediator = mediator;
         }
 
         public async Task<ApplicationUser?> GetUserByUsername(string username)
@@ -37,6 +43,63 @@ namespace s20601.Services
             var user = auth.User;
 
             return user;
+        }
+
+        public async Task<string?> GetUserAvatarByUserId(string userId)
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync();
+
+            var user = await context.Users
+                .Where(x => userId == x.Id)
+                .FirstOrDefaultAsync();
+            
+            return await _mediator.Send(new GetAzureUserAvatarQuery(AzureBlobType.UserAvatars, user.avatar));
+        }
+
+        public async Task<string?> UpdateUserProfileDescription(string profileDescription)
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync();
+            var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = auth.User;
+
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            
+            var userFromDb = await context.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();
+
+            if (userFromDb == null)
+            {
+                return null;
+            }
+            
+            userFromDb.ProfileDescription = profileDescription;
+
+            await context.SaveChangesAsync();
+            
+            return userFromDb.ProfileDescription;
+        }
+
+        public async Task<string?> UpdateUserAvatar(Stream fileStream, string avatar)
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync();
+            var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = auth.User;
+
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            
+            var userFromDb = await context.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();
+
+            if (userFromDb == null)
+            {
+                return null;
+            }
+
+            userFromDb.avatar = avatar;
+
+            await context.SaveChangesAsync();
+            
+            _mediator.Send(new UploadUserAvatarCommand(AzureBlobType.UserAvatars, fileStream, userFromDb.avatar));
+            
+            return userFromDb.ProfileDescription;
         }
     }
 }
