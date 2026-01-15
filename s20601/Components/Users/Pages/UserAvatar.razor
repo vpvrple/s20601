@@ -1,0 +1,34 @@
+@using s20601.Services
+@inject IUserService UserSvc
+
+@if (string.IsNullOrEmpty(_userAvatar))
+{
+    <MudPaper Class="d-flex align-center justify-center" Style="width: 100%; height:100%">
+        <MudIcon Icon="@Icons.Material.Filled.Person" Style="font-size: 6rem;" />
+    </MudPaper>
+}
+else
+{
+    <MudPaper Class="d-flex align-center justify-center" Style="width: 100%; height:100%">
+        <MudImage Src="@_userAvatar"
+                  ObjectFit="ObjectFit.Contain"
+                  Alt="User avatar"
+                  Elevation="1"
+                  Style="width: 100%; height: 100%;">
+        </MudImage>
+    </MudPaper>
+}
+
+
+@code {
+    [Parameter]
+    public required string UserId { get; set; }
+
+    private string? _userAvatar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userAvatar = await UserSvc.GetUserAvatarByUserId(UserId);
+    }
+
+}

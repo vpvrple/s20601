@@ -53,6 +53,10 @@ namespace s20601.Services
                 .Where(x => userId == x.Id)
                 .FirstOrDefaultAsync();
             
+            if (user.avatar == null)
+            {
+                return null;
+            }
             return await _mediator.Send(new GetAzureUserAvatarQuery(AzureBlobType.UserAvatars, user.avatar));
         }
 

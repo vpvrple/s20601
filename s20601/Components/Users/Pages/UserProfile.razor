@@ -22,35 +22,41 @@
         else
         {
             <MudStack Row="true" AlignItems="AlignItems.Start">
-                <MudImage Src="@_userAvatar"
-                          ObjectFit="ObjectFit.Cover"
-                          Alt="User avatar"
-                          Elevation="1"
-                          Height="200"
-                          Width="180">
-                </MudImage>
-                <MudStack AlignItems="AlignItems.Start" Spacing="0">
-                    <MudText Typo="Typo.h5">@Username</MudText>
-                    <MudText Typo="Typo.subtitle1">points @_user.ReputationPoints</MudText>
-                    <MudText Typo="Typo.subtitle2">Joined: @_user.CreatedAt.ToShortDateString()</MudText>
-                    <MudText Typo="Typo.body1"
-                             Class="mt-3 mb-3">@(_user.ProfileDescription ?? "No description available.")</MudText>
-                </MudStack>
-                <MudSpacer/>
+            <MudGrid>
+                <MudItem xs="2">
+                        <UserAvatar UserId="@_user.Id" />
+                </MudItem>
+                <MudItem xs="9">
+                        <MudStack AlignItems="AlignItems.Start" Spacing="0">
+                            <MudText Typo="Typo.h5">@Username</MudText>
+                            <MudText Typo="Typo.subtitle1">points @_user.ReputationPoints</MudText>
+                            <MudText Typo="Typo.subtitle2">Joined: @_user.CreatedAt.ToShortDateString()</MudText>
+                            <MudText Typo="Typo.body1"
+                                     Class="mt-3 mb-3">@(_user.ProfileDescription ?? "No description available.")</MudText>
+                        </MudStack>
+                </MudItem>
+                <MudItem xs="1">
+                        @if (_isLoggedInUser)
+                        {
+                            <CustomizeProfileButton User="@_user" DialogTitle="Customize Profile" OnProfileUpdated="RefreshUserProfile" />
+                        }
+                        else if (_relationshipType == RelationshipType.Friends)
+                        {
+                            <MessageFriend />
+                            <FriendButton FriendId="@_user?.Id" OnFriendshipChange="RefreshRelationshipStatus" />
+                        }
+                        else
+                        {
+                            <FriendButton FriendId="@_user?.Id" OnFriendshipChange="RefreshRelationshipStatus" />
+                        }
+                </MudItem>
+            </MudGrid>
+           
+                
+                
+                
 
-                @if (_isLoggedInUser)
-                {
-                    <CustomizeProfileButton User="@_user" DialogTitle="Customize Profile" OnProfileUpdated="RefreshUserProfile" />
-                }
-                else if (_relationshipType == RelationshipType.Friends)
-                {
-                    <MessageFriend />
-                    <FriendButton FriendId="@_user?.Id" OnFriendshipChange="RefreshRelationshipStatus"/>
-                }
-                else
-                {
-                    <FriendButton FriendId="@_user?.Id" OnFriendshipChange="RefreshRelationshipStatus"/>
-                }
+                
 
 
             </MudStack>
@@ -173,7 +179,6 @@
         [Parameter] public required string Username { get; set; }
 
         private ApplicationUser? _user;
-        private string _userAvatar;
         private UserRatingSummary? _userRatingSummary;
         private List<MovieCollection>? _userMovieCollections;
 
@@ -225,9 +230,6 @@
                     _isLoggedInUser = false;
                     await RefreshRelationshipStatus();
                 }
-                    
-                _userAvatar = await UserSvc.GetUserAvatarByUserId(_user.Id);
-                
 
                 _labels = new string[ratingCount];
                 _ratingData = new double[ratingCount];
@@ -262,7 +264,6 @@
             if (_user != null)
             {
                 _user = await UserSvc.GetUserByUsername(Username);
-                _userAvatar = await UserSvc.GetUserAvatarByUserId(_user.Id);
                 StateHasChanged();
             }
         }

@@ -2,6 +2,7 @@
 
 @using s20601.Components.Common.Components
 @using Services
+@using s20601.Components.Movies.Components
 @using s20601.Data.Models.DTOs
 @inject IRatingService RatingSvc
 
@@ -17,11 +18,11 @@
         {
             <MudItem>
                 <MudCard>
-                    <MovieRatingExtended MovieId="movie.Id" Size="Size.Medium" />
+                    <MovieCoverComponent MovieId="movie.Id" />
                     <MudCardContent>
                         <MudStack>
                             <MudText Typo="Typo.h6" Align="Align.Center">
-                                @movie.Title
+                                <MudLink Href="@movie.GetUrl()">@movie.Title</MudLink>
                                 <MudText Typo="Typo.subtitle2">(@movie.StartYear) @(movie.Runtime / 60) hours @(movie.Runtime % 60) minutes</MudText>
                             </MudText>
 

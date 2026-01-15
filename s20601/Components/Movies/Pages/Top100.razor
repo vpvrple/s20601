@@ -24,7 +24,7 @@
                     <MudCardContent>
                         <MudStack>
                             <MudText Typo="Typo.h6" Align="Align.Center">
-                                @(topMoviesByRating.IndexOf(movie) + 1). @movie.Title
+                                <MudLink Href="@movie.GetUrl()">@(topMoviesByRating.IndexOf(movie) + 1). @movie.Title</MudLink>
                                 <MudText Typo="Typo.subtitle2">(@movie.StartYear) @(movie.Runtime / 60) hours @(movie.Runtime % 60) minutes</MudText>
                             </MudText>
 
