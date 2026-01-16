@@ -7,8 +7,6 @@ namespace s20601.Data;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<ApplicationUser>(options)
 {
-    public virtual DbSet<ActivityType> ActivityTypes { get; set; }
-    public virtual DbSet<Comment> Comments { get; set; }
     public virtual DbSet<Crew> Crews { get; set; }
     public virtual DbSet<Genre> Genres { get; set; }
     public virtual DbSet<Message> Messages { get; set; }
@@ -24,19 +22,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public virtual DbSet<MovieUpdateRequestCrew> MovieUpdateRequestCrews { get; set; }
     public virtual DbSet<Review> Reviews { get; set; }
     public virtual DbSet<ReviewRate> ReviewRates { get; set; }
-    public virtual DbSet<SocialActivityLog> SocialActivityLogs { get; set; }
     public virtual DbSet<UserRelationship> UserRelationships { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-
-        modelBuilder.Entity<ActivityType>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("ActivityType_pk");
-
-            entity.ToTable("ActivityType");
-
-        });
-
         modelBuilder.Entity<Crew>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Crew_pk");
@@ -358,29 +346,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasForeignKey(d => d.Review_Id)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("ReviewRate_Review");
-        });
-
-        modelBuilder.Entity<SocialActivityLog>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("SocialActivityLog_pk");
-
-            entity.ToTable("SocialActivityLog");
-
-            entity.HasIndex(e => e.IdActivityType, "IX_SocialActivityLog_IdActivityType");
-
-            entity.HasIndex(e => e.IdUser, "IX_SocialActivityLog_IdUser");
-
-            entity.Property(e => e.ActivityAt).HasPrecision(2);
-
-            entity.HasOne(d => d.IdActivityTypeNavigation).WithMany(p => p.SocialActivityLogs)
-                .HasForeignKey(d => d.IdActivityType)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("ActivityLog_ActivityType");
-
-            entity.HasOne(d => d.IdUserNavigation).WithMany(p => p.SocialActivityLogs)
-                .HasForeignKey(d => d.IdUser)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("ActivityLog_User");
         });
 
         modelBuilder.Entity<ApplicationUser>(entity =>

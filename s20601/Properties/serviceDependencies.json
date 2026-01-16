@@ -8,6 +8,11 @@
       "type": "mssql",
       "connectionId": "AzureDbConnection",
       "dynamicId": null
+    },
+    "storage1": {
+      "type": "storage",
+      "connectionId": "StorageConnection",
+      "dynamicId": null
     }
   }
 }

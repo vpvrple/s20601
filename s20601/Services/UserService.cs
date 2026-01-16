@@ -53,11 +53,11 @@ namespace s20601.Services
                 .Where(x => userId == x.Id)
                 .FirstOrDefaultAsync();
             
-            if (user.avatar == null)
+            if (user.Avatar == null)
             {
                 return null;
             }
-            return await _mediator.Send(new GetAzureUserAvatarQuery(AzureBlobType.UserAvatars, user.avatar));
+            return await _mediator.Send(new GetAzureUserAvatarQuery(AzureBlobType.UserAvatars, user.Avatar));
         }
 
         public async Task<string?> UpdateUserProfileDescription(string profileDescription)
@@ -97,11 +97,11 @@ namespace s20601.Services
                 return null;
             }
 
-            userFromDb.avatar = avatar;
+            userFromDb.Avatar = avatar;
 
             await context.SaveChangesAsync();
             
-            _mediator.Send(new UploadUserAvatarCommand(AzureBlobType.UserAvatars, fileStream, userFromDb.avatar));
+            _mediator.Send(new UploadUserAvatarCommand(AzureBlobType.UserAvatars, fileStream, userFromDb.Avatar));
             
             return userFromDb.ProfileDescription;
         }
