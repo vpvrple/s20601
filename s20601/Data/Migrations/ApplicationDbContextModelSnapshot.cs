@@ -3,7 +3,6 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using s20601.Data;
 
@@ -12,11 +11,9 @@ using s20601.Data;
 namespace s20601.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251226201522_MakeBirthYearNullableMovieUpdateRequestCrew")]
-    partial class MakeBirthYearNullableMovieUpdateRequestCrew
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,22 +21,6 @@ namespace s20601.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("GroupOwnership", b =>
-                {
-                    b.Property<string>("IdOwner")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("IdGroup")
-                        .HasColumnType("int");
-
-                    b.HasKey("IdOwner", "IdGroup")
-                        .HasName("GroupOwnership_pk");
-
-                    b.HasIndex(new[] { "IdGroup" }, "IX_GroupOwnership_IdGroup");
-
-                    b.ToTable("GroupOwnership", (string)null);
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -190,23 +171,6 @@ namespace s20601.Migrations
                     b.ToTable("MovieUpdateRequestGenre", (string)null);
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Name")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id")
-                        .HasName("ActivityType_pk");
-
-                    b.ToTable("ActivityType", (string)null);
-                });
-
             modelBuilder.Entity("s20601.Data.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -214,6 +178,9 @@ namespace s20601.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("Avatar")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -231,6 +198,10 @@ namespace s20601.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LastDailyLogin")
+                        .HasPrecision(2)
+                        .HasColumnType("datetime2(2)");
+
                     b.Property<DateTime?>("LastLogin")
                         .HasPrecision(2)
                         .HasColumnType("datetime2(2)");
@@ -240,12 +211,6 @@ namespace s20601.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Nickname")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -296,50 +261,6 @@ namespace s20601.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.Comment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<int?>("IdComment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IdPost")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IdUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.HasKey("Id")
-                        .HasName("Comment_pk");
-
-                    b.HasIndex("IdComment");
-
-                    b.HasIndex("IdPost");
-
-                    b.HasIndex("IdUser");
-
-                    b.ToTable("Comment", (string)null);
-                });
-
             modelBuilder.Entity("s20601.Data.Models.Crew", b =>
                 {
                     b.Property<int>("Id")
@@ -359,6 +280,10 @@ namespace s20601.Migrations
                         .HasMaxLength(100)
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<string>("IMDBId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -390,53 +315,6 @@ namespace s20601.Migrations
                         .HasName("Genre_pk");
 
                     b.ToTable("Genre", (string)null);
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.Group", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<byte[]>("Image")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varbinary(100)");
-
-                    b.Property<int>("Name")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id")
-                        .HasName("Group_pk");
-
-                    b.ToTable("Group", (string)null);
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.GroupMembership", b =>
-                {
-                    b.Property<string>("IdUser")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("IdGroup")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.HasKey("IdUser", "IdGroup")
-                        .HasName("GroupMembership_pk");
-
-                    b.HasIndex(new[] { "IdGroup" }, "IX_GroupMembership_IdGroup");
-
-                    b.ToTable("GroupMembership", (string)null);
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Message", b =>
@@ -488,11 +366,17 @@ namespace s20601.Migrations
                     b.Property<int?>("EndYear")
                         .HasColumnType("int");
 
+                    b.Property<string>("IMDBId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("OriginalTitle")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(1000)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Overview")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PosterPath")
                         .HasColumnType("nvarchar(max)");
@@ -505,15 +389,15 @@ namespace s20601.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(100)
+                        .HasMaxLength(1000)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<string>("TitleType")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(100)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("Id")
                         .HasName("Movie_pk");
@@ -744,9 +628,6 @@ namespace s20601.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool?>("IsAccepted")
-                        .HasColumnType("bit");
-
                     b.Property<int?>("Movie_Id")
                         .HasColumnType("int");
 
@@ -754,6 +635,12 @@ namespace s20601.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("NewOriginalTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewOverview")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewPosterPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("NewRuntimeMinutes")
@@ -767,6 +654,9 @@ namespace s20601.Migrations
 
                     b.Property<string>("NewTitleType")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id")
                         .HasName("MovieUpdateRequest_pk");
@@ -829,50 +719,6 @@ namespace s20601.Migrations
                     b.ToTable("MovieUpdateRequestCrew", (string)null);
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.Post", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(5000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<int>("IdGroup")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IdUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int?>("LastModifiedAt")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(150)");
-
-                    b.HasKey("Id")
-                        .HasName("Post_pk");
-
-                    b.HasIndex(new[] { "IdGroup" }, "IX_Post_IdGroup");
-
-                    b.HasIndex(new[] { "IdUser" }, "IX_Post_IdUser");
-
-                    b.ToTable("Post", (string)null);
-                });
-
             modelBuilder.Entity("s20601.Data.Models.Review", b =>
                 {
                     b.Property<int>("Id")
@@ -930,7 +776,7 @@ namespace s20601.Migrations
                         .HasPrecision(3)
                         .HasColumnType("datetime2(3)");
 
-                    b.Property<int>("Rating")
+                    b.Property<int>("ReviewRateType")
                         .HasColumnType("int");
 
                     b.Property<int>("Review_Id")
@@ -944,35 +790,6 @@ namespace s20601.Migrations
                     b.HasIndex(new[] { "Review_Id" }, "IX_ReviewRate_Review_Id");
 
                     b.ToTable("ReviewRate", (string)null);
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.SocialActivityLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("ActivityAt")
-                        .HasPrecision(2)
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<int>("IdActivityType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IdUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id")
-                        .HasName("SocialActivityLog_pk");
-
-                    b.HasIndex(new[] { "IdActivityType" }, "IX_SocialActivityLog_IdActivityType");
-
-                    b.HasIndex(new[] { "IdUser" }, "IX_SocialActivityLog_IdUser");
-
-                    b.ToTable("SocialActivityLog", (string)null);
                 });
 
             modelBuilder.Entity("s20601.Data.Models.UserRelationship", b =>
@@ -997,21 +814,6 @@ namespace s20601.Migrations
                     b.HasIndex(new[] { "IdRelatedUser" }, "IX_UserRelationship_IdRelatedUser");
 
                     b.ToTable("UserRelationship", (string)null);
-                });
-
-            modelBuilder.Entity("GroupOwnership", b =>
-                {
-                    b.HasOne("s20601.Data.Models.Group", null)
-                        .WithMany()
-                        .HasForeignKey("IdGroup")
-                        .IsRequired()
-                        .HasConstraintName("GroupOwnership_Group");
-
-                    b.HasOne("s20601.Data.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("IdOwner")
-                        .IsRequired()
-                        .HasConstraintName("GroupOwnership_User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1078,51 +880,6 @@ namespace s20601.Migrations
                         .HasForeignKey("MovieUpdateRequestId")
                         .IsRequired()
                         .HasConstraintName("MovieUpdateRequestGenre_MovieUpdateRequest");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.Comment", b =>
-                {
-                    b.HasOne("s20601.Data.Models.Comment", "IdCommentNavigation")
-                        .WithMany("InverseIdCommentNavigation")
-                        .HasForeignKey("IdComment")
-                        .HasConstraintName("Comment_Comment");
-
-                    b.HasOne("s20601.Data.Models.Post", "IdPostNavigation")
-                        .WithMany("Comments")
-                        .HasForeignKey("IdPost")
-                        .IsRequired()
-                        .HasConstraintName("Comment_Post");
-
-                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
-                        .WithMany("Comments")
-                        .HasForeignKey("IdUser")
-                        .IsRequired()
-                        .HasConstraintName("Comment_User");
-
-                    b.Navigation("IdCommentNavigation");
-
-                    b.Navigation("IdPostNavigation");
-
-                    b.Navigation("IdUserNavigation");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.GroupMembership", b =>
-                {
-                    b.HasOne("s20601.Data.Models.Group", "IdGroupNavigation")
-                        .WithMany("GroupMemberships")
-                        .HasForeignKey("IdGroup")
-                        .IsRequired()
-                        .HasConstraintName("GroupMembership_Group");
-
-                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
-                        .WithMany("GroupMemberships")
-                        .HasForeignKey("IdUser")
-                        .IsRequired()
-                        .HasConstraintName("GroupMembership_User");
-
-                    b.Navigation("IdGroupNavigation");
-
-                    b.Navigation("IdUserNavigation");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Message", b =>
@@ -1280,25 +1037,6 @@ namespace s20601.Migrations
                     b.Navigation("MovieUpdateRequest");
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.Post", b =>
-                {
-                    b.HasOne("s20601.Data.Models.Group", "IdGroupNavigation")
-                        .WithMany("Posts")
-                        .HasForeignKey("IdGroup")
-                        .IsRequired()
-                        .HasConstraintName("Post_Group");
-
-                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
-                        .WithMany("Posts")
-                        .HasForeignKey("IdUser")
-                        .IsRequired()
-                        .HasConstraintName("Post_User");
-
-                    b.Navigation("IdGroupNavigation");
-
-                    b.Navigation("IdUserNavigation");
-                });
-
             modelBuilder.Entity("s20601.Data.Models.Review", b =>
                 {
                     b.HasOne("s20601.Data.Models.ApplicationUser", "IdAuthorNavigation")
@@ -1337,25 +1075,6 @@ namespace s20601.Migrations
                     b.Navigation("Review");
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.SocialActivityLog", b =>
-                {
-                    b.HasOne("s20601.Data.Models.ActivityType", "IdActivityTypeNavigation")
-                        .WithMany("SocialActivityLogs")
-                        .HasForeignKey("IdActivityType")
-                        .IsRequired()
-                        .HasConstraintName("ActivityLog_ActivityType");
-
-                    b.HasOne("s20601.Data.Models.ApplicationUser", "IdUserNavigation")
-                        .WithMany("SocialActivityLogs")
-                        .HasForeignKey("IdUser")
-                        .IsRequired()
-                        .HasConstraintName("ActivityLog_User");
-
-                    b.Navigation("IdActivityTypeNavigation");
-
-                    b.Navigation("IdUserNavigation");
-                });
-
             modelBuilder.Entity("s20601.Data.Models.UserRelationship", b =>
                 {
                     b.HasOne("s20601.Data.Models.ApplicationUser", "IdRelatedUserNavigation")
@@ -1375,17 +1094,8 @@ namespace s20601.Migrations
                     b.Navigation("IdUserNavigation");
                 });
 
-            modelBuilder.Entity("s20601.Data.Models.ActivityType", b =>
-                {
-                    b.Navigation("SocialActivityLogs");
-                });
-
             modelBuilder.Entity("s20601.Data.Models.ApplicationUser", b =>
                 {
-                    b.Navigation("Comments");
-
-                    b.Navigation("GroupMemberships");
-
                     b.Navigation("MessageIdRecipientNavigations");
 
                     b.Navigation("MessageIdSenderNavigations");
@@ -1396,22 +1106,13 @@ namespace s20601.Migrations
 
                     b.Navigation("MovieUpdateRequests");
 
-                    b.Navigation("Posts");
-
                     b.Navigation("ReviewRates");
 
                     b.Navigation("Reviews");
 
-                    b.Navigation("SocialActivityLogs");
-
                     b.Navigation("UserRelationshipIdRelatedUserNavigations");
 
                     b.Navigation("UserRelationshipIdUserNavigations");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.Comment", b =>
-                {
-                    b.Navigation("InverseIdCommentNavigation");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Crew", b =>
@@ -1422,13 +1123,6 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.Genre", b =>
                 {
                     b.Navigation("MovieGenres");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.Group", b =>
-                {
-                    b.Navigation("GroupMemberships");
-
-                    b.Navigation("Posts");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Movie", b =>
@@ -1458,11 +1152,6 @@ namespace s20601.Migrations
             modelBuilder.Entity("s20601.Data.Models.MovieUpdateRequest", b =>
                 {
                     b.Navigation("NewCrew");
-                });
-
-            modelBuilder.Entity("s20601.Data.Models.Post", b =>
-                {
-                    b.Navigation("Comments");
                 });
 
             modelBuilder.Entity("s20601.Data.Models.Review", b =>

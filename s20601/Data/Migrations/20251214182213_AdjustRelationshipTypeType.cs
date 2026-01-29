@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace s20601.Migrations
+namespace s20601.Data.Migrations
 {
     /// <inheritdoc />
     public partial class AdjustRelationshipTypeType : Migration
