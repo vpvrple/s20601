@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using s20601.Data.Models;
 using s20601.Data;
 using s20601.Events.Commands;
+using s20601.Events.Commands.UserAvatars;
 using s20601.Events.Queries;
 using s20601.Services.External.Azure;
 
@@ -60,7 +61,7 @@ namespace s20601.Services
             return await _mediator.Send(new GetAzureUserAvatarQuery(AzureBlobType.UserAvatars, user.Avatar));
         }
 
-        public async Task<string?> UpdateUserProfileDescription(string profileDescription)
+        public async Task<string?> UpdateUserProfileDescription(string? profileDescription)
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
             var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
@@ -82,28 +83,46 @@ namespace s20601.Services
             return userFromDb.ProfileDescription;
         }
 
-        public async Task<string?> UpdateUserAvatar(Stream fileStream, string avatar)
+        public async Task<string?> UpdateUserAvatar(Stream? fileStream, string? avatar)
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
             var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
             var user = auth.User;
 
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            
-            var userFromDb = await context.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();
 
+            var userFromDb = await context.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();
+            
             if (userFromDb == null)
             {
                 return null;
             }
+            
+            if (userFromDb.Avatar != null)
+            {
+                await _mediator.Send(new UserAvatarUpdatedCommand(AzureBlobType.UserAvatars, userFromDb.Avatar));
+            }
 
-            userFromDb.Avatar = avatar;
+            if (avatar is null)
+            {
+                userFromDb.Avatar = null;
+            }
+            else
+            {
+                if (fileStream == null)
+                {
+                    throw new ArgumentNullException(nameof(fileStream), "File stream cannot be null if avatar is provided.");
+                }
+                var fileExtension = Path.GetExtension(avatar).ToLowerInvariant();
+                var newFileName = $"{Guid.NewGuid()}{fileExtension}";
+
+                userFromDb.Avatar = newFileName;
+                await _mediator.Send(new UploadUserAvatarCommand(AzureBlobType.UserAvatars, fileStream, newFileName));
+            }
 
             await context.SaveChangesAsync();
-            
-            _mediator.Send(new UploadUserAvatarCommand(AzureBlobType.UserAvatars, fileStream, userFromDb.Avatar));
-            
-            return userFromDb.ProfileDescription;
+
+            return userFromDb.Avatar;
         }
     }
 }

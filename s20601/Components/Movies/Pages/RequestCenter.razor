@@ -1,13 +1,9 @@
 ﻿@page "/request-center"
 
-@using System.Security.Claims
-@using s20601.Components.Movies.Components
 @using s20601.Data.Models
 @using s20601.Services
 
 @inject IMovieService MovieSvc
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 
 <AuthorizeView>
     <Authorized>
@@ -19,7 +15,7 @@
         {
             <MudGrid Style="overflow: scroll;" Class="mt-6">
                 <MudItem xs="3">
-                    <MudText Typo="Typo.h5">My requests</MudText>
+                    <MudText Typo="Typo.h5">Requests</MudText>
                     <MudText Typo="Typo.body2" GutterBottom="true">@_openRequestsCount Open</MudText>
                     <MudStack Spacing="2" AlignItems="AlignItems.Start">
                         @foreach (var request in _requests)
@@ -40,9 +36,6 @@
                     </MudStack>
                 </MudItem>
                 <MudItem xs="9">
-                    
-                    <MovieEditRequestButton ButtonText="New movie request" DialogTitle="Create movie request"></MovieEditRequestButton>
-
                     @if (_selectedRequestId.HasValue)
                     {
                         <MudCard Elevation="0">
@@ -50,25 +43,32 @@
                                 <MudCardContent>
                                     @if (_detailsLoading)
                                     {
-                                        <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                                        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
                                     }
                                     else
                                     {
                                         <MudStack Row="true">
                                             <MudText Typo="Typo.h5">
                                                 #@_selectedRequestId
-                                                <MudChip T="string" Color="@(GetChipStyle(_selectedRequest?.Status))" Size="Size.Small">
-                                                    @_selectedRequest?.Status
-                                                </MudChip>
+                                                @if (_selectedRequest.Movie_Id == null)
+                                                {
+                                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">New
+                                                        Movie
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string" Color="Color.Info" Size="Size.Small">
+                                                        Update
+                                                    </MudChip>
+                                                }
                                             </MudText>
                                         </MudStack>
-
-                                        <MudText Typo="Typo.body2" GutterBottom="true">Requesting
-                                            user: @_requestor</MudText>
+                                        
                                         @if (!string.IsNullOrWhiteSpace(_requestDescription))
                                         {
                                             <MudText Typo="Typo.body2" GutterBottom="true">
-                                                <b>Description:</b> @_requestDescription
+                                                <b>Your description:</b> @_requestDescription
                                             </MudText>
                                         }
 
@@ -76,12 +76,34 @@
                                                   LoadingProgressColor="Color.Info">
                                             <HeaderContent>
                                                 <MudTh>Field</MudTh>
-                                                <MudTh>Requested Value</MudTh>
+                                                <MudTh>Previous Value</MudTh>
+                                                <MudTh>Requested Change</MudTh>
                                             </HeaderContent>
                                             <RowTemplate Context="tableContext">
                                                 <MudTd DataLabel="Field">@tableContext.FieldName</MudTd>
-                                                <MudTd DataLabel="Requested Value"
-                                                       Style="@(tableContext.IsChanged ? "color:var(--mud-palette-primary);" : "")">@tableContext.NewValue</MudTd>
+                                                <MudTd DataLabel="Previous Value">
+                                                    @if (tableContext.FieldName == "Poster" && tableContext.PreviousValue != "-")
+                                                    {
+                                                        <MudImage Src="@tableContext.PreviousValue" Height="150"
+                                                                  ObjectFit="ObjectFit.Contain"/>
+                                                    }
+                                                    else
+                                                    {
+                                                        @tableContext.PreviousValue
+                                                    }
+                                                </MudTd>
+                                                <MudTd DataLabel="Requested Change"
+                                                       Style="@(tableContext.IsChanged ? "color:var(--mud-palette-primary);" : "")">
+                                                    @if (tableContext.FieldName == "Poster" && tableContext.NewValue != "-")
+                                                    {
+                                                        <MudImage Src="@tableContext.NewValue" Height="150"
+                                                                  ObjectFit="ObjectFit.Contain"/>
+                                                    }
+                                                    else
+                                                    {
+                                                        @tableContext.NewValue
+                                                    }
+                                                </MudTd>
                                             </RowTemplate>
                                         </MudTable>
                                     }
@@ -89,11 +111,26 @@
                             </MudForm>
                         </MudCard>
                     }
+                    else
+                    {
+                        <MudAlert>
+                            @if (_requests.Count == 0)
+                            {
+                                <MudText Typo="Typo.body1">No requests found.</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body1">Select request to view its details.</MudText>
+                            }
+                        </MudAlert>
+                    }
                 </MudItem>
             </MudGrid>
         }
     </Authorized>
 </AuthorizeView>
+
+
 
 @code {
     private List<MovieUpdateRequest> _requests = new();
@@ -104,49 +141,23 @@
     private string? _requestDescription;
 
     private int? _selectedRequestId;
-    private MovieUpdateRequestStatus? _selectedRequestStatus;
     private MovieUpdateRequest? _selectedRequest;
     private bool _loading;
     private bool _detailsLoading;
 
-    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            _requests = await MovieSvc.GetMovieUpdateRequests(x => x.IdUser == userId);
-            _openRequestsCount = _requests.Count;
-            _selectedRequestId = _requests.Select(x => x.Id).FirstOrDefault();
-            if (_selectedRequestId != 0)
-            {
-                await OnRequestSelected(_selectedRequestId.Value);
-            }
-        }
-
-
+        _requests = await MovieSvc.GetMovieUpdateRequests();
+        _requests.OrderBy(x => x.Status);
+        _openRequestsCount = _requests.Count;
         _loading = false;
     }
 
-    private Color GetButtonStyle(int requestId)
-    {
-        return _selectedRequestId == requestId ? Color.Default : Color.Transparent;
-    }
 
-    private Color GetChipStyle(MovieUpdateRequestStatus? status)
+    private Color SetButtonColor(int requestId)
     {
-        return status switch
-        {
-            MovieUpdateRequestStatus.Approved => Color.Success,
-            MovieUpdateRequestStatus.Open => Color.Info,
-            MovieUpdateRequestStatus.Rejected => Color.Error,
-            _ => Color.Default
-        };
+        return _selectedRequestId == requestId ? Color.Primary : Color.Default;
     }
 
     private async Task OnRequestSelected(int requestId)
@@ -163,64 +174,78 @@
             _requestor = _selectedRequest.IdUserNavigation.UserName;
             _requestDescription = _selectedRequest.Description;
 
-            GenerateChanges(_selectedRequest);
+            await GenerateChanges(_selectedRequest);
         }
 
         _detailsLoading = false;
         StateHasChanged();
     }
 
-    private void GenerateChanges(MovieUpdateRequest request)
+    private async Task GenerateChanges(MovieUpdateRequest request)
     {
         _changes.Clear();
 
-        if (request.Movie != null)
+        if (request.Movie is not null)
         {
-            AddChange("Title", request.NewTitle ?? "Unchanged", request.NewTitle != null);
-            AddChange("Original Title", request.NewOriginalTitle ?? "Unchanged", request.NewOriginalTitle != null);
-            AddChange("Start Year", request.NewStartYear?.ToString() ?? "Unchanged", request.NewStartYear != null);
-            AddChange("End Year", request.NewEndYear?.ToString() ?? "Unchanged", request.NewEndYear != null);
-            AddChange("Runtime", request.NewRuntimeMinutes?.ToString() ?? "Unchanged", request.NewRuntimeMinutes != null);
-            AddChange("Title Type", request.NewTitleType ?? "Unchanged", request.NewTitleType != null);
+            AddChange("Title", request.Movie.Title, request.NewTitle ?? request.Movie.Title);
+            AddChange("Original Title", request.Movie.OriginalTitle, request.NewOriginalTitle ?? request.Movie.OriginalTitle);
+            AddChange("Start Year", request.Movie.StartYear.ToString(), request.NewStartYear?.ToString() ?? request.Movie.StartYear.ToString());
+            AddChange("End Year", request.Movie.EndYear?.ToString() ?? "-", request.NewEndYear?.ToString() ?? request.Movie.EndYear?.ToString() ?? "-");
+            AddChange("Runtime", request.Movie.RuntimeMinutes.ToString(), request.NewRuntimeMinutes?.ToString() ?? request.Movie.RuntimeMinutes.ToString());
+            AddChange("Title Type", request.Movie.TitleType, request.NewTitleType ?? request.Movie.TitleType);
+
+            var oldPosterUrl = request.Movie.PosterPath == null ? await MovieSvc.GetMoviePosterByMovieId(request.Movie.Id) : "-";
+            var newPosterUrl = request.NewPosterPath != null ? await MovieSvc.GetMoviePoster(request.NewPosterPath) : "-";
+            AddChange("Poster", oldPosterUrl ?? "-", newPosterUrl ?? "-");
+
+            var currentGenres = await MovieSvc.GetMovieGenresByIdAsync(request.Movie.Id);
+            var currentGenresString = string.Join(", ", currentGenres.OrderBy(g => g.Name).Select(g => g.Name));
 
             string newGenresString;
-            bool genresChanged = false;
             if (request.NewGenres != null && request.NewGenres.Any())
             {
                 newGenresString = string.Join(", ", request.NewGenres.OrderBy(g => g.Name).Select(g => g.Name));
-                genresChanged = true;
             }
             else
             {
-                newGenresString = "Unchanged";
+                newGenresString = currentGenresString;
             }
 
-            AddChange("Genres", newGenresString, genresChanged);
+            AddChange("Genres", currentGenresString, newGenresString);
+
+            var currentCrew = await MovieSvc.GetMovieCrewByMovieIdAsync(request.Movie.Id);
+            var currentCrewString = string.Join(", ", currentCrew
+                .OrderBy(c => c.LastName).ThenBy(c => c.FirstName)
+                .Select(c => $"{c.FirstName} {c.LastName} ({c.Job})"));
 
             string newCrewString;
-            bool crewChanged = false;
             if (request.NewCrew != null && request.NewCrew.Any())
             {
                 newCrewString = string.Join(", ", request.NewCrew
                     .OrderBy(c => c.LastName).ThenBy(c => c.FirstName)
                     .Select(c => $"{c.FirstName} {c.LastName} ({c.Job})"));
-                crewChanged = true;
             }
             else
             {
-                newCrewString = "Unchanged";
+                newCrewString = currentCrewString;
             }
 
-            AddChange("Crew", newCrewString, crewChanged);
+            AddChange("Crew", currentCrewString, newCrewString);
+
+            var currentOverview = await MovieSvc.GetMovieOverviewById(request.Movie.Id);
+            AddChange("Overview", currentOverview ?? "-", request.NewOverview ?? "-");
         }
         else
         {
-            AddChange("Title", request.NewTitle ?? "-", true);
-            AddChange("Original Title", request.NewOriginalTitle ?? "-", true);
-            AddChange("Start Year", request.NewStartYear?.ToString() ?? "-", true);
-            AddChange("End Year", request.NewEndYear?.ToString() ?? "-", true);
-            AddChange("Runtime", request.NewRuntimeMinutes?.ToString() ?? "-", true);
-            AddChange("Title Type", request.NewTitleType ?? "-", true);
+            AddChange("Title", "-", request.NewTitle ?? "-");
+            AddChange("Original Title", "-", request.NewOriginalTitle ?? "-");
+            AddChange("Start Year", "-", request.NewStartYear?.ToString() ?? "-");
+            AddChange("End Year", "-", request.NewEndYear?.ToString() ?? "-");
+            AddChange("Runtime", "-", request.NewRuntimeMinutes?.ToString() ?? "-");
+            AddChange("Title Type", "-", request.NewTitleType ?? "-");
+
+            var newPosterUrl = request.NewPosterPath != null ? await MovieSvc.GetMoviePoster(request.NewPosterPath) : "-";
+            AddChange("Poster", "-", newPosterUrl ?? "-");
 
             var newGenresString = "-";
             if (request.NewGenres != null && request.NewGenres.Any())
@@ -228,7 +253,7 @@
                 newGenresString = string.Join(", ", request.NewGenres.OrderBy(g => g.Name).Select(g => g.Name));
             }
 
-            AddChange("Genres", newGenresString, true);
+            AddChange("Genres", "-", newGenresString);
 
             var newCrewString = "-";
             if (request.NewCrew != null && request.NewCrew.Any())
@@ -238,28 +263,48 @@
                     .Select(c => $"{c.FirstName} {c.LastName} ({c.Job})"));
             }
 
-            AddChange("Crew", newCrewString, true);
+            AddChange("Crew", "-", newCrewString);
+            AddChange("Overview", "-", request.NewOverview ?? "-");
         }
 
         return;
 
-        void AddChange(string field, string newVal, bool isChanged)
+        void AddChange(string field, string oldVal, string newVal)
         {
-            _changes.Add(new RequestFieldChange(field, newVal, isChanged));
+            _changes.Add(new RequestFieldChange(field, oldVal, newVal));
         }
+    }
+    
+    private Color GetButtonStyle(int requestId)
+    {
+        return _selectedRequestId == requestId ? Color.Default : Color.Transparent;
+    }
+    
+    private Color GetChipStyle(MovieUpdateRequestStatus? status)
+    {
+        return status switch
+        {
+            MovieUpdateRequestStatus.Approved => Color.Success,
+            MovieUpdateRequestStatus.Open => Color.Info,
+            MovieUpdateRequestStatus.Rejected => Color.Error,
+            _ => Color.Default
+        };
     }
 
     public class RequestFieldChange
     {
         public string FieldName { get; set; }
+        public string PreviousValue { get; set; }
         public string NewValue { get; set; }
-        public bool IsChanged { get; set; }
+        public bool IsChanged => PreviousValue != NewValue;
 
-        public RequestFieldChange(string fieldName, string newValue, bool isChanged)
+        public RequestFieldChange(string fieldName, string previousValue, string newValue)
         {
             FieldName = fieldName;
+            PreviousValue = previousValue;
             NewValue = newValue;
-            IsChanged = isChanged;
         }
     }
+
+
 }

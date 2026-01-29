@@ -6,5 +6,4 @@ public class MovieRatingSummary
 {
     public double AvgRating { get; set; }
     public int RateCount { get; set; }
-    public SentimentType Sentiment { get; set; }
 }

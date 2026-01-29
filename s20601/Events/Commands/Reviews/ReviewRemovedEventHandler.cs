@@ -18,7 +18,7 @@ public class ReviewRemovedEventHandler
 
     public async Task Handle(ReviewRemovedCommand command, CancellationToken cancellationToken)
     {
-        var review = await _reviewService.GetMovieReviewWithRatingByIdAsync(command.reviewId);
+        var review = await _reviewService.GetMovieReviewWithRatingById(command.reviewId);
         if (review == null)
         {
             return;

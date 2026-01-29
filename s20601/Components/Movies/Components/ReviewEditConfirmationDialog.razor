@@ -1,0 +1,19 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Elevation="0" Variant="Variant.Filled">
+            If you edit your review, you will lose reputation points gained from it. All rating will be reset.
+            </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="@Submit">I understand</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}

@@ -11,13 +11,14 @@
 
 @code {
     [Parameter]
-    public required Movie Movie { get; set; }
+    public Movie? Movie { get; set; }
     [Parameter]
     public required string DialogTitle { get; set; }
     [Parameter]
     public required string ButtonText { get; set; }
     [Parameter] public Variant Variant { get; set; } = Variant.Filled;
     [Parameter] public Color Color { get; set; } = Color.Primary;
+    [Parameter] public EventCallback OnRequestSubmitted { get; set; }
     
     private async Task OpenMovieRequestDialog()
     {
@@ -26,6 +27,12 @@
             { x => x.Movie, Movie }
         };
 
-        await DialogService.ShowAsync<MovieRequestDialog>(DialogTitle, parameters);
+        var dialog = await DialogService.ShowAsync<MovieRequestDialog>(DialogTitle, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool success && success)
+        {
+            await OnRequestSubmitted.InvokeAsync();
+        }
     }
 }

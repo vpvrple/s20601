@@ -1,30 +1,14 @@
 ﻿@using s20601.Services
 @using s20601.Data.Models.DTOs;
 @using s20601.Data.Models;
-@using Microsoft.AspNetCore.Identity;
 
 @inject IReviewService ReviewSvc
-@inject IUserService UserSvc
 
-<AuthorizeView>
     @if (!userReviewed)
     {
         <AuthorizeView Policy="CanPostReview" Context="authContext">
             <Authorized Context="innerContext">
-                <MudPaper Class="d-flex justify-end flex-grow-1 gap-4 mt-6 mb-6" Elevation="0">
-                    <MudTextField @bind-Value="reviewContent" T="string" Label="Write a review" Variant="Variant.Text" AutoGrow="true" />
-                    <MudButton Disabled="@_processing" OnClick="() => PostReview(reviewContent)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Class="d-flex justify-end align-self-end">
-                        @if (_processing)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                            <MudText Class="ms-2">Posting</MudText>
-                        }
-                        else
-                        {
-                            <MudText>Post</MudText>
-                        }
-                    </MudButton>
-                </MudPaper>
+                <ReviewInput Processing="@_processing" OnPostReview="PostReview" />
             </Authorized>
             <NotAuthorized Context="innerContext">
                 
@@ -39,7 +23,14 @@
             </NotAuthorized>
         </AuthorizeView>
     }
-</AuthorizeView>
+    else if (_editingReviewId.HasValue)
+    {
+        var reviewToEdit = reviews.FirstOrDefault(r => r.Id == _editingReviewId.Value);
+        if (reviewToEdit != null)
+        {
+             <ReviewInput Processing="@_processing" OnPostReview="@(UpdateReview)" ExistingReview="@reviewToEdit.Content" OnCancel="@CancelEdit" />
+        }
+    }
 
 @if (_loading)
 {
@@ -49,47 +40,42 @@ else
 {
     @foreach (var review in reviews)
     {
-        <Review ReviewParam="@review"
-        OnRemove="RemoveFromList"
-        OnVote="OnVote" />
+        if (_editingReviewId != review.Id)
+        {
+            <Review ReviewParam="@review"
+            OnRemove="RemoveFromList"
+            OnVote="OnVote"
+            OnEdit="OnEditReview" />
+        }
     }
 
 }
 
 @code {
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
-    [Parameter]
-    public Movie Movie { get; set; }
+    [Parameter] public Movie Movie { get; set; }
 
-    private string reviewContent = string.Empty;
     private bool _processing = false;
-
     private bool _loading;
     private bool userReviewed = false;
-    private string userId = null!;
     private List<GetMovieReviewWithRating?> reviews = null!;
+    private int? _editingReviewId;
 
     protected override async Task OnInitializedAsync()
     {
-        _loading = true;
-        var authState = await AuthenticationStateTask;
-
-        if (authState.User.Identity.IsAuthenticated)
-        {
-            userId = authState.User.Claims.First().Value;
-            userReviewed = await ReviewSvc.AlreadyReviewed(Movie.Id, userId);
-        }
+        _loading = true; 
+        userReviewed = await ReviewSvc.AlreadyReviewed(Movie.Id);
         reviews = await ReviewSvc.GetMovieReviewsWithRating(Movie.Id);
         _loading = false;
     }
 
     private async Task PostReview(string review)
     {
+        if (string.IsNullOrWhiteSpace(review)) return;
+
         _processing = true;
 
-        await ReviewSvc.AddReviewAsync(review, Movie.Id, userId);
+        await ReviewSvc.AddReview(review, Movie.Id);
 
         reviews = await ReviewSvc.GetMovieReviewsWithRating(Movie.Id);
 
@@ -98,6 +84,35 @@ else
         StateHasChanged();
 
         _processing = false;
+    }
+
+    private async Task UpdateReview(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content) || !_editingReviewId.HasValue) return;
+
+        _processing = true;
+        
+        await ReviewSvc.UpdateReview(_editingReviewId.Value, content);
+
+        _editingReviewId = null;
+        reviews = await ReviewSvc.GetMovieReviewsWithRating(Movie.Id);
+        
+        StateHasChanged();
+        
+        _processing = false;
+    }
+
+    private async Task OnEditReview(int reviewId)
+    {
+        _editingReviewId = reviewId;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private void CancelEdit()
+    {
+        _editingReviewId = null;
+        StateHasChanged();
     }
 
     private async Task RemoveFromList(int reviewId)

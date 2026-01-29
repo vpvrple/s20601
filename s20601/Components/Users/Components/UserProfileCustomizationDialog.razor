@@ -11,19 +11,23 @@
                 <MudCardContent>
                     <MudStack>
                         <MudStack Row="true">
-                            <MudFileUpload T="IBrowserFile" FilesChanged="@UploadFiles">
-                                <ActivatorContent>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Secondary"
-                                               StartIcon="@Icons.Material.Filled.Image">
-                                        Load your avatar
-                                    </MudButton>
-                                </ActivatorContent>
-                            </MudFileUpload>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="@(UploadAvatar)">
+                                        <ActivatorContent>
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary">
+                                                Upload your avatar
+                                            </MudButton>
+                                        </ActivatorContent>
+                                    </MudFileUpload>
                             @if (_avatar is not null)
                             {
-                                <MudChip T="string" Color="Color.Dark" OnClose="@ClearAvatar">
+                                <MudChip T="string" Color="Color.Info" OnClose="@ClearAvatar">
                                     @(_avatar?.Name)
                                 </MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string">No File</MudChip>
                             }
                         </MudStack>
 
@@ -32,7 +36,7 @@
                     </MudStack>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@Submit">Update
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(Submit)">Update
                     </MudButton>
                 </MudCardActions>
             </MudCard>
@@ -45,45 +49,94 @@
 @code {
 
     [Parameter] public ApplicationUser User { get; set; }
-
+    [Parameter] public EventCallback OnProfileUpdated { get; set; }
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
     private string? _profileDescription;
     private IBrowserFile? _avatar;
 
-    private void UploadFiles(IBrowserFile file)
+    private MudFileUpload<IBrowserFile>? _fileUpload;
+    private MemoryStream? _uploadedFileStream;
+    
+    protected override void OnInitialized()
     {
-        _avatar = file;
+        if (User is not null)
+        {
+            _profileDescription = User.ProfileDescription;
+        }
     }
 
-    private void ClearAvatar(MudChip<string> chip)
+    private void ClearAvatar()
     {
         _avatar = null;
+        _uploadedFileStream?.Dispose();
+        _uploadedFileStream = null;
         StateHasChanged();
+    }
+
+    private async Task UploadAvatar(IBrowserFile avatar)
+    {
+        long maxFileSize = 5 * 1024 * 1024;
+        if (avatar.Size > maxFileSize)
+        {
+            Snackbar.Add("File is too large. Max size is 5MB.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            _uploadedFileStream?.DisposeAsync();
+            _uploadedFileStream = new MemoryStream();
+            await avatar.OpenReadStream(maxFileSize).CopyToAsync(_uploadedFileStream);
+            _uploadedFileStream.Position = 0;
+            _avatar = avatar;
+            Snackbar.Add("Your avatar was uploaded successfully!", Severity.Info);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            Snackbar.Add("Failed to read uploaded file.", Severity.Error);
+            _avatar = null;
+            _uploadedFileStream?.DisposeAsync();
+            _uploadedFileStream = null;
+        }
     }
 
     private async Task Submit()
     {
-        if (!string.IsNullOrEmpty(_profileDescription))
-        {
-            await UserSvc.UpdateUserProfileDescription(_profileDescription);
-        }
+        bool changesMade = false;
 
         if (_avatar is not null)
         {
-            try
-            {
-                using var stream = _avatar.OpenReadStream(5 * 1024 * 1024); // Limit to 5 MB
-                var newPosterFileName = await UserSvc.UpdateUserAvatar(stream, _avatar.Name);
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add("Something went wrong with file upload. Please try again.", Severity.Error);
-                return;
-            }
+            var newAvatar = await UserSvc.UpdateUserAvatar(_uploadedFileStream, _avatar.Name);
+            User.Avatar = newAvatar;
+            changesMade = true;
+        }
+        else if (_avatar is null && User.Avatar is not null)
+        {
+            await UserSvc.UpdateUserAvatar(_uploadedFileStream, null);
+            User.Avatar = null;
+            changesMade = true;
         }
 
-        Snackbar.Add("Your profile was updated.", Severity.Info);
+        if (_profileDescription != User.ProfileDescription)
+        {
+            var newDescription = await UserSvc.UpdateUserProfileDescription(_profileDescription);
+            User.ProfileDescription = newDescription;
+            changesMade = true;
+        }
+
+        if (!changesMade)
+        {
+            Snackbar.Add("No changes made", Severity.Info);
+        }
+        else
+        {
+            Snackbar.Add("Your profile was updated.", Severity.Info);
+            await OnProfileUpdated.InvokeAsync();
+        }
+
         MudDialog.Close(DialogResult.Ok(true));
     }
 

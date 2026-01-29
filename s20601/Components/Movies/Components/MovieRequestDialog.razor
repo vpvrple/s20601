@@ -1,270 +1,253 @@
-﻿@using System.Security.Claims
-@using s20601.Data.Models
+﻿@using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @using s20601.Services
+@using System.Security.Claims
+@using System.IO
 
 @inject IMovieService MovieSvc
 @inject ISnackbar Snackbar
 
-<style>
-    .file-upload-input {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        z-index: 10;
-        opacity: 0;
-    }
-</style>
+<AuthorizeView>
+    <Authorized>
+        @{
+            var authenticatedUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+        }
+        <MudDialog>
+            <DialogContent>
+                <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors" Spacing="2">
+                    <MudStepper @bind-ActiveIndex="_index" @ref="@_stepper">
+                        <ChildContent>
+                            <MudStep Title="Poster">
 
-<MudDialog>
-    <DialogContent>
-        <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors" Spacing="2">
-            <MudStepper @bind-ActiveIndex="_index" ShowResetButton>
-                <ChildContent>
-                    <MudStep Title="Poster">
-                        <MudStack Style="width: 100%">
-                            <MudFileUpload T="IBrowserFile"
-                                           @ref="@_fileUpload"
-                                           OnFilesChanged="OnInputFileChanged"
-                                           Hidden="@false"
-                                           InputClass="file-upload-input"
-                                           tabindex="-1"
-                                           @ondrop="@ClearDragClass"
-                                           @ondragenter="@SetDragClass"
-                                           @ondragleave="@ClearDragClass"
-                                           @ondragend="@ClearDragClass">
-                                <ActivatorContent>
-                                    <MudPaper Height="300px"
-                                              Outlined="true"
-                                              Class="@_dragClass"
-                                              Style="margin: 8px">
-                                        <MudText Typo="Typo.h6">
-                                            Drag and drop poster here or click
-                                        </MudText>
-                                        @foreach (var file in _fileNames)
-                                        {
-                                            <MudChip T="string"
-                                                     Color="Color.Dark"
-                                                     Text="@file"
-                                                     tabindex="-1"/>
-                                        }
-                                    </MudPaper>
-                                </ActivatorContent>
-                            </MudFileUpload>
-                            <MudToolBar Gutters="@false"
-                                        Class="relative d-flex justify-end gap-4">
-                                <MudButton Color="Color.Primary"
-                                           OnClick="@OpenFilePickerAsync"
-                                           Variant="Variant.Filled">
-                                    Pick image to upload
-                                </MudButton>
-                                <MudButton Color="Color.Error"
-                                           Disabled="@(!_fileNames.Any())"
-                                           OnClick="@ClearAsync"
-                                           Variant="Variant.Filled">
-                                    Clear
-                                </MudButton>
-                            </MudToolBar>
-                        </MudStack>
+                                <MudStack Row="true" Style="width: 100%" AlignItems="AlignItems.Center">
 
-                    </MudStep>
-                    <MudStep Title="General movie information">
-                        <MudStack Spacing="2">
-                            <MudTextField @bind-Value="_title" Label="Title"/>
-                            <MudTextField @bind-Value="_originalTitle" Label="Original Title"/>
-                            <MudNumericField @bind-Value="_startYear" Label="Start Year"/>
-                            <MudNumericField @bind-Value="_endYear" Label="End Year"/>
-                            <MudNumericField @bind-Value="_runtimeMinutes" Label="Runtime (minutes)"/>
-                            <MudTextField @bind-Value="_titleType" Label="Type"/>
+                                    <MudFileUpload T="IBrowserFile" FilesChanged="@(UploadPoster)">
+                                        <ActivatorContent>
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary">
+                                                Upload your poster
+                                            </MudButton>
+                                        </ActivatorContent>
+                                    </MudFileUpload>
+                                    @if (_poster != null)
+                                    {
+                                        <MudChip T="string" Color="Color.Dark" OnClose="@ClearPoster">
+                                            @(_poster?.Name)
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string">No poster uploaded yet</MudChip>
+                                    }
+                                </MudStack>
+                            </MudStep>
+                            
+                            
+                            <MudStep Title="General movie information">
+                                <MudStack Spacing="2">
+                                    <MudTextField @bind-Value="_title" Label="Title"/>
+                                    <MudTextField @bind-Value="_originalTitle" Label="Original Title"/>
+                                    <MudNumericField @bind-Value="_startYear" Label="Start Year"/>
+                                    <MudNumericField @bind-Value="_endYear" Label="End Year"/>
+                                    <MudNumericField @bind-Value="_runtimeMinutes" Label="Runtime (minutes)"/>
+                                    <MudTextField @bind-Value="_titleType" Label="Type"/>
 
-                            <MudAutocomplete T="Genre" Label="Genres" @ref="_autocomplete" Value="_selectedGenreToAdd"
-                                             ValueChanged="OnGenreSelected" SearchFunc="@SearchGenre"
-                                             ToStringFunc="@(g => g?.Name)"
-                                             ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
-                                <ItemTemplate Context="genre">
-                                    <MudText>
-                                        @(genre.Name)
-                                    </MudText>
-                                </ItemTemplate>
-                            </MudAutocomplete>
-                            <div class="d-flex flex-wrap mt-2">
-                                @foreach (var genre in _selectedGenres)
-                                {
-                                    <MudChip T="Genre" OnClose="@(() => RemoveGenre(genre))">@genre.Name</MudChip>
-                                }
-                            </div>
-                            <MudTextField @bind-Value="_overview" Label="Overview" HelperText="What is this movie about? Remember - no spoilers!" Lines="3"/>
-                            <MudTextField @bind-Value="_description" Lines="2" Label="Request description"
-                                          HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"/>
-
-                        </MudStack>
-                    </MudStep>
-                    
-                    <MudStep Title="Crew">
-
-
-                        <MudTable Items="@_crew" Hover="true" CanCancelEdit="true"
-                                  @bind-SelectedItem="@_selectedCrew" SortLabel="Sort By"
-                                  CommitEditTooltip="Commit Edit"
-                                  OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))"
-                                  RowEditPreview="@BackupItem" RowEditCancel="@ResetItemToOriginalValues"
-                                  RowEditCommit="@ItemHasBeenCommitted" IsEditRowSwitchingBlocked="false"
-                                  ApplyButtonPosition="TableApplyButtonPosition.End"
-                                  EditButtonPosition="TableEditButtonPosition.End"
-                                  EditTrigger="@TableEditTrigger.EditButton">
-                            <ToolBarContent>
-                                
-                                <MudStack Row="true" AlignItems="AlignItems.Baseline" Style="width: 100%">
-                                    <MudText Typo="Typo.h6">Movie crew</MudText>
-                                    <MudAutocomplete T="GetMovieCrewMemberWithDetails" Label="Search existing crew"
-                                                     Value="_selectedCrewToAdd"
-                                                     ValueChanged="OnCrewSelected" SearchFunc="@SearchCrew"
-                                                     ToStringFunc="@(c => c == null ? null : $"{c.FirstName} {c.LastName} ({c.BirthYear})")"
+                                    <MudAutocomplete T="Genre" Label="Genres" @ref="_autocomplete" Value="_selectedGenreToAdd"
+                                                     ValueChanged="OnGenreSelected" SearchFunc="@SearchGenre"
+                                                     ToStringFunc="@(g => g?.Name)"
                                                      ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
-                                        <ItemTemplate Context="crew">
+                                        <ItemTemplate Context="genre">
                                             <MudText>
-                                                @($"{crew.FirstName} {crew.LastName} ({crew.BirthYear})")
+                                                @(genre.Name)
                                             </MudText>
                                         </ItemTemplate>
                                     </MudAutocomplete>
-                                    <MudButton StartIcon="@Icons.Material.Filled.Add"
-                                               OnClick=@(() => OnAddCrewMember())>Add new crew member
-                                    </MudButton>
+                                    <div class="d-flex flex-wrap mt-2">
+                                        @foreach (var genre in _selectedGenres)
+                                        {
+                                            <MudChip T="Genre" OnClose="@(() => RemoveGenre(genre))">@genre.Name</MudChip>
+                                        }
+                                    </div>
+                                    <MudTextField @bind-Value="_overview" Label="Overview" HelperText="What is this movie about? Remember - no spoilers!" Lines="3"/>
+                                    <MudTextField @bind-Value="_description" Lines="2" Label="Request description"
+                                                  HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"/>
+
                                 </MudStack>
+                            </MudStep>
 
-                            </ToolBarContent>
-                            <HeaderContent>
-                                <MudTh>
-                                    <MudTableSortLabel
-                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.FirstName)">
-                                        FirstName
-                                    </MudTableSortLabel>
-                                </MudTh>
-                                <MudTh>
-                                    <MudTableSortLabel
-                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.LastName)">LastName
-                                    </MudTableSortLabel>
-                                </MudTh>
-                                <MudTh>
-                                    <MudTableSortLabel
-                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.BirthYear)">
-                                        BirthYear
-                                    </MudTableSortLabel>
-                                </MudTh>
-                                <MudTh>
-                                    <MudTableSortLabel
-                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.DeathYear)">
-                                        DeathYear
-                                    </MudTableSortLabel>
-                                </MudTh>
-                                <MudTh>
-                                    <MudTableSortLabel
-                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.Job)">Job
-                                    </MudTableSortLabel>
-                                </MudTh>
-                                <MudTh>
-                                    <MudTableSortLabel
-                                        SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x=>x.CharacterName)">
-                                        CharacterName
-                                    </MudTableSortLabel>
-                                </MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="First Name">@context.FirstName</MudTd>
-                                <MudTd DataLabel="Last Name">@context.LastName</MudTd>
-                                <MudTd DataLabel="Birth Year">@context.BirthYear</MudTd>
-                                <MudTd DataLabel="Death Year">@context.DeathYear</MudTd>
-                                <MudTd DataLabel="Job">@context.Job</MudTd>
-                                <MudTd DataLabel="Character Name">@context.CharacterName</MudTd>
-                            </RowTemplate>
-                            <RowEditingTemplate>
-                                <MudTd DataLabel="First Name">
-                                    <MudTextField @bind-Value="context.FirstName"/>
-                                </MudTd>
-                                <MudTd DataLabel="Last Name">
-                                    <MudTextField @bind-Value="context.LastName"/>
-                                </MudTd>
-                                <MudTd DataLabel="Birth Year">
-                                    <MudNumericField @bind-Value="context.BirthYear"/>
-                                </MudTd>
-                                <MudTd DataLabel="Death Year">
-                                    <MudNumericField @bind-Value="context.DeathYear"/>
-                                </MudTd>
-                                <MudTd DataLabel="Job">
-                                    <MudTextField @bind-Value="context.Job"/>
-                                </MudTd>
-                                <MudTd DataLabel="Character Name">
-                                    <MudTextField @bind-Value="context.CharacterName"/>
-                                </MudTd>
-                            </RowEditingTemplate>
-                            <PagerContent>
-                                <MudTablePager/>
-                            </PagerContent>
-                            <EditButtonContent Context="button">
-                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0"
-                                               OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
-                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.DeleteOutline"
-                                               Class="pa-0"
-                                               OnClick="@(() => OnRemoveCrew((GetMovieCrewMemberWithDetails)button.Item))"
-                                               Disabled="@button.ButtonDisabled"/>
-                            </EditButtonContent>
-                        </MudTable>
-                    </MudStep>
-                </ChildContent>
-                <ConnectorTemplate Context="step">
-                    <div class="mud-stepper-nav-connector">
-                        @{
-                            int value = step.Completed ? 100 : 0;
-                            <MudProgressLinear Striped Value="value" Min="0" Max="100"
-                                               Color="Color.Primary"
-                                               Style="height: 2px; background-color: #d4ddeb; border-radius: 2px;"/>
-                        }
-                    </div>
-                </ConnectorTemplate>
-                <LabelTemplate>
-                    @if (context.IsActive) {
-                        <MudIcon Icon="@Icons.Material.Filled.EditLocationAlt" Color="Color.Primary"></MudIcon>
-                    }
-                </LabelTemplate>
-                <ActionContent Context="stepper">
-                    <MudButton OnClick="@(() => stepper.ResetAsync())">Reset</MudButton>
-                    @if (!_completed)
-                    {
-                        <MudButton OnClick="@(() => stepper.PreviousStepAsync())"
-                                   StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary"
-                                   Disabled="@(_index <= 0)">Previous</MudButton>
-                        <MudSpacer/>
-                        @if (stepper.Steps[_index].Skippable == true)
-                        {
-                            <MudButton OnClick="@(() => stepper.SkipCurrentStepAsync())"
-                                       EndIcon="@stepper.SkipButtonIcon" Color="Color.Primary">Skip</MudButton>
-                        }
+                            <MudStep Title="Crew">
 
-                        @if (_index < stepper.Steps.Count - 1)
-                        {
-                            <MudButton OnClick="@(() => stepper.NextStepAsync())"
-                                       EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary">Next</MudButton>
-                        }
-                    }
-                </ActionContent>
-            </MudStepper>
-        </MudForm>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="@Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="@Submit">Submit</MudButton>
-    </DialogActions>
-</MudDialog>
+
+                                <MudTable Items="@_crew" Hover="true" CanCancelEdit="true"
+                                          @bind-SelectedItem="@_selectedCrew" SortLabel="Sort By"
+                                          CommitEditTooltip="Commit Edit"
+                                          OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))"
+                                          RowEditPreview="@BackupItem" RowEditCancel="@ResetItemToOriginalValues"
+                                          RowEditCommit="@ItemHasBeenCommitted" IsEditRowSwitchingBlocked="false"
+                                          ApplyButtonPosition="TableApplyButtonPosition.End"
+                                          EditButtonPosition="TableEditButtonPosition.End"
+                                          EditTrigger="@TableEditTrigger.EditButton"
+                                          Context="MudTableContext">
+                                    <ToolBarContent>
+
+                                        <MudStack Row="true" AlignItems="AlignItems.Baseline" Style="width: 100%">
+                                            <MudText Typo="Typo.h6">Movie crew</MudText>
+                                            <MudAutocomplete T="GetMovieCrewMemberWithDetails" Label="Search existing crew"
+                                                             Value="_selectedCrewToAdd"
+                                                             ValueChanged="OnCrewSelected" SearchFunc="@SearchCrew"
+                                                             ToStringFunc="@(c => c == null ? null : $"{c.FirstName} {c.LastName} ({c.BirthYear})")"
+                                                             ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
+                                                <ItemTemplate Context="crew">
+                                                    <MudText>
+                                                        @($"{crew.FirstName} {crew.LastName} ({crew.BirthYear})")
+                                                    </MudText>
+                                                </ItemTemplate>
+                                            </MudAutocomplete>
+                                            <MudButton StartIcon="@Icons.Material.Filled.Add"
+                                                       OnClick=@(() => OnAddCrewMember())>Add new crew member
+                                            </MudButton>
+                                        </MudStack>
+
+                                    </ToolBarContent>
+                                    <HeaderContent>
+                                        <MudTh>
+                                            <MudTableSortLabel
+                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.FirstName)">
+                                                FirstName
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel
+                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.LastName)">LastName
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel
+                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.BirthYear)">
+                                                BirthYear
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel
+                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.DeathYear)">
+                                                DeathYear
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel
+                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.Job)">Job
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                        <MudTh>
+                                            <MudTableSortLabel
+                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.CharacterName)">
+                                                CharacterName
+                                            </MudTableSortLabel>
+                                        </MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="First Name">@MudTableContext.FirstName</MudTd>
+                                        <MudTd DataLabel="Last Name">@MudTableContext.LastName</MudTd>
+                                        <MudTd DataLabel="Birth Year">@MudTableContext.BirthYear</MudTd>
+                                        <MudTd DataLabel="Death Year">@MudTableContext.DeathYear</MudTd>
+                                        <MudTd DataLabel="Job">@MudTableContext.Job</MudTd>
+                                        <MudTd DataLabel="Character Name">@MudTableContext.CharacterName</MudTd>
+                                    </RowTemplate>
+                                    <RowEditingTemplate>
+                                        <MudTd DataLabel="First Name">
+                                            <MudTextField @bind-Value="MudTableContext.FirstName"/>
+                                        </MudTd>
+                                        <MudTd DataLabel="Last Name">
+                                            <MudTextField @bind-Value="MudTableContext.LastName"/>
+                                        </MudTd>
+                                        <MudTd DataLabel="Birth Year">
+                                            <MudNumericField @bind-Value="MudTableContext.BirthYear"/>
+                                        </MudTd>
+                                        <MudTd DataLabel="Death Year">
+                                            <MudNumericField @bind-Value="MudTableContext.DeathYear"/>
+                                        </MudTd>
+                                        <MudTd DataLabel="Job">
+                                            <MudTextField @bind-Value="MudTableContext.Job"/>
+                                        </MudTd>
+                                        <MudTd DataLabel="Character Name">
+                                            <MudTextField @bind-Value="MudTableContext.CharacterName"/>
+                                        </MudTd>
+                                    </RowEditingTemplate>
+                                    <PagerContent>
+                                        <MudTablePager/>
+                                    </PagerContent>
+                                    <EditButtonContent Context="button">
+                                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0"
+                                                       OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
+                                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Class="pa-0"
+                                                       OnClick="@(() => OnRemoveCrew((GetMovieCrewMemberWithDetails)button.Item))"
+                                                       Disabled="@button.ButtonDisabled"/>
+                                    </EditButtonContent>
+                                </MudTable>
+                            </MudStep>
+                        </ChildContent>
+                        <ConnectorTemplate Context="step">
+                            <div class="mud-stepper-nav-connector">
+                                @{
+                                    int value = step.Completed ? 100 : 0;
+                                    <MudProgressLinear Striped Value="value" Min="0" Max="100"
+                                                       Color="Color.Primary"
+                                                       Style="height: 2px; background-color: #d4ddeb; border-radius: 2px;"/>
+                                }
+                            </div>
+                        </ConnectorTemplate>
+                        <LabelTemplate Context="LabelTemplateContext">
+                            @if (LabelTemplateContext.IsActive)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.EditLocationAlt" Color="Color.Primary"></MudIcon>
+                            }
+                        </LabelTemplate>
+                        <ActionContent Context="stepper">
+                            @if (!_completed)
+                            {
+                                if (_index != 0)
+                                {
+                                    <MudButton OnClick="@(() => stepper.PreviousStepAsync())"
+                                               StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary">
+                                        Previous
+                                    </MudButton>
+                                }
+                                <MudSpacer/>
+                                @if (stepper.Steps[_index].Skippable == true)
+                                {
+                                    <MudButton OnClick="@(() => stepper.SkipCurrentStepAsync())"
+                                               EndIcon="@stepper.SkipButtonIcon" Color="Color.Primary">Skip</MudButton>
+                                }
+
+                                @if (_index < stepper.Steps.Count - 1)
+                                {
+                                    <MudButton OnClick="@(() => stepper.NextStepAsync())"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary">Next</MudButton>
+                                }
+                            }
+                        </ActionContent>
+                    </MudStepper>
+                </MudForm>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@(Reset)">Reset</MudButton>
+                <MudSpacer/>
+                <MudButton OnClick="@Cancel">Cancel</MudButton>
+                <MudButton Color="Color.Primary" OnClick="@(() => Submit(authenticatedUserId))">Submit</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
 
 @code {
-    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-
+    [Parameter] public Movie? Movie { get; set; }
+    
     private bool _success;
     private string[] _errors = [];
     private MudForm _form;
+    private MudStepper _stepper;
     private MudAutocomplete<Genre> _autocomplete;
     private int _index;
     private bool _completed;
@@ -278,39 +261,75 @@
     private string _description = "";
     private string _overview = "";
 
-    [Parameter] public Movie? Movie { get; set; }
 
     private List<Genre> _allGenres = new();
     private HashSet<Genre> _selectedGenres = new();
     private List<Genre> _originalGenres = new();
     private Genre? _selectedGenreToAdd;
+    
+    
+    private List<string> editEvents = new();
+    private List<GetMovieCrewMemberWithDetails> _crew;
+    private GetMovieCrewMemberWithDetails _selectedCrew;
+    private GetMovieCrewMemberWithDetails _selectedCrewBeforeEdit;
+    private MudTable<GetMovieCrewMemberWithDetails> _table;
+
 
     private GetMovieCrewMemberWithDetails? _selectedCrewToAdd;
+
+    private IBrowserFile? _poster;
+    private MudFileUpload<IBrowserFile>? _fileUpload;
+    private MemoryStream? _uploadedFileStream;
 
     protected override async Task OnInitializedAsync()
     {
         _allGenres = await MovieSvc.GetAllGenresAsync();
-        if (Movie is not null)
+        await LoadMovieDataAsync();
+    }
+
+    private async Task Reset()
+    {
+        await _form.ResetAsync();
+        await _stepper.ResetAsync();
+        await LoadMovieDataAsync();
+    }
+
+    private async Task LoadMovieDataAsync()
+    {
+        if (Movie is null)
         {
-            _title = Movie.Title;
-            _originalTitle = Movie.OriginalTitle;
-            _startYear = Movie.StartYear;
-            _endYear = Movie.EndYear;
-            _runtimeMinutes = Movie.RuntimeMinutes;
-            _titleType = Movie.TitleType;
+            Movie = new Movie();
+        }
+
+        _title = Movie.Title;
+        _originalTitle = Movie.OriginalTitle;
+        _startYear = Movie.StartYear;
+        _endYear = Movie.EndYear;
+        _runtimeMinutes = Movie.RuntimeMinutes;
+        _titleType = Movie.TitleType;
+        _overview = Movie.Overview;
+
+        if (Movie.Id != 0)
+        {
             _originalGenres = await MovieSvc.GetMovieGenresByIdAsync(Movie.Id);
             _selectedGenres = _allGenres.Where(g => _originalGenres.Any(og => og.Id == g.Id)).ToHashSet();
             _crew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
-            _overview = Movie.Overview;
         }
         else
         {
-            Movie = new Movie();
+            _selectedGenres = new HashSet<Genre>();
             _crew = new List<GetMovieCrewMemberWithDetails>();
+            _originalGenres = new List<Genre>();
         }
-    }
 
-    private async Task Submit()
+        _poster = null;
+        _uploadedFileStream = null;
+        _description = "";
+        _selectedGenreToAdd = null;
+        _selectedCrewToAdd = null;
+    }
+    
+    private async Task Submit(string userId)
     {
         var request = new MovieUpdateRequest
         {
@@ -418,12 +437,12 @@
             hasChanges = true;
         }
 
-        if (file != null)
+        if (_poster != null && _uploadedFileStream != null)
         {
             try
             {
-                using var stream = file.OpenReadStream(5 * 1024 * 1024); // Limit to 5 MB
-                var newPosterFileName = await MovieSvc.UploadMoviePoster(Movie.Id, stream, file.Name);
+                _uploadedFileStream.Position = 0;
+                var newPosterFileName = await MovieSvc.UploadMoviePoster(Movie.Id, _uploadedFileStream, _poster.Name);
 
                 request.NewPosterPath = newPosterFileName;
                 changes.Add("Poster updated");
@@ -431,6 +450,7 @@
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 Snackbar.Add("Something went wrong with file upload. Please try again.", Severity.Error);
                 return;
             }
@@ -443,10 +463,6 @@
         }
 
         request.Description = _description;
-
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (userId != null)
         {
@@ -522,44 +538,39 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
-
-    private const string DefaultDragClass = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
-    private string _dragClass = DefaultDragClass;
-    private readonly List<string> _fileNames = new();
-    private MudFileUpload<IBrowserFile>? _fileUpload;
-
-    private async Task ClearAsync()
+    
+    
+    private void ClearPoster()
     {
-        await (_fileUpload?.ClearAsync() ?? Task.CompletedTask);
-        _fileNames.Clear();
-        ClearDragClass();
+        _poster = null;
+        StateHasChanged();
     }
 
-    private Task OpenFilePickerAsync()
-        => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
-
-
-    private IBrowserFile? file;
-
-    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    private async Task UploadPoster(IBrowserFile file)
     {
-        ClearDragClass();
-        file = e.File;
-        _fileNames.Add(file.Name);
+        long maxFileSize = 5 * 1024 * 1024;
+        if (file.Size > maxFileSize)
+        {
+            Snackbar.Add("File is too large. Max size is 5MB.", Severity.Error);
+            return;
+        }
+        try
+        {
+            _uploadedFileStream?.Dispose();
+            _uploadedFileStream = new MemoryStream();
+            await file.OpenReadStream(maxFileSize).CopyToAsync(_uploadedFileStream);
+            _uploadedFileStream.Position = 0;
+            _poster = file;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            Snackbar.Add("Failed to read file.", Severity.Error);
+            _poster = null;
+            _uploadedFileStream?.DisposeAsync();
+            _uploadedFileStream = null;
+        }
     }
-
-    private void SetDragClass()
-        => _dragClass = $"{DefaultDragClass} mud-border-primary";
-
-    private void ClearDragClass()
-        => _dragClass = DefaultDragClass;
-
-
-    private List<string> editEvents = new();
-    private List<GetMovieCrewMemberWithDetails> _crew;
-    private GetMovieCrewMemberWithDetails _selectedCrew;
-    private GetMovieCrewMemberWithDetails _selectedCrewBeforeEdit;
-    private MudTable<GetMovieCrewMemberWithDetails> _table;
 
     private void OnAddCrewMember()
     {

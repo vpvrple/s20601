@@ -1,0 +1,54 @@
+﻿<MudPaper Class="d-flex justify-end flex-grow-1 gap-4 mt-6 mb-6" Elevation="0">
+    <MudTextField @bind-Value="_reviewContent" 
+                  Label="@(string.IsNullOrEmpty(ExistingReview) ? "Write a review" : "Your review")" 
+                  Variant="Variant.Text" 
+                  AutoGrow="true" 
+                  Immediate="true"/>
+    <MudButton Disabled="@(Processing)" OnClick="@OnPost" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Primary" Class="d-flex justify-end align-self-end">
+        @if (Processing)
+        {
+            <MudProgressLinear Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+            <MudText Class="ms-2">Posting</MudText>
+        }
+        else
+        {
+            <MudText>Post</MudText>
+        }
+    </MudButton>
+    @if (!string.IsNullOrEmpty(ExistingReview))
+    {
+        <MudButton OnClick="@OnCancel" Variant="Variant.Text" Color="Color.Secondary" Class="align-self-end">Cancel</MudButton>
+    }
+</MudPaper>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    [Parameter] public bool Processing { get; set; }
+    [Parameter] public EventCallback<string> OnPostReview { get; set; }
+    [Parameter] public string? ExistingReview { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private string _reviewContent = string.Empty;
+    private bool _initialized;
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized && !string.IsNullOrEmpty(ExistingReview))
+        {
+            _reviewContent = ExistingReview;
+            _initialized = true;
+        }
+    }
+
+    private async Task OnPost()
+    {
+        if (!string.IsNullOrWhiteSpace(_reviewContent))
+        {
+            await OnPostReview.InvokeAsync(_reviewContent);
+            if (string.IsNullOrEmpty(ExistingReview))
+            {
+                _reviewContent = string.Empty;
+            }
+        }
+    }
+}

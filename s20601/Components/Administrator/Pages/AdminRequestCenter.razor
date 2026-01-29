@@ -32,14 +32,14 @@ else
             </MudStack>
         </MudItem>
         <MudItem xs="9">
-        @if (_selectedRequestId.HasValue)
-        {
-            <MudCard Elevation="0">
-                <MudForm>
-                    <MudCardContent>
+            @if (_selectedRequestId.HasValue)
+            {
+                <MudCard Elevation="0">
+                    <MudForm>
+                        <MudCardContent>
                             @if (_detailsLoading)
                             {
-                                <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
                             }
                             else
                             {
@@ -64,7 +64,8 @@ else
                                 <MudText Typo="Typo.body2" GutterBottom="true">Requesting user: @_requestor</MudText>
                                 @if (!string.IsNullOrWhiteSpace(_requestDescription))
                                 {
-                                    <MudText Typo="Typo.body2" GutterBottom="true"><b>Description:</b> @_requestDescription
+                                    <MudText Typo="Typo.body2" GutterBottom="true">
+                                        <b>Description:</b> @_requestDescription
                                     </MudText>
                                 }
 
@@ -80,7 +81,8 @@ else
                                         <MudTd DataLabel="Previous Value">
                                             @if (tableContext.FieldName == "Poster" && tableContext.PreviousValue != "-")
                                             {
-                                                <MudImage Src="@tableContext.PreviousValue" Height="150" ObjectFit="ObjectFit.Contain" />
+                                                <MudImage Src="@tableContext.PreviousValue" Height="150"
+                                                          ObjectFit="ObjectFit.Contain"/>
                                             }
                                             else
                                             {
@@ -91,7 +93,8 @@ else
                                                Style="@(tableContext.IsChanged ? "color:var(--mud-palette-primary);" : "")">
                                             @if (tableContext.FieldName == "Poster" && tableContext.NewValue != "-")
                                             {
-                                                <MudImage Src="@tableContext.NewValue" Height="150" ObjectFit="ObjectFit.Contain" />
+                                                <MudImage Src="@tableContext.NewValue" Height="150"
+                                                          ObjectFit="ObjectFit.Contain"/>
                                             }
                                             else
                                             {
@@ -101,19 +104,35 @@ else
                                     </RowTemplate>
                                 </MudTable>
                             }
-                    </MudCardContent>
-                    
-                    <MudCardActions>
-                        <MudButton OnClick="OnRequestReject" Variant="Variant.Filled" Color="Color.Error" Class="ml-auto mr-2">Reject</MudButton>
-                        <MudButton OnClick="OnRequestApprove" Variant="Variant.Filled" Color="Color.Success">Approve</MudButton>
-                    </MudCardActions>
-                </MudForm>
-                
-            </MudCard>
-            
-        }
+                        </MudCardContent>
+
+                        <MudCardActions>
+                            <MudButton OnClick="OnRequestReject" Variant="Variant.Filled" Color="Color.Error"
+                                       Class="ml-auto mr-2">Reject
+                            </MudButton>
+                            <MudButton OnClick="OnRequestApprove" Variant="Variant.Filled" Color="Color.Success">
+                                Approve
+                            </MudButton>
+                        </MudCardActions>
+                    </MudForm>
+
+                </MudCard>
+            }
+            else
+            {
+                <MudAlert>
+                    @if (_requests.Count == 0)
+                    {
+                        <MudText Typo="Typo.body1">No requests found.</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body1">Select request to view its details.</MudText>
+                    }
+                </MudAlert>
+            }
         </MudItem>
-        
+
     </MudGrid>
 }
 
@@ -138,7 +157,6 @@ else
         _loading = false;
     }
 
-    
 
     private Color SetButtonColor(int requestId)
     {
@@ -172,18 +190,18 @@ else
         {
             await MovieSvc.ApproveMovieUpdateRequest(_selectedRequestId.Value);
             Snackbar.Add($"Request #{_selectedRequestId} approved!", Severity.Success);
-            
+
             RemoveRequestFromList(_selectedRequestId.Value);
         }
     }
-    
+
     public async Task OnRequestReject()
     {
         if (_selectedRequestId.HasValue)
         {
             await MovieSvc.RejectMovieUpdateRequest(_selectedRequestId.Value);
             Snackbar.Add($"Request #{_selectedRequestId} rejected!", Severity.Info);
-            
+
             RemoveRequestFromList(_selectedRequestId.Value);
         }
     }
@@ -202,7 +220,7 @@ else
         _changes.Clear();
         StateHasChanged();
     }
-    
+
     private async Task GenerateChanges(MovieUpdateRequest request)
     {
         _changes.Clear();
@@ -215,7 +233,7 @@ else
             AddChange("End Year", request.Movie.EndYear?.ToString() ?? "-", request.NewEndYear?.ToString() ?? request.Movie.EndYear?.ToString() ?? "-");
             AddChange("Runtime", request.Movie.RuntimeMinutes.ToString(), request.NewRuntimeMinutes?.ToString() ?? request.Movie.RuntimeMinutes.ToString());
             AddChange("Title Type", request.Movie.TitleType, request.NewTitleType ?? request.Movie.TitleType);
-            
+
             var oldPosterUrl = request.Movie.PosterPath == null ? await MovieSvc.GetMoviePosterByMovieId(request.Movie.Id) : "-";
             var newPosterUrl = request.NewPosterPath != null ? await MovieSvc.GetMoviePoster(request.NewPosterPath) : "-";
             AddChange("Poster", oldPosterUrl ?? "-", newPosterUrl ?? "-");
@@ -253,6 +271,7 @@ else
             }
 
             AddChange("Crew", currentCrewString, newCrewString);
+            AddChange("Overview", request.Movie.Overview ?? "-", request.NewOverview ?? "-");
         }
         else
         {
@@ -262,7 +281,7 @@ else
             AddChange("End Year", "-", request.NewEndYear?.ToString() ?? "-");
             AddChange("Runtime", "-", request.NewRuntimeMinutes?.ToString() ?? "-");
             AddChange("Title Type", "-", request.NewTitleType ?? "-");
-            
+
             var newPosterUrl = request.NewPosterPath != null ? await MovieSvc.GetMoviePoster(request.NewPosterPath) : "-";
             AddChange("Poster", "-", newPosterUrl ?? "-");
 
@@ -283,6 +302,7 @@ else
             }
 
             AddChange("Crew", "-", newCrewString);
+            AddChange("Overview", "-", request.NewOverview ?? "-");
         }
 
         return;
@@ -307,5 +327,4 @@ else
             NewValue = newValue;
         }
     }
-
 }

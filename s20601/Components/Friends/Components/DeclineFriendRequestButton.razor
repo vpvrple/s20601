@@ -1,31 +1,26 @@
-﻿@using System.Security.Claims
-@using s20601.Services
+﻿@using s20601.Services
 
 @inject IFriendService FriendSvc
 
 <AuthorizeView>
     <Authorized>
-        <MudButton OnClick="@DeclineRequest" EndIcon="@Icons.Material.Filled.DoNotDisturb">Decline</MudButton>
+        <MudButton OnClick="@DeclineRequest"
+                   EndIcon="@Icons.Material.Filled.DoNotDisturb"
+                   Variant="Variant.Filled"
+                   Color="Color.Error"
+                   Size="Size.Small">
+            Decline
+        </MudButton>
     </Authorized>
 </AuthorizeView>
 
 @code {
-    [CascadingParameter]
-    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-
     [Parameter] public required string RequesterId { get; set; }
     [Parameter] public EventCallback OnRequestDeclined { get; set; }
-    
+
     private async Task DeclineRequest()
     {
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            await FriendSvc.DeclineFriendRequest(RequesterId);
-            await OnRequestDeclined.InvokeAsync();
-        }
+        await FriendSvc.DeclineFriendRequest(RequesterId);
+        await OnRequestDeclined.InvokeAsync();
     }
 }

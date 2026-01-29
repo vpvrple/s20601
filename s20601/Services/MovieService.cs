@@ -46,8 +46,6 @@ public class MovieService : IMovieService
         return movies ?? [];
     }
 
-    
-
     public async Task<List<Movie>> GetTrendingMovies(int n)
     {
         //needs to be revisited
@@ -119,24 +117,6 @@ public class MovieService : IMovieService
         return newFileName;
     }
 
-    // public async Task<string?> UpdateMoviePoster(int movieId, string newPoster)
-    // {
-    //     using var context = await _dbContextFactory.CreateDbContextAsync();
-    //     var movie = await context.Movies
-    //         .Where(x => x.Id == movieId)
-    //         .FirstOrDefaultAsync();
-    //
-    //     if (movie != null)
-    //     {
-    //         movie.PosterPath = newPoster;
-    //     }
-    //     
-    //     await context.SaveChangesAsync();
-    //
-    //     return newPoster;
-    // }
-    
-
     public async Task<string?> GetMovieOverviewById(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -175,8 +155,6 @@ public class MovieService : IMovieService
             .Where(r => r.Movie_Id == id)
             .Select(r => r.Content)
             .ToListAsync();
-
-        ratingSummary!.Sentiment = await _mediator.Send(new GetAzureReviewsSentimentQuery(reviews));
 
         return new MovieWithRating
         {
@@ -283,7 +261,6 @@ public class MovieService : IMovieService
         return await query.ToListAsync();
     }
 
-    // to refactor
     public async Task<List<GetMovieCrewMemberWithDetails>> SearchCrewAsync(string query, int? movieId = null)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -345,7 +322,6 @@ public class MovieService : IMovieService
 
         if (request.Movie_Id.HasValue)
         {
-            // Update existing movie
             var movie = await context.Movies
                 .Include(m => m.MovieGenres)
                 .Include(m => m.MovieCrews)
@@ -360,7 +336,6 @@ public class MovieService : IMovieService
                 if (request.NewRuntimeMinutes.HasValue) movie.RuntimeMinutes = request.NewRuntimeMinutes.Value;
                 if (request.NewTitleType != null) movie.TitleType = request.NewTitleType;
 
-                // Update Genres
                 if (request.NewGenres.Count != 0)
                 {
                     context.MovieGenres.RemoveRange(movie.MovieGenres);
@@ -376,16 +351,13 @@ public class MovieService : IMovieService
                 
                 if (request.NewPosterPath != null)
                 {
-                    // Delete old poster to save space
                     if (!string.IsNullOrEmpty(movie.PosterPath))
                     {
                         await _mediator.Send(new MoviePosterUpdatedCommand(AzureBlobType.MovieImages, movie.PosterPath));
                     }
-                    // Update poster path
                     movie.PosterPath = request.NewPosterPath;
                 }
                 
-                // Update Crew
                 if (request.NewCrew.Count != 0)
                 {
                     context.MovieCrews.RemoveRange(movie.MovieCrews);
@@ -410,13 +382,11 @@ public class MovieService : IMovieService
                                 BirthYear = crewRequest.BirthYear ?? 0,
                                 DeathYear = crewRequest.DeathYear
                             };
-                            context.Crews.Add(newCrew);
-                            await context.SaveChangesAsync(); // Save to get ID
-
+                            
                             context.MovieCrews.Add(new MovieCrew
                             {
                                 Movie_Id = movie.Id,
-                                IdCrew = newCrew.Id,
+                                IdCrewNavigation = newCrew,
                                 Job = crewRequest.Job,
                                 CharacterName = crewRequest.CharacterName
                             });
@@ -439,18 +409,15 @@ public class MovieService : IMovieService
             };
 
             context.Movies.Add(newMovie);
-            await context.SaveChangesAsync();
 
             foreach (var genre in request.NewGenres)
             {
                 context.MovieGenres.Add(new MovieGenre
                 {
-                    Movie_Id = newMovie.Id,
+                    Movie = newMovie,
                     Genre_Id = genre.Id
                 });
             }
-
-            newMovie.PosterPath = request.NewPosterPath;
             
             foreach (var crewRequest in request.NewCrew)
             {
@@ -458,7 +425,7 @@ public class MovieService : IMovieService
                 {
                     context.MovieCrews.Add(new MovieCrew
                     {
-                        Movie_Id = newMovie.Id,
+                        Movie = newMovie,
                         IdCrew = crewRequest.CrewId.Value,
                         Job = crewRequest.Job,
                         CharacterName = crewRequest.CharacterName
@@ -473,13 +440,11 @@ public class MovieService : IMovieService
                         BirthYear = crewRequest.BirthYear ?? 0,
                         DeathYear = crewRequest.DeathYear
                     };
-                    context.Crews.Add(newCrew);
-                    await context.SaveChangesAsync();
 
                     context.MovieCrews.Add(new MovieCrew
                     {
-                        Movie_Id = newMovie.Id,
-                        IdCrew = newCrew.Id,
+                        Movie = newMovie,
+                        IdCrewNavigation = newCrew,
                         Job = crewRequest.Job,
                         CharacterName = crewRequest.CharacterName
                     });

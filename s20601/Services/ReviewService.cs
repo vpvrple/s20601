@@ -20,7 +20,7 @@ public class ReviewService : IReviewService
         _userService = userService;
     }
 
-    public async Task<GetMovieReviewWithRating> GetMovieReviewWithRatingByIdAsync(int id)
+    public async Task<GetMovieReviewWithRating> GetMovieReviewWithRatingById(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -65,46 +65,28 @@ public class ReviewService : IReviewService
         return reviews;
     }
 
-    public async Task<GetMovieReviewWithRating> GetUserMovieReviewWithRating(string userId, int movieId)
+    public async Task AddReview(string content, int movieId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var review = await context.Reviews
-            .Where(x => x.Movie_Id == movieId && x.IdAuthor == userId)
-            .Include(x => x.ReviewRates)
-            .ThenInclude(x => x.IdUserNavigation)
-            .Select(x => new GetMovieReviewWithRating
-            {
-                Id = x.Id,
-                AuthorId = x.IdAuthor,
-                Username = x.IdAuthorNavigation.UserName,
-                CreatedAt = x.CreatedAt,
-                Content = x.Content,
-                LikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Like),
-                DislikeRating = x.ReviewRates.Select(x => x.ReviewRateType).Count(rateType => rateType == ReviewRateType.Dislike)
-            })
-            .FirstOrDefaultAsync();
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
 
-        return review;
-    }
-
-    public async Task AddReviewAsync(string content, int movieId, string authorId)
-    {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        if (authenticatedUserId is null)
+            return;
 
         var review = new Review
         {
             Content = content,
             CreatedAt = DateTime.UtcNow,
             Movie_Id = movieId,
-            IdAuthor = authorId
+            IdAuthor = authenticatedUserId
         };
         context.Reviews.Add(review);
 
         await context.SaveChangesAsync();
     }
 
-    public async Task RemoveReviewAsync(int reviewId, string userId)
+    public async Task RemoveReview(int reviewId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -113,12 +95,14 @@ public class ReviewService : IReviewService
             .Where(x => x.Id == reviewId)
             .FirstOrDefaultAsync();
 
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
         if (review == null)
             throw new ArgumentNullException("Review not found.");
-        else if (review.IdAuthor != userId)
+        if (review.IdAuthor != authenticatedUserId)
             throw new UnauthorizedAccessException("Not authorized.");
 
-        await _mediator.Publish(new ReviewRemovedCommand(userId, reviewId, 0));
+        await _mediator.Publish(new ReviewRemovedCommand(authenticatedUserId, reviewId, 0));
 
         context.ReviewRates.RemoveRange(review.ReviewRates);
         context.Reviews.Remove(review);
@@ -126,15 +110,16 @@ public class ReviewService : IReviewService
     }
 
 
-    public async Task<bool> AlreadyReviewed(int movieId, string authorId)
+    public async Task<bool> AlreadyReviewed(int movieId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
         return await context.Reviews
-            .AnyAsync(x => x.Movie_Id == movieId && x.IdAuthor == authorId);
+            .AnyAsync(x => x.Movie_Id == movieId && x.IdAuthor == authenticatedUserId);
     }
 
 
-    public async Task VoteReview(int reviewId, string userId, ReviewRateType? vote)
+    public async Task VoteReview(int reviewId, ReviewRateType? vote)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -143,10 +128,15 @@ public class ReviewService : IReviewService
 
         var authenticatedUserId = await _userService.GetAuthenticatedUserId();
 
+        if (authenticatedUserId is null)
+        {
+            return;
+        }
+
         var authorId = review.IdAuthor;
 
         var currentVote = await context.ReviewRates
-            .Where(x => x.Review_Id == reviewId && x.IdUser == userId)
+            .Where(x => x.Review_Id == reviewId && x.IdUser == authenticatedUserId)
             .FirstOrDefaultAsync();
 
         if (vote is null)
@@ -164,7 +154,7 @@ public class ReviewService : IReviewService
             {
                 context.ReviewRates.Add(new ReviewRate
                 {
-                    IdUser = userId,
+                    IdUser = authenticatedUserId,
                     Review_Id = reviewId,
                     ReviewRateType = vote.Value,
                     RatedAt = DateTime.UtcNow
@@ -202,16 +192,47 @@ public class ReviewService : IReviewService
                 }
             }
         }
-    await context.SaveChangesAsync();
-}
 
-public async Task<ReviewRateType?> GetUserVoteByReview(int reviewId, string userId)
-{
-    using var context = await _dbContextFactory.CreateDbContextAsync();
-    return await context.ReviewRates
-        .Where(x => x.IdUser == userId && x.Review_Id == reviewId)
-        .Select(x => (ReviewRateType?)x.ReviewRateType)
-        .FirstOrDefaultAsync();
-}
+        await context.SaveChangesAsync();
+    }
 
+    public async Task<ReviewRateType?> GetUserVoteByReview(int reviewId)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
+        return await context.ReviewRates
+            .Where(x => x.IdUser == authenticatedUserId && x.Review_Id == reviewId)
+            .Select(x => (ReviewRateType?)x.ReviewRateType)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task UpdateReview(int reviewId, string content)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var review = await context.Reviews
+            .Include(x => x.ReviewRates)
+            .Where(x => x.Id == reviewId)
+            .FirstOrDefaultAsync();
+
+        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+
+
+        if (review == null)
+            throw new ArgumentNullException("Review not found.");
+        if (review.IdAuthor != authenticatedUserId)
+            throw new UnauthorizedAccessException("Not authorized.");
+
+        // Reset points and ratings
+        await _mediator.Publish(new ReviewRemovedCommand(authenticatedUserId, reviewId, 0));
+        context.ReviewRates.RemoveRange(review.ReviewRates);
+
+        review.Content = content;
+        review.CreatedAt = DateTime.UtcNow;
+
+        context.Reviews.Update(review);
+        await context.SaveChangesAsync();
+    }
 }

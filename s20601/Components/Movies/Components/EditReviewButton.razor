@@ -1,0 +1,20 @@
+﻿@inject IDialogService DialogService
+
+<MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(OpenReviewEditConfirmationDialog)" />
+
+@code {
+
+    [Parameter] public EventCallback OnReviewEditConfirmed { get; set; }
+    
+    private async Task OpenReviewEditConfirmationDialog()
+    {
+        var dialog = await DialogService.ShowAsync<ReviewEditConfirmationDialog>("Review Edit Confirmation");
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool and true)
+        {
+            await OnReviewEditConfirmed.InvokeAsync();
+            StateHasChanged();
+        }
+    }
+}

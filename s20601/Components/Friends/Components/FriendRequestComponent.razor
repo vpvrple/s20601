@@ -1,31 +1,44 @@
-﻿<MudPaper Class="pa-2" Elevation="0" @onclick="SelectRequest" Style="cursor: pointer;">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-        <MudAvatar Color="Color.Primary">@RequesterAvatar</MudAvatar>
-        <MudStack Spacing="0">
-            <MudText Typo="Typo.body1">@RequesterUsername</MudText>
-            <MudStack Row="true">
-                <AcceptFriendRequestButton RequesterId="@RequesterId" OnRequestAccepted="OnRequestProcessed"></AcceptFriendRequestButton>
-                <DeclineFriendRequestButton RequesterId="@RequesterId" OnRequestDeclined="OnRequestProcessed"></DeclineFriendRequestButton>
+﻿@using s20601.Components.Users.Pages
+@inject NavigationManager NagivationMgr
+
+<MudButton OnClick="@SelectRequest" Variant="Variant.Text" Class="pa-0" Style="justify-content:flex-start"
+           FullWidth="true">
+    <MudPaper Class="pa-2" Elevation="0" Width="100%">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+            <MudButton OnClick="@NavigateToProfile">
+                <UserAvatar UserId="@RequesterId"></UserAvatar>
+            </MudButton>
+            <MudStack Spacing="1" AlignItems="AlignItems.Start">
+                <MudButton OnClick="@NavigateToProfile">
+                    @RequesterUsername
+                </MudButton>
+                <MudStack Row="true" Spacing="2">
+                    <AcceptFriendRequestButton RequesterId="@RequesterId"
+                                               OnRequestAccepted="OnRequestProcessed">
+                    </AcceptFriendRequestButton>
+                    <DeclineFriendRequestButton RequesterId="@RequesterId"
+                                                OnRequestDeclined="OnRequestProcessed">
+                    </DeclineFriendRequestButton>
+                </MudStack>
             </MudStack>
         </MudStack>
-    </MudStack>
-</MudPaper>
+    </MudPaper>
+</MudButton>
 
 @code {
-
-    [Parameter]
-    public required char RequesterAvatar { get; set; }
-    [Parameter]
-    public required string RequesterUsername { get; set; }
-    [Parameter]
-    public required string RequesterId { get; set; }
-    [Parameter]
-    public EventCallback OnRequestProcessed { get; set; }
-    [Parameter]
-    public EventCallback OnRequestSelected { get; set; }
+    [Parameter] public required string RequesterAvatar { get; set; }
+    [Parameter] public required string RequesterUsername { get; set; }
+    [Parameter] public required string RequesterId { get; set; }
+    [Parameter] public EventCallback OnRequestProcessed { get; set; }
+    [Parameter] public EventCallback<string> OnRequestSelected { get; set; }
 
     private async Task SelectRequest()
     {
-        await OnRequestSelected.InvokeAsync();
+        await OnRequestSelected.InvokeAsync(RequesterId);
+    }
+
+    private void NavigateToProfile()
+    {
+        NagivationMgr.NavigateTo($"/user/{RequesterUsername}");
     }
 }

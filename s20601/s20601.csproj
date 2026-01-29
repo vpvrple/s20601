@@ -40,8 +40,6 @@
 
   <ItemGroup>
     <Folder Include="Components\Administrator\Components\" />
-    <Folder Include="Components\MovieCollections\Components\" />
-    <Folder Include="Data\Migrations\" />
   </ItemGroup>
 
   <ItemGroup>

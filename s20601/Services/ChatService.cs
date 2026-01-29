@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using s20601.Data;
 using s20601.Data.Models;
+using s20601.Data.Models.DTOs;
 
 namespace s20601.Services;
 
@@ -41,7 +42,7 @@ public class ChatService : IChatService
         return messageDb;
     }
 
-    public async Task<List<Message>?> GetConversation(string friendId)
+    public async Task<List<ChatMessage>?> GetConversation(string friendId)
     {
         var authenticatedUserId = await _userService.GetAuthenticatedUserId();
         
@@ -53,8 +54,22 @@ public class ChatService : IChatService
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
         return await context.Messages
+            .Include(x => x.IdRecipientNavigation)
+            .Include(x => x.IdSenderNavigation)
             .Where(m => (m.IdSender == authenticatedUserId && m.IdRecipient == friendId) || 
                         (m.IdSender == friendId && m.IdRecipient == authenticatedUserId))
+            .Select(x => new ChatMessage()
+            {
+                IdSender = x.IdSender,
+                IdRecipient = x.IdRecipient,
+                Created = x.Created,
+                Content = x.Content,
+                MessageStatus = x.MessageStatus,
+                SenderUsername = x.IdSenderNavigation.UserName,
+                RecipientUsername = x.IdRecipientNavigation.UserName,
+                SenderAvatar =  x.IdSenderNavigation.Avatar,
+                RecipientAvatar =  x.IdRecipientNavigation.Avatar,
+            })
             .OrderBy(m => m.Created)
             .ToListAsync();
     }

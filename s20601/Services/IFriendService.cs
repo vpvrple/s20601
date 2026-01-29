@@ -11,5 +11,5 @@ public interface IFriendService
     Task RemoveFriend(string friendId);
     Task DeclineFriendRequest(string requesterId);
     Task SendFriendRequest(string receiverId, string message);
-    Task<string?> GetFriendRequestMessage(string receiverId);
+    Task<string?> GetFriendRequestMessage(string requesterId);
 }

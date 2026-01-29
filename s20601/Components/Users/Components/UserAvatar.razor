@@ -1,0 +1,48 @@
+@using s20601.Services
+@inject IUserService UserSvc
+
+<MudAvatar Class="d-flex align-center justify-center" Style="@Style" Rounded="false">
+    @if (string.IsNullOrEmpty(_userAvatar))
+    {
+        <MudIcon Icon="@Icons.Material.Filled.Person" Style="width: 60%; height: 60%;" />
+    }
+    else
+    {
+        <MudImage Src="@_userAvatar"
+                  ObjectFit="ObjectFit.Contain"
+                  Alt="User avatar"
+                  Elevation="1"
+                  Style="width: 100%; height: 100%;">
+        </MudImage>
+    }
+</MudAvatar>
+
+    @code {
+    [Parameter]
+    public required string UserId { get; set; }
+    [Parameter] public string? Style { get; set; }
+    
+    [Parameter] public string? AvatarUrl { get; set; }
+    
+    private string? _userAvatar;
+    private string? _previousUserId;
+    private string? _previousAvatarUrl;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (UserId != _previousUserId || AvatarUrl != _previousAvatarUrl)
+        {
+            _previousUserId = UserId;
+            _previousAvatarUrl = AvatarUrl;
+            
+            // if (!string.IsNullOrEmpty(AvatarUrl))
+            // {
+            //     _userAvatar = AvatarUrl;
+            // }
+            // else
+            // {
+                _userAvatar = await UserSvc.GetUserAvatarByUserId(UserId);
+            // }
+        }
+    }
+}

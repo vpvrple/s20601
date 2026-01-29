@@ -5,7 +5,7 @@ namespace s20601.Data.Models;
 public class Movie : INavigable
 {
     public int Id { get; set; }
-    public string IMDBId { get; set; } = null!;
+    public string? IMDBId { get; init; }
     public string Title { get; set; } = null!;
     public string OriginalTitle { get; set; } = null!;
     public int StartYear { get; set; }

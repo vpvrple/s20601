@@ -1,6 +1,7 @@
 ﻿@using s20601.Services;
 @using s20601.Data.Models;
 @using System.Security.Claims
+@using s20601.Components.Users.Components
 @using s20601.Data.Models.DTOs
 
 @inject IReviewService ReviewSvc
@@ -13,11 +14,9 @@
 else
 {
     <MudChat>
-        <MudAvatar>
-            @ReviewParam.Username[0]
-        </MudAvatar>
+        <UserAvatar UserId="@ReviewParam.AuthorId"></UserAvatar>
         <MudChatHeader Name="@ReviewParam.Username" Time="@ReviewParam.CreatedAt.ToString()"/>
-        <MudChatBubble Style="width: 100%;">
+        <MudChatBubble Style="width: 100%; word-break: break-word;">
             @ReviewParam.Content
         </MudChatBubble>
         <MudChatFooter>
@@ -26,14 +25,15 @@ else
                     @{
                         var authenticatedUserId = @context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                     }
-                    <MudIconButton Color="@_colorLike" Icon="@Icons.Material.Filled.ThumbUp" OnClick="@(() => Vote(ReviewParam.Id, ReviewRateType.Like, authenticatedUserId))"/>
+                    <MudIconButton Color="@_colorLike" Icon="@Icons.Material.Filled.ThumbUp" OnClick="@(() => Vote(ReviewParam.Id, ReviewRateType.Like))"/>
                     @ReviewParam.LikeRating
-                    <MudIconButton Color="@_colorDislike" Icon="@Icons.Material.Filled.ThumbDown" OnClick="@(() => Vote(ReviewParam.Id, ReviewRateType.Dislike, authenticatedUserId))"/>
+                    <MudIconButton Color="@_colorDislike" Icon="@Icons.Material.Filled.ThumbDown" OnClick="@(() => Vote(ReviewParam.Id, ReviewRateType.Dislike))"/>
                     @ReviewParam.DislikeRating
 
                     @if (authenticatedUserId == ReviewParam.AuthorId)
                     {
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Remove(ReviewParam.Id, authenticatedUserId))"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Remove(ReviewParam.Id))"/>
+                        <EditReviewButton OnReviewEditConfirmed="@(() => OnEdit.InvokeAsync(ReviewParam.Id))" />
                     }
                 </Authorized>
                 <NotAuthorized>
@@ -48,32 +48,26 @@ else
 }
 
 @code {
-    
-    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
     [Parameter] public required GetMovieReviewWithRating ReviewParam { get; set; }
     private Color _colorLike;
     private Color _colorDislike;
     private ReviewRateType? _currentVote;
     private bool _loading;
     [Parameter] public required EventCallback<int> OnRemove { get; set; }
+    [Parameter] public required EventCallback<int> OnEdit { get; set; }
+
 
     protected override async Task OnInitializedAsync()
     {
         _loading =  true;
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            var authenticatedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            _currentVote = await ReviewSvc.GetUserVoteByReview(ReviewParam.Id, authenticatedUserId);
-            SetVoteButtonColor(_currentVote);
-        }
+        _currentVote = await ReviewSvc.GetUserVoteByReview(ReviewParam.Id);
+        SetVoteButtonColor(_currentVote);
         _loading = false;
     }
 
-    private async Task Remove(int reviewId, string userId)
+    private async Task Remove(int reviewId)
     {
-        await ReviewSvc.RemoveReviewAsync(reviewId, userId);
+        await ReviewSvc.RemoveReview(reviewId);
 
         await OnRemove.InvokeAsync(reviewId);
     }
@@ -83,14 +77,14 @@ else
     [Parameter]
     public required EventCallback<ReviewList.VoteReviewChange> OnVote { get; set; }
 
-    private async Task Vote(int reviewId, ReviewRateType? newVote, string userId)
+    private async Task Vote(int reviewId, ReviewRateType? newVote)
     {
         if (_currentVote == newVote)
         {
             newVote = null;
         }
         
-        await ReviewSvc.VoteReview(reviewId, userId, newVote);
+        await ReviewSvc.VoteReview(reviewId, newVote);
         
         await OnVote.InvokeAsync(new ReviewList.VoteReviewChange(reviewId, _currentVote, newVote));
         _currentVote = newVote;
@@ -99,7 +93,7 @@ else
     
     }
 
-    private async Task SetVoteButtonColor(ReviewRateType? vote)
+    private void SetVoteButtonColor(ReviewRateType? vote)
     {
         if (vote == _currentVote)
         {

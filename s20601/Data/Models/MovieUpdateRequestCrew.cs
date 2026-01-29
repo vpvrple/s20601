@@ -8,7 +8,7 @@ public class MovieUpdateRequestCrew
     public string LastName { get; set; } = null!;
     public int? BirthYear { get; set; }
     public int? DeathYear { get; set; }
-    public string Job { get; set; } = null!;
+    public string? Job { get; set; } = null!;
     public string? CharacterName { get; set; }
     public int? CrewId { get; set; }
     

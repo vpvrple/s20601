@@ -1,7 +1,6 @@
 ﻿using s20601.Data;
 using s20601.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 
 namespace s20601.Services;
 
@@ -124,14 +123,14 @@ public class FriendService : IFriendService
             .ExecuteDeleteAsync();
     }
 
-    public async Task<string?> GetFriendRequestMessage(string receiverId)
+    public async Task<string?> GetFriendRequestMessage(string requesterId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
         var authenticatedUserId = await _userService.GetAuthenticatedUserId();
 
         var request = await context.UserRelationships
-            .Where(ur => ur.IdUser == authenticatedUserId && ur.IdRelatedUser == receiverId && ur.Type == RelationshipType.Pending)
+            .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == authenticatedUserId && ur.Type == RelationshipType.Pending)
             .Select(ur => ur.Message)
             .FirstOrDefaultAsync();
             

@@ -23,8 +23,8 @@
         {
             <MudStack Row="true" AlignItems="AlignItems.Start">
             <MudGrid>
-                <MudItem xs="2">
-                        <UserAvatar UserId="@_user.Id" />
+                <MudItem xs="2" Class="d-flex justify-center align-center">
+                    <UserAvatar UserId="@_user.Id" Style="width: 7rem; height: 7rem;" AvatarUrl="@_avatarUrl"/>
                 </MudItem>
                 <MudItem xs="9">
                         <MudStack AlignItems="AlignItems.Start" Spacing="0">
@@ -191,6 +191,7 @@
 
         private RelationshipType? _relationshipType;
         
+        private string? _avatarUrl;
         
         private DateTime? _month = DateTime.UtcNow;
         private MudDatePicker _picker;
@@ -212,7 +213,7 @@
             {
             } *@
         
-        protected override async Task OnInitializedAsync()
+        protected override async Task OnParametersSetAsync()
         {
             _loading =  true;
             var authState = await AuthenticationStateTask;
@@ -264,6 +265,7 @@
             if (_user != null)
             {
                 _user = await UserSvc.GetUserByUsername(Username);
+                _avatarUrl = await UserSvc.GetUserAvatarByUserId(_user.Id);
                 StateHasChanged();
             }
         }

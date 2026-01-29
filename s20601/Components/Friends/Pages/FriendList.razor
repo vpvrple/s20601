@@ -6,13 +6,16 @@
 @using s20601.Services
 @using Microsoft.AspNetCore.SignalR.Client
 @using s20601.Components.Friends.Components
+@using s20601.Components.Users.Pages
+@using s20601.Data.Models.DTOs
 @using s20601.Hubs
 
-@inject NavigationManager Navigation
+@inject NavigationManager NavigationMgr
 @inject IUserService UserSvc
 @inject IChatService ChatSvc
 @inject IFriendService FriendSvc
 @inject IHubContext<ChatHub> HubContext
+
 
 @implements IAsyncDisposable
 
@@ -24,34 +27,48 @@
         }
         else
         {
-            <MudGrid Style="overflow: scroll;" Class="mt-6">
-                <MudItem xs="4" Style="height: 100%; overflow-y: scroll;" Class="border-r mud-border-lines-default">
-                    <MudTabs @bind-ActivePanelIndex="@_activeIndex">
+            <MudGrid Style="height: 80vh; width: 100%;" Class="mt-6">
+                <MudItem xs="4" Style="height: 100%; overflow-y: auto;" Class="border-r mud-border-lines-default">
+                    <MudTabs ActivePanelIndexChanged="OnTabChanged">
                         <MudTabPanel Text="Friends" ID='"friends"'>
                             <MudStack Class="ma-2">
-                                @foreach (var friend in _friends)
+                                @if (_friends.Count == 0)
                                 {
-                                    <MudPaper Class="pa-2" Elevation="0" Style="cursor: pointer;"
-                                              @onclick="() => SelectedFriend(friend)" Width="100%">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                            <MudAvatar Color="Color.Primary">@friend.UserName[0]</MudAvatar>
-                                            <MudStack Spacing="0">
-                                                <MudText Typo="Typo.body1">@friend.UserName</MudText>
-                                            </MudStack>
-                                        </MudStack>
-                                    </MudPaper>
+                                    <MudText Typo="Typo.body2" Color="Color.Dark">Your friend list is empty.</MudText>
                                 }
+                                else
+                                {
+                                    @foreach (var friend in _friends)
+                                    {
+                                        <MudPaper Class="pa-2" Elevation="0" Style="cursor: pointer;" Width="100%">
+                                            <MudButton OnClick="@(() => SelectedFriend(friend))" FullWidth="true" Class="justify-start">
+                                                <UserAvatar UserId="@friend.Id" ></UserAvatar>
+                                                <MudStack Spacing="2" Class="ml-4">
+                                                        @friend.UserName
+                                                </MudStack>
+                                            </MudButton>
+                                        </MudPaper>
+                                    }
+                                }
+
                             </MudStack>
                         </MudTabPanel>
                         <MudTabPanel Text="Friend requests" ID='"friends_requests"'>
                             <MudStack Class="ma-2">
-                                @foreach (var request in _friendRequests)
+                                @if (_friendRequests.Count == 0)
                                 {
-                                    <FriendRequestComponent RequesterId="@request.Id"
-                                                            RequesterUsername="@request.UserName"
-                                                            RequesterAvatar="@request.UserName[0]"
-                                                            OnRequestProcessed="RefreshData"
-                                                            OnRequestSelected="() => SelectRequest(request.Id)"></FriendRequestComponent>
+                                    <MudText Typo="Typo.body2" Color="Color.Dark">You have no pending friend requests.</MudText>
+                                }
+                                else
+                                {
+                                    @foreach (var request in _friendRequests)
+                                    {
+                                        <FriendRequestComponent RequesterId="@request.Id"
+                                                                RequesterUsername="@request.UserName"
+                                                                RequesterAvatar="@request.Avatar"
+                                                                OnRequestProcessed="HandleRequestProcessed"
+                                                                OnRequestSelected="SelectRequest"></FriendRequestComponent>
+                                    }
                                 }
                             </MudStack>
                         </MudTabPanel>
@@ -62,39 +79,61 @@
                     {
                         @if (!string.IsNullOrEmpty(Username))
                         {
-                            <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-4" Elevation="0">
-                                <MudText Typo="Typo.caption" Align="Align.Center" Class="mb-4">Start of conversation with @Username</MudText>
-                                @foreach (var message in _conversation)
+                            <MudPaper Elevation="0" Style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column-reverse;" Class="pa-2">
+                                @foreach (var message in Enumerable.Reverse(_conversation))
                                 {
-
-                                    <MudChat ChatPosition="@(message.IdSender == _authenticatedUserId ? ChatBubblePosition.End : ChatBubblePosition.Start)">
-                                        <MudAvatar>@message.IdSender[0]</MudAvatar>
-                                        <MudChatHeader Name="@message.IdSender" Time="@message.Created.ToString()"></MudChatHeader>
+                                    var position = ChatBubblePosition.Start;
+                                    if (message.IdSender == _authenticatedUserId)
+                                    {
+                                        position = ChatBubblePosition.End;
+                                    }
+                                    <MudChat ChatPosition="@position">
+                                        <UserAvatar UserId="@message.IdSender"></UserAvatar>
+                                        <MudChatHeader Name="@message.SenderUsername" Time="@message.Created.ToString()"></MudChatHeader>
                                         <MudChatBubble>
                                             @message.Content
                                         </MudChatBubble>
                                     </MudChat>
                                 }
+                                <MudText Typo="Typo.caption" Align="Align.Center" Class="mb-4">Start of conversation with @Username</MudText>
                             </MudPaper>
 
-                            <MudPaper Elevation="0" Class="pa-2 mt-auto">
+                            <MudPaper Elevation="0" Class="pa-2">
                                 <MudStack Row="true" AlignItems="AlignItems.Center">
                                     <MudTextField TextUpdateSuppression="false" @bind-Value="_inputMessage" Variant="Variant.Outlined" Placeholder="Message..." Margin="Margin.Dense" FullWidth="true" Immediate="true" OnKeyDown="@HandleEnter" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Send" Color="Color.Primary" OnClick="@SendClick" />
                                 </MudStack>
                             </MudPaper>
                         }
+                        else
+                        {
+                            if (_friends.Count == 0)
+                            {
+                                <MudAlert>No data to display. Chat with selected friend will appear here.</MudAlert>
+                            }
+                            else
+                            {
+                                <MudAlert>Select a friend to start chatting.</MudAlert>
+                            }
+                        }
                     }
                     else if (_activeIndex == 1)
                     {
-                        <MudText Typo="Typo.body1" Class="mb-4">@_selectedRequestMessage</MudText>
-                    }
-
-                    else
-                    {
-                        <MudPaper Class="d-flex flex-column flex-grow-1 justify-center align-center" Elevation="0">
-                            <MudText Typo="Typo.body1" Color="Color.Dark">Select a friend to start chatting</MudText>
-                        </MudPaper>
+                        if (_selectedRequestId is not null)
+                        {
+                            <MudText Typo="Typo.body1" Class="mb-4">@(_selectedRequestMessage ?? "No message content")</MudText>
+                        }
+                        else
+                        {
+                            if (_friendRequests.Count == 0)
+                            {
+                                <MudAlert>No data to display. Friend request message will appear here.</MudAlert>
+                            }
+                            else
+                            {
+                                <MudAlert>Select a friend request to see details.</MudAlert>
+                            }
+                        }
                     }
                 </MudItem>
             </MudGrid>
@@ -108,14 +147,16 @@
     private bool _loading;
     private List<ApplicationUser> _friendRequests = [];
     private List<ApplicationUser> _friends = [];
-    private List<Message>? _conversation = [];
+    private List<ChatMessage>? _conversation = [];
     private string? _inputMessage;
     private string? _friendId;
     private string? _loadedFriendUsername;
     private string? _selectedRequestMessage;
+    private string? _selectedRequestId;
     private int _activeIndex;
     private HubConnection? _hubConnection;
-    private string _authenticatedUserId;
+    private string _authenticatedUserId = string.Empty;
+    private string _authenticatedUsername = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -126,11 +167,12 @@
         if (user.Identity?.IsAuthenticated == true)
         {
             _authenticatedUserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            _authenticatedUsername = user.Identity.Name ?? "";
 
             await RefreshData();
 
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri($"/chathub?userId={_authenticatedUserId}"))
+                .WithUrl(NavigationMgr.ToAbsoluteUri($"/chathub?userId={_authenticatedUserId}"))
                 .WithAutomaticReconnect()
                 .Build();
 
@@ -138,11 +180,13 @@
             {
                 if (_friendId == senderId)
                 {
-                    _conversation.Add(new Message
+                    _conversation.Add(new ChatMessage
                     {
                         IdSender = senderId,
                         Content = messageText,
-                        Created = DateTime.UtcNow
+                        Created = DateTime.UtcNow,
+                        SenderUsername = _loadedFriendUsername ?? "Unknown",
+                        RecipientUsername = _authenticatedUsername
                     });
 
                     InvokeAsync(StateHasChanged);
@@ -162,11 +206,19 @@
         StateHasChanged();
     }
 
+    private async Task HandleRequestProcessed()
+    {
+        _selectedRequestId = null;
+        _selectedRequestMessage = null;
+        await RefreshData();
+    }
+
     private async Task LoadConversation()
     {
         if (!string.IsNullOrEmpty(_friendId))
         {
-            _conversation = await ChatSvc.GetConversation(_friendId);
+            var conversation = await ChatSvc.GetConversation(_friendId);
+            _conversation = conversation ?? [];
         }
         else
         {
@@ -196,11 +248,12 @@
 
     private void SelectedFriend(ApplicationUser friend)
     {
+        _activeIndex = 0;
         Username = friend.UserName;
         _friendId = friend.Id;
         _loadedFriendUsername = friend.UserName;
 
-        Navigation.NavigateTo($"/friends/{Username}");
+        NavigationMgr.NavigateTo($"/friends/{Username}");
     }
 
     private async Task SendClick()
@@ -212,7 +265,19 @@
 
             var msg = await ChatSvc.SaveMessage(_friendId, messageToSend);
 
-            _conversation.Add(msg);
+            if (msg != null)
+            {
+                _conversation.Add(new ChatMessage
+                {
+                    IdSender = msg.IdSender,
+                    IdRecipient = msg.IdRecipient,
+                    Created = msg.Created,
+                    Content = msg.Content,
+                    MessageStatus = msg.MessageStatus,
+                    SenderUsername = _authenticatedUsername,
+                    RecipientUsername = _loadedFriendUsername ?? ""
+                });
+            }
 
             await HubContext.Clients.Group(_friendId).SendAsync("ReceiveMessage", _authenticatedUserId, messageToSend);
 
@@ -236,6 +301,19 @@
 
     private async Task SelectRequest(string requesterId)
     {
+        _activeIndex = 1;
+        _selectedRequestId = requesterId;
         _selectedRequestMessage = await FriendSvc.GetFriendRequestMessage(requesterId);
+        StateHasChanged();
+    }
+
+    private void OnTabChanged(int index)
+    {
+        _activeIndex = index;
+        if (_activeIndex == 0)
+        {
+            _selectedRequestId = null;
+            _selectedRequestMessage = null;
+        }
     }
 }
