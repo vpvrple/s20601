@@ -9,4 +9,5 @@ public interface IUserService
     Task<string?> GetUserAvatarByUserId(string userId);
     Task<string?> UpdateUserAvatar(Stream? fileStream, string? avatar);
     Task<string?> UpdateUserProfileDescription(string? profileDescription);
+    Task DailyLogin();
 }

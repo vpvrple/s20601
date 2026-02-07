@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Events.Commands.UserAvatars;
+using s20601.Events.Commands.UserLogIns;
 using s20601.Events.Queries;
 using s20601.Services.External.Azure;
 using System.Security.Claims;
@@ -116,6 +117,36 @@ namespace s20601.Services
             await context.SaveChangesAsync();
 
             return userFromDb.Avatar;
+        }
+
+        public async Task DailyLogin()
+        {
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity is { IsAuthenticated: true })
+            {
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId != null)
+                {
+                    using var context = await _dbContextFactory.CreateDbContextAsync();
+                    var appUser = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+                    if (appUser != null)
+                    {
+                        if (appUser.LastDailyLogin == null || appUser.LastDailyLogin < DateTime.UtcNow.Date)
+                        {
+                            appUser.LastDailyLogin = DateTime.UtcNow;
+                            context.Users.Update(appUser);
+                            var result = await context.SaveChangesAsync();
+                            if (result > 0)
+                            {
+                                await _mediator.Publish(new UserLoggedInCommand(appUser.Id, 1));
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
