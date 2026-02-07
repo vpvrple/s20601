@@ -46,39 +46,13 @@
                             </MudItem>
                         </MudItem>
                         <MudItem xs="12" Class="d-flex justify-center">
-                            <div>
                                 <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large">Log in</MudButton>
-                            </div>
                         </MudItem>
-                        @* <MudItem xs="12">
-                            <MudDivider />
-                        </MudItem>
-                        <MudItem xs="12">
-                            <div>
-                                <p>
-                                    <MudText Typo="Typo.body1" Align="Align.Center"><MudLink Href="Account/ForgotPassword">Forgot your password?</MudLink></MudText>
-
-                                </p>
-                                                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                    </p>
-                                <p>
-                                    <MudText Typo="Typo.body1" Align="Align.Center"><MudLink Href="Account/ResendEmailConfirmation">Resend email confirmation</MudLink></MudText>
-                                </p>
-                            </div>
-                        </MudItem> *@
                     </MudGrid>
                 </MudContainer>
             </EditForm>
         </section>
     </div>
-    @* <div class="col-lg-4 col-lg-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
-    </div> *@
 </div>
 
 @code {
@@ -139,7 +113,7 @@
     private sealed class InputModel
     {
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         [Display(Name = "Username")]
         public string Username { get; set; } = "";
 
