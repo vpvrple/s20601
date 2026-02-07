@@ -127,7 +127,7 @@ else
                 <MudPaper Elevation="0">
                     <MudText Typo="Typo.h6">Cast</MudText>
                     <MudGrid>
-                        @if (_crew.All(member => member.Job != "Actor"))
+                        @if (_crew.All(member => member.Job.ToLower() != "Actor".ToLower()))
                         {
                             <MudItem>
                                 <MudText Typo="Typo.subtitle1" Color="Color.Dark">
@@ -138,7 +138,7 @@ else
                         }
                         else
                         {
-                            foreach (var member in _crew.Where(member => member.Job == "Actor"))
+                            foreach (var member in _crew.Where(member => member.Job.ToLower() == "Actor".ToLower()))
                             {
                                 <MudItem>
                                     <MudLink
@@ -168,23 +168,13 @@ else
             <MudCarouselWithPagination Items=@_pastPicks itemsPerCarousel="5"></MudCarouselWithPagination>
         }
     }
-
-
-    if (_trendingMovieCollections.Count != 0)
-    {
-        <MudText Typo="Typo.h4" Class="mt-6">Trending community collections</MudText>
-        <MudCarouselWithPagination Items=@_trendingMovieCollections
-                                   itemsPerCarousel="5"></MudCarouselWithPagination>
-    }
 }
 
 @code {
     Movie? _movieOfTheDay;
     List<Genre> _movieGenres = null!;
     List<GetMovieCrewMemberWithDetails> _crew = null!;
-
     List<Movie> _pastPicks = null!;
-    List<MovieCollection> _trendingMovieCollections = null!;
 
     private bool _loading;
 
@@ -202,7 +192,6 @@ else
 
         _pastPicks = await MovieSvc.GetPastMoviesOfTheDay(10);
 
-        _trendingMovieCollections = await MovieCollectionSvc.GetTrendingMovieCollections(10);
 
         _loading = false;
     }
