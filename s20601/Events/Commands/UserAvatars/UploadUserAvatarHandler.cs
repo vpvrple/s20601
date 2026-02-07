@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using s20601.Events.Commands;
+using s20601.Events.Commands.UserAvatars;
 using s20601.Services.External.Azure;
 
 public class UploadUserAvatarHandler : IRequestHandler<UploadUserAvatarCommand, string?>

@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using s20601.Data.Models;
-using s20601.Events.Commands;
 using s20601.Events.Commands.Chat;
 
 namespace s20601.Hubs;

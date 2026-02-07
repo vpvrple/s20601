@@ -2,7 +2,7 @@
 using s20601.Data.Models;
 using s20601.Services;
 
-namespace s20601.Events.Commands;
+namespace s20601.Events.Commands.Reviews;
 
 public class ReviewUnratedEventHandler
     : INotificationHandler<ReviewUnratedCommand>

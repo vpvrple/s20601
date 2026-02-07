@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using s20601.Services;
 
-namespace s20601.Events.Commands;
+namespace s20601.Events.Commands.Reviews;
 
 public class ReviewDislikedEventHandler
     : INotificationHandler<ReviewDislikedCommand>

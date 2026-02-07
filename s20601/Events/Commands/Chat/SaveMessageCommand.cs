@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace s20601.Events.Commands;
+namespace s20601.Events.Commands.Chat;
 
 public record SaveMessageCommand(
     string IdRecipient,

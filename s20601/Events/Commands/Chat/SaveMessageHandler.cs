@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using s20601.Events.Commands;
+using s20601.Events.Commands.Chat;
 using s20601.Services;
 
 public class SaveMessageHandler : INotificationHandler<SaveMessageCommand>

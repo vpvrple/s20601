@@ -1,6 +1,6 @@
 ﻿using Azure;
 using MediatR;
-using s20601.Events.Commands;
+using s20601.Events.Commands.MoviePosters;
 using s20601.Services.External.Azure;
 
 public class MoviePosterUpdatedHandler : IRequestHandler<MoviePosterUpdatedCommand, Response>

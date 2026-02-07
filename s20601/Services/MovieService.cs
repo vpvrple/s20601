@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
-using s20601.Events.Commands;
 using s20601.Events.Queries;
 using s20601.Services.External.Azure;
 
