@@ -5,7 +5,6 @@ using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
 using s20601.Events.Commands.Ratings;
 
-
 namespace s20601.Services;
 
 public class RatingService : IRatingService

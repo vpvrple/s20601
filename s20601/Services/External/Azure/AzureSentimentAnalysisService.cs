@@ -20,7 +20,6 @@ public class AzureSentimentAnalysisService : IAzureSentimentAnalysisService
 
             foreach (var res in response.Value)
             {
-                // 3. CHECK FOR ERRORS first!
                 if (res.HasError)
                 {
                     Console.WriteLine($"Document {res.Id} failed: {res.Error.Message}");

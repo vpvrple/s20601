@@ -29,8 +29,6 @@ else if (_movieCollections != null)
                 </MudPaper>
                 <MudPaper Elevation="0">
                     <MudStack>
-                        
-
                         <MudText Typo="Typo.h5" Align="Align.Start">
                             <MudStack Row="true">
                                 @(_movieCollections.IndexOf(collection) + 1). @collection.Name
@@ -41,32 +39,22 @@ else if (_movieCollections != null)
                                     }
                                 </MudAvatarGroup>
                             </MudStack>
-                            
                             <MudText Typo="Typo.body2">
                                 @(collection.Description.Length > 100 ? $"{collection.Description.Substring(0, 100)}..." : collection.Description)
                             </MudText>
                         </MudText>
-                        
-                        
-                        
-
-                            
-                                
-                        
                                 <MudText Typo="Typo.subtitle2">
                                     Movies: @collection.MovieCount</MudText>
 
                                 <MudText Typo="Typo.subtitle2">Created
                                     at: @collection.CreatedAt.ToShortDateString()</MudText>
-                            
                     </MudStack>
                 </MudPaper>
             </MudStack>
             </MudLink>
-                
         }
     </MudStack>
-        
+
 }
 
 @code

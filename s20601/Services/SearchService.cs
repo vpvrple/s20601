@@ -14,10 +14,8 @@ public class SearchService : ISearchService
     }
     public async Task<List<Movie>> SearchMovieByTitle(string title)
     {
-        //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        // FOR NOW JUST SIMPLE CONTAINS, BETTER IMPLEMENTATION NEEDED
         var movieTitles = await context.Movies
             .Where(x => x.Title.Contains(title) || x.OriginalTitle.Contains(title))
             .ToListAsync();

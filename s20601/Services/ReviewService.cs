@@ -225,7 +225,6 @@ public class ReviewService : IReviewService
         if (review.IdAuthor != authenticatedUserId)
             throw new UnauthorizedAccessException("Not authorized.");
 
-        // Reset points and ratings
         await _mediator.Publish(new ReviewRemovedCommand(authenticatedUserId, reviewId, 0));
         context.ReviewRates.RemoveRange(review.ReviewRates);
 
