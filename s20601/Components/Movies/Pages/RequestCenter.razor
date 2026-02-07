@@ -1,5 +1,6 @@
 ﻿@page "/request-center"
 
+@using s20601.Components.Movies.Components
 @using s20601.Data.Models
 @using s20601.Services
 
@@ -36,6 +37,7 @@
                     </MudStack>
                 </MudItem>
                 <MudItem xs="9">
+                    <MovieEditRequestButton ButtonText="New request" DialogTitle="Create your movie request"></MovieEditRequestButton>
                     @if (_selectedRequestId.HasValue)
                     {
                         <MudCard Elevation="0">
@@ -64,7 +66,7 @@
                                                 }
                                             </MudText>
                                         </MudStack>
-                                        
+
                                         @if (!string.IsNullOrWhiteSpace(_requestDescription))
                                         {
                                             <MudText Typo="Typo.body2" GutterBottom="true">
@@ -149,7 +151,7 @@
     {
         _loading = true;
         _requests = await MovieSvc.GetMovieUpdateRequests();
-        _requests.OrderBy(x => x.Status);
+        _requests = _requests.OrderBy(x => x.Status).ToList();
         _openRequestsCount = _requests.Count;
         _loading = false;
     }

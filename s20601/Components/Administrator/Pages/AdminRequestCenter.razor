@@ -1,5 +1,6 @@
 ﻿@page "/admin-request-center"
 @using Microsoft.AspNetCore.Authorization
+@using s20601.Components.Movies.Components
 @attribute [Authorize(Roles = "Admin")]
 
 @using s20601.Data.Models
@@ -32,6 +33,7 @@ else
             </MudStack>
         </MudItem>
         <MudItem xs="9">
+            <MovieEditRequestButton ButtonText="New request" DialogTitle="Create your movie request"></MovieEditRequestButton>
             @if (_selectedRequestId.HasValue)
             {
                 <MudCard Elevation="0">
@@ -152,7 +154,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
-        _requests = await MovieSvc.GetMovieUpdateRequests(x => x.Status == MovieUpdateRequestStatus.Open);
+        _requests = await MovieSvc.GetMovieUpdateRequests(MovieUpdateRequestStatus.Open);
         _openRequestsCount = _requests.Count;
         _loading = false;
     }
