@@ -49,15 +49,4 @@ public class AzureBlobService : IAzureBlobService
 
         return blobClient.Uri.ToString();
     }
-
-    // private bool IsContainerPrivate(AzureBlobType containerType)
-    // {
-    //     return containerType switch
-    //     {
-    //         AzureBlobType.UserAvatars => false,
-    //         AzureBlobType.MovieImages => false,
-    //         AzureBlobType.MovieCollectionImages => true,
-    //         _ => false
-    //     };
-    // }
 }

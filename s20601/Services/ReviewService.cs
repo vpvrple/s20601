@@ -11,13 +11,13 @@ public class ReviewService : IReviewService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly IMediator _mediator;
-    private readonly IUserService _userService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public ReviewService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator, IUserService userService)
+    public ReviewService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator, ICurrentUserService currentUserService)
     {
         _dbContextFactory = dbContextFactory;
         _mediator = mediator;
-        _userService = userService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<GetMovieReviewWithRating> GetMovieReviewWithRatingById(int id)
@@ -69,7 +69,7 @@ public class ReviewService : IReviewService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         if (authenticatedUserId is null)
             return;
@@ -95,7 +95,7 @@ public class ReviewService : IReviewService
             .Where(x => x.Id == reviewId)
             .FirstOrDefaultAsync();
 
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         if (review == null)
             throw new ArgumentNullException("Review not found.");
@@ -113,7 +113,7 @@ public class ReviewService : IReviewService
     public async Task<bool> AlreadyReviewed(int movieId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         return await context.Reviews
             .AnyAsync(x => x.Movie_Id == movieId && x.IdAuthor == authenticatedUserId);
     }
@@ -126,7 +126,7 @@ public class ReviewService : IReviewService
         var review = await context.Reviews.FindAsync(reviewId);
         if (review is null) return;
 
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         if (authenticatedUserId is null)
         {
@@ -200,7 +200,7 @@ public class ReviewService : IReviewService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         return await context.ReviewRates
             .Where(x => x.IdUser == authenticatedUserId && x.Review_Id == reviewId)
@@ -217,7 +217,7 @@ public class ReviewService : IReviewService
             .Where(x => x.Id == reviewId)
             .FirstOrDefaultAsync();
 
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
 
         if (review == null)

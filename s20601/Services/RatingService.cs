@@ -12,19 +12,19 @@ public class RatingService : IRatingService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly IMediator _mediator;
-    private readonly IUserService _userService;
-    public RatingService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IUserService userService, IMediator mediator)
+    private readonly ICurrentUserService _currentUserService;
+    public RatingService(IDbContextFactory<ApplicationDbContext> dbContextFactory, ICurrentUserService currentUserService, IMediator mediator)
     {
         _dbContextFactory = dbContextFactory;
         _mediator = mediator;
-        _userService = userService;
+        _currentUserService = currentUserService;
     }
 
-    public async Task<UserRatingSummary?> GetUserRatingSummaryAsync()
+    public async Task<UserRatingSummary?> GetUserRatingSummaryAsync(string? userId = null)
     {
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var targetUserId = userId ?? await _currentUserService.GetAuthenticatedUserId();
 
-        if (authenticatedUserId is null)
+        if (targetUserId is null)
         {
             return null;
         }
@@ -32,7 +32,7 @@ public class RatingService : IRatingService
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
         var ratings = await context.MovieRates
-            .Where(x => x.IdUser == authenticatedUserId)
+            .Where(x => x.IdUser == targetUserId)
             .ToListAsync();
 
         double avgRating = ratings.Count != 0 ? ratings.Average(x => x.Rating) : 0;
@@ -62,7 +62,7 @@ public class RatingService : IRatingService
         }
 
         var totalReviews = await context.Reviews
-            .Where(x => x.IdAuthor == authenticatedUserId)
+            .Where(x => x.IdAuthor == targetUserId)
             .CountAsync();
 
         var ratingDistribution = ratings
@@ -87,7 +87,7 @@ public class RatingService : IRatingService
 
     public async Task RateMovieAsync(int movieId, int? rating)
     {
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         if (authenticatedUserId is null)
         {
@@ -154,7 +154,7 @@ public class RatingService : IRatingService
 
     public async Task<MovieRate?> GetUserMovieRating(int movieId)
     {
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         if (authenticatedUserId is null)
         {

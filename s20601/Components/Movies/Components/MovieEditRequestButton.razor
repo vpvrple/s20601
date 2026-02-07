@@ -30,7 +30,7 @@
         var dialog = await DialogService.ShowAsync<MovieRequestDialog>(DialogTitle, parameters);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is bool success && success)
+        if (!result.Canceled && result.Data is true)
         {
             await OnRequestSubmitted.InvokeAsync();
         }

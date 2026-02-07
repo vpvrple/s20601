@@ -124,6 +124,9 @@ builder.Services
     .AddScoped<IMovieService, MovieService>();
 
 builder.Services
+    .AddScoped<ICurrentUserService, CurrentUserService>();
+
+builder.Services
     .AddScoped<IUserService, UserService>();
 
 builder.Services
@@ -148,6 +151,7 @@ builder.Services
     .AddScoped<IChatService, ChatService>();
 
 builder.Services.AddClipboard();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient<ITmdbLibClient, TmdbLibClient>(client =>
 {

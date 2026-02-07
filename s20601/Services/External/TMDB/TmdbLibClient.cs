@@ -13,6 +13,8 @@ public class TmdbLibClient : ITmdbLibClient
         _apiKey = config["Tmdb:ApiKey"];
     }
 
+    
+    
     public async Task<string?> GetPosterUrlByImdbIdAsync(string imdbId)
     {
         var response = await _httpClient.GetFromJsonAsync<TmdbResponse>(
@@ -20,12 +22,7 @@ public class TmdbLibClient : ITmdbLibClient
 
         var movie = response?.MovieResults?.FirstOrDefault();
 
-        if (string.IsNullOrEmpty(movie?.PosterPath))
-        {
-            return null;
-        }
-
-        return $"{ImageBaseUrl}{movie.PosterPath}";
+        return string.IsNullOrEmpty(movie?.PosterPath) ? null : $"{ImageBaseUrl}{movie.PosterPath}";
     }
 
     public async Task<string?> GetMovieOverviewByImdbIdAsync(string imdbId)
@@ -35,11 +32,34 @@ public class TmdbLibClient : ITmdbLibClient
 
         var movie = response?.MovieResults?.FirstOrDefault();
 
-        if (string.IsNullOrEmpty(movie?.Overview))
+        return string.IsNullOrEmpty(movie?.Overview) ? null : movie.Overview;
+    }
+    
+    public async Task<string?> GetPersonaImageUrlByImdbIdAsync(string imdbId)
+    {
+        var response = await _httpClient.GetFromJsonAsync<TmdbResponse>(
+            $"find/{imdbId}?api_key={_apiKey}&external_source=imdb_id");
+
+        var person = response?.PersonResults.FirstOrDefault();
+
+        return string.IsNullOrEmpty(person.ProfilePath) ? null : $"{ImageBaseUrl}{person.ProfilePath}";
+    }
+
+    public async Task<string?> GetPersonaBiographyByImdbIdAsync(string imdbId)
+    {
+        var response = await _httpClient.GetFromJsonAsync<TmdbResponse>(
+            $"find/{imdbId}?api_key={_apiKey}&external_source=imdb_id");
+
+        var person = response?.PersonResults?.FirstOrDefault();
+
+        if (person == null)
         {
             return null;
         }
 
-        return movie.Overview;
+        var personDetails = await _httpClient.GetFromJsonAsync<PersonResult>(
+            $"person/{person.Id}?api_key={_apiKey}");
+
+        return string.IsNullOrEmpty(personDetails?.Biography) ? null : personDetails.Biography;
     }
 }

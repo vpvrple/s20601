@@ -17,14 +17,15 @@
 }
 else if (_moviesInCollection.Count == 0)
 {
-    <MudStack Row="true" AlignItems="AlignItems.Baseline">
-        <MudText Class="mt-6" Typo="Typo.h4">@_movieCollection.Name</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6">
+        <MudText Typo="Typo.h4" Style="overflow-wrap: anywhere">@_movieCollection.Name</MudText>
         @if (_movieCollection.Type == CollectionType.Custom && _canEdit)
         {
             <MudButton OnClick="OpenAddMovieToCollectionDialogAsync"
                        Variant="Variant.Filled"
                        StartIcon="@Icons.Material.Filled.Add"
-                       Color="Color.Primary">
+                       Color="Color.Primary"
+                       >
                 Add movie
             </MudButton>
         }
@@ -32,7 +33,7 @@ else if (_moviesInCollection.Count == 0)
     <MudFlexBreak />
     @if (_movieCollection.Description is not null)
     {
-        <MudText Typo="Typo.body2">@_movieCollection.Description</MudText>
+        <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere">@_movieCollection.Description</MudText>
     }
 
     <MudStack Style="height: 60vh; width: 100%;" Class="mt-8 mb-2" Justify="Justify.Center" AlignItems="AlignItems.Center">
@@ -42,66 +43,64 @@ else if (_moviesInCollection.Count == 0)
 }
 else
 {
-    <MudStack Row="true" AlignItems="AlignItems.Baseline">
-        <MudText Class="mt-6" Typo="Typo.h4">@_movieCollection.Name</MudText>
-        @if (_movieCollection.Type == CollectionType.Custom && _canEdit)
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6">
+            <MudText Typo="Typo.h4" Style="overflow-wrap: anywhere">@_movieCollection.Name</MudText>
+            @if (_movieCollection.Type == CollectionType.Custom && _canEdit)
+            {
+                <MudButton OnClick="OpenAddMovieToCollectionDialogAsync" Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">
+                    Add movie
+                </MudButton>
+            }
+        </MudStack>
+        <MudFlexBreak />
+        if (_movieCollection.Description is not null)
         {
-            <MudButton OnClick="OpenAddMovieToCollectionDialogAsync" Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary">
-                Add movie
-            </MudButton>
+        <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere">@_movieCollection.Description</MudText>
         }
-    </MudStack>
-    <MudFlexBreak />
-    if (_movieCollection.Description is not null)
-    {
-        <MudText Typo="Typo.body2">@_movieCollection.Description</MudText>
-    }
 
-    <MudFlexBreak />
-    <MudTable Items="@_moviesInCollection"
-              Hover="true"
-              Breakpoint="Breakpoint.Sm"
-              Loading="@_loading"
-              LoadingProgressColor="Color.Info"
-              Bordered="false"
-              Elevation="1"
-              @ref="_mudTable"
-              @bind-SelectedItems="_selectedMovies"
-              MultiSelection="true">
-        <HeaderContent>
-            <MudTh>Title</MudTh>
-            <MudTh>Release year</MudTh>
-            <MudTh>Runtime</MudTh>
-            <MudTh>Rating</MudTh>
-            <MudTh Style="text-align: right;">
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" AnchorOrigin="Origin.BottomRight"
-                         TransformOrigin="Origin.TopRight">
-                    <MudMenuItem Class="d-flex align-items-center" Icon="@Icons.Material.Filled.Delete"
-                                 IconColor="Color.Error" OnClick="OnDeleteSelectedMovies"
-                                 Disabled="@(_selectedMovies.Count == 0 || _movieCollection.MovieCollectionUsers.Any(x=>x.IdUser == _userId && x.Role == CollectionRole.Viewer))">
-                        Delete Selected
-                    </MudMenuItem>
-                </MudMenu>
-            </MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Title">
-                <MudLink Href="@context.GetUrl()">@context.Title</MudLink>
-            </MudTd>
-            <MudTd DataLabel="Release year">@context.StartYear</MudTd>
-            <MudTd DataLabel="Runtime">@context.Runtime</MudTd>
-            <MudTd DataLabel="Rating">
-                <MovieRatingExtended MovieId="@context.Id" />
-            </MudTd>
-            <MudTd></MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
-
-    <MudText Class="mt-6" Typo="Typo.h6">These seems like a good fit here</MudText>
+        <MudFlexBreak />
+        <MudTable Items="@_moviesInCollection"
+                  Hover="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Loading="@_loading"
+                  LoadingProgressColor="Color.Info"
+                  Bordered="false"
+                  Elevation="1"
+                  @ref="_mudTable"
+                  @bind-SelectedItems="_selectedMovies"
+                  MultiSelection="true">
+            <HeaderContent>
+                <MudTh>Title</MudTh>
+                <MudTh>Release year</MudTh>
+                <MudTh>Runtime</MudTh>
+                <MudTh>Rating</MudTh>
+                <MudTh Style="text-align: right;">
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" AnchorOrigin="Origin.BottomRight"
+                             TransformOrigin="Origin.TopRight">
+                        <MudMenuItem Class="d-flex align-items-center" Icon="@Icons.Material.Filled.Delete"
+                                     IconColor="Color.Error" OnClick="OnDeleteSelectedMovies"
+                                     Disabled="@(_selectedMovies.Count == 0 || _movieCollection.MovieCollectionUsers.Any(x=>x.IdUser == _userId && x.Role == CollectionRole.Viewer))">
+                            Delete Selected
+                        </MudMenuItem>
+                    </MudMenu>
+                </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Title">
+                    <MudLink Href="@context.GetUrl()" Style="overflow-wrap: anywhere">@context.Title</MudLink>
+                </MudTd>
+                <MudTd DataLabel="Release year">@context.StartYear</MudTd>
+                <MudTd DataLabel="Runtime">@context.Runtime</MudTd>
+                <MudTd DataLabel="Rating">
+                    <MovieRatingExtended MovieId="@context.Id" />
+                </MudTd>
+                <MudTd></MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
 }
 
 @code {

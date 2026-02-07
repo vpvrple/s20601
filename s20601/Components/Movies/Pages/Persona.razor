@@ -1,6 +1,108 @@
-﻿@page "/Persona"
-<h3>Persona</h3>
+﻿@page "/persona/{PersonaId:int}"
 
-@code {
+@using s20601.Components.Movies.Components
+@using s20601.Data.Models.DTOs
+@using s20601.Services
+
+@inject IMovieService MovieSvc
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    }
+    else
+    {
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <MudStack Row="true" AlignItems="AlignItems.Start">
+                <MudGrid>
+                    <MudItem xs="2" Class="d-flex justify-center align-start">
+                        <PersonaImage PersonaId="@PersonaId" Style="width: 7rem; height: 7rem;"/>
+                    </MudItem>
+                    <MudItem xs="10">
+                        <MudStack AlignItems="AlignItems.Start" Spacing="0">
+                            <MudText Typo="Typo.h5">@_persona.FirstName @_persona.LastName</MudText>
+                            @if (!string.IsNullOrEmpty(FormatBirthDeathDates()))
+                            {
+                                <MudText Typo="Typo.subtitle1">@FormatBirthDeathDates()</MudText>
+                            }
+                            <MudText Typo="Typo.h5">Biography</MudText>
+                            @if (string.IsNullOrEmpty(_personaBiography))
+                            {
+                                <MudText Typo="Typo.body1" Class="mt-3 mb-3">No biography available.</MudText>
+                            }
+                            else if (_personaBiography.Length > 500 && !_showFullBiography)
+                            {
+                                <MudText Typo="Typo.body1" Class="mt-3 mb-3">
+                                    @_personaBiography.Substring(0, 500)...
+                                    <MudLink OnClick="@(() => _showFullBiography = true)" Underline="Underline.Always" Color="Color.Primary">Read more</MudLink>
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body1" Class="mt-3 mb-3">
+                                    @_personaBiography
+                                    @if (_personaBiography.Length > 500)
+                                    {
+                                        <MudLink OnClick="@(() => _showFullBiography = false)" Underline="Underline.Always" Color="Color.Primary">Read less</MudLink>
+                                    }
+                                </MudText>
+                            }
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
+
+            <MudStack Class="mt-9 mb-3 d-flex">
+                <MudText Class="mt-3" Typo="Typo.h6" Style="width: 100%;">Related movies</MudText>
+                <MudFlexBreak/>
+                
+                <MudGrid>
+                @foreach (var movie in _persona.Movies.DistinctBy(x => x.MovieId))
+                {
+                    <MudItem xs="2">
+                        <MudStack Row="true">
+                            <MudLink Href="@movie.MovieUrl">
+                                <MovieCoverComponent MovieId="@movie.MovieId"></MovieCoverComponent>
+                            </MudLink>
+                        </MudStack>
+                        
+                    </MudItem>
+                }
+                </MudGrid>
+            </MudStack>
+        </MudContainer>
+    }
     
+    
+@code
+{
+    [Parameter] public int PersonaId { get; set; }
+    private GetPersonaWithDetails? _persona;
+    private string? _personaBiography;
+    private string? _personaImage;
+    private bool _loading;
+    private bool _showFullBiography = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _persona = await MovieSvc.GetPersonaWithDetails(PersonaId);
+        _personaBiography = await MovieSvc.GetPersonaBiographyById(PersonaId);
+        _loading = false;
+    }
+
+    private string FormatBirthDeathDates()
+    {
+        if (_persona is null) return string.Empty;
+        
+        var hasBirth = _persona.BirthYear > 0;
+        var hasDeath = _persona.DeathYear.HasValue && _persona.DeathYear.Value > 0;
+
+        if (!hasBirth && !hasDeath) return string.Empty;
+
+        var birth = hasBirth ? _persona.BirthYear.ToString() : "?";
+        var death = hasDeath ? _persona.DeathYear.ToString() : "";
+
+        return $"({birth} - {death})";
+    }
 }

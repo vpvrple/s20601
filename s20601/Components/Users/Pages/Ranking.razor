@@ -29,21 +29,22 @@ else
         <RowTemplate>
             <MudTd DataLabel="Nr">@(Users.IndexOf(context) + 1)</MudTd>
             <MudTd DataLabel="Username">
-                @if (isAuthenticated)
-                {
-                    <MudLink Href="@($"user/{context.UserName}")">@context.UserName</MudLink>
-                }
-                else
-                {
+                <AuthorizeView Context="authContext">
+                    <Authorized>
+                         <MudLink Href="@($"user/{context.UserName}")">@context.UserName</MudLink>
+                    </Authorized>
+                    <NotAuthorized>
                     <MudLink Href="/account/login">@context.UserName</MudLink>
-                }
+
+                    </NotAuthorized>
+                </AuthorizeView>
                 </MudTd>
             <MudTd DataLabel="Name">@context.CreatedAt.Date.ToShortDateString()</MudTd>
             <MudTd DataLabel="Position" HideSmall="_hidePosition">@context.ReputationPoints</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }"
-            RowsPerPageString="@rowsPerPageString" />
+                           RowsPerPageString="Rows per page:" />
 
         </PagerContent>
 
@@ -53,22 +54,11 @@ else
     private bool _hidePosition;
     private bool _loading;
     private List<ApplicationUser> Users = null!;
-    private bool isAuthenticated = false;
-
-
-    private string rowsPerPageString = "Rows per page:";
 
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
         Users = await RankingSvc.GetTopUsersByPoints();
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authenticationState.User;
-
-        if (user.Identity.IsAuthenticated)
-        {
-            isAuthenticated = true;
-        }
         _loading = false;
     }
 }

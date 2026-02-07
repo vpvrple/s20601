@@ -1,20 +1,19 @@
-﻿using Azure;
-using MediatR;
+﻿using MediatR;
 using s20601.Data.Models;
 using s20601.Events.Commands;
 using s20601.Services;
 
-public class SendMessageHandler : IRequestHandler<SendMessageCommand, RelationshipType?>
+public class SaveMessageHandler : INotificationHandler<SaveMessageCommand>
 {
-    private readonly IFriendService _friendService;
+    private readonly IChatService _chatService;
 
-    public SendMessageHandler(IFriendService friendService)
+    public SaveMessageHandler(IChatService chatService)
     {
-        _friendService = friendService;
+        _chatService = chatService;
     }
 
-    public async Task<RelationshipType?> Handle(SendMessageCommand request, CancellationToken cancellationToken)
+    public async Task Handle(SaveMessageCommand request, CancellationToken cancellationToken)
     {
-        return await _friendService.GetUsersRelationshipType(request.IdRecipient);
+        await _chatService.SaveMessage(request.IdRecipient, request.message);
     }
 }

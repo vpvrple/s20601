@@ -31,13 +31,19 @@ public partial class MovieCollection : INavigable
 
 public enum CollectionType
 {
-    Custom = 0,      // Created by user (Deletable)
-    MyRatings = 1,   // The rating target (Protected)
-    WatchLater = 2,  // Future proofing (Protected)
+    Custom = 0,
+    MyRatings = 1,
+    WatchLater = 2,
 }
 
 public enum CollectionVisibility
 {
     Private = 0,
     Public = 1
+}
+
+public enum MovieCollectionFilter
+{
+    All = 0,
+    PublicOnly = 1
 }

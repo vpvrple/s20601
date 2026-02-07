@@ -1,10 +1,6 @@
-﻿using Azure;
-using MediatR;
-using s20601.Services.External.Azure;
+﻿using MediatR;
+using s20601.Data.Models;
 
-namespace s20601.Events.Commands;
+namespace s20601.Events.Commands.Chat;
 
-public record SendMessageCommand(string IdSender, 
-    string IdRecipient, 
-    string message
-) : INotification, IRequest<Response>;
+public record SendMessageCommand(string IdRecipient) : INotification, IRequest<RelationshipType?>;

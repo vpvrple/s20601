@@ -1,29 +1,35 @@
-﻿@using s20601.Components.Users.Pages
+﻿@using s20601.Components.Users.Components
+@using s20601.Components.Users.Pages
+
 @inject NavigationManager NagivationMgr
 
-<MudButton OnClick="@SelectRequest" Variant="Variant.Text" Class="pa-0" Style="justify-content:flex-start"
-           FullWidth="true">
-    <MudPaper Class="pa-2" Elevation="0" Width="100%">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
-            <MudButton OnClick="@NavigateToProfile">
-                <UserAvatar UserId="@RequesterId"></UserAvatar>
-            </MudButton>
-            <MudStack Spacing="1" AlignItems="AlignItems.Start">
-                <MudButton OnClick="@NavigateToProfile">
-                    @RequesterUsername
-                </MudButton>
-                <MudStack Row="true" Spacing="2">
-                    <AcceptFriendRequestButton RequesterId="@RequesterId"
-                                               OnRequestAccepted="OnRequestProcessed">
-                    </AcceptFriendRequestButton>
-                    <DeclineFriendRequestButton RequesterId="@RequesterId"
-                                                OnRequestDeclined="OnRequestProcessed">
-                    </DeclineFriendRequestButton>
+<AuthorizeView>
+    <Authorized>
+        <MudButton OnClick="@SelectRequest" Variant="Variant.Text" Class="pa-0" Style="justify-content:flex-start"
+                   FullWidth="true">
+            <MudPaper Class="pa-2" Elevation="0" Width="100%">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+                    <MudButton OnClick="@NavigateToProfile">
+                        <UserAvatar UserId="@RequesterId"></UserAvatar>
+                    </MudButton>
+                    <MudStack Spacing="1" AlignItems="AlignItems.Start">
+                        <MudButton OnClick="@NavigateToProfile">
+                            @RequesterUsername
+                        </MudButton>
+                        <MudStack Row="true" Spacing="2">
+                            <AcceptFriendRequestButton RequesterId="@RequesterId"
+                                                       OnRequestAccepted="OnRequestProcessed">
+                            </AcceptFriendRequestButton>
+                            <DeclineFriendRequestButton RequesterId="@RequesterId"
+                                                        OnRequestDeclined="OnRequestProcessed">
+                            </DeclineFriendRequestButton>
+                        </MudStack>
+                    </MudStack>
                 </MudStack>
-            </MudStack>
-        </MudStack>
-    </MudPaper>
-</MudButton>
+            </MudPaper>
+        </MudButton>
+    </Authorized>
+</AuthorizeView>
 
 @code {
     [Parameter] public required string RequesterAvatar { get; set; }

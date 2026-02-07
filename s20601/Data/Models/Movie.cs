@@ -25,6 +25,7 @@ public class Movie : INavigable
     {
         return $"movie/{Id}";
     }
+
     public override string ToString()
     {
         return Title;

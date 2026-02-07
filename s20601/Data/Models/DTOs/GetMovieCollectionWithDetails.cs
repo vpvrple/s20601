@@ -16,4 +16,5 @@ public class GetMovieCollectionWithDetails
     
     public IDictionary<ApplicationUser, CollectionRole> Members { get; set; }
     
+    public int MovieCount { get; set; }
 }

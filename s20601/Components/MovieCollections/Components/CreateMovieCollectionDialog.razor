@@ -1,0 +1,115 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using s20601.Data.Models
+@using s20601.Services
+
+@inject IMovieCollectionService MovieCollectionSvc
+
+<AuthorizeView>
+    <Authorized>
+        <MudDialog Class="d-flex justify-start">
+            <TitleContent>
+                Create movie list
+            </TitleContent>
+            <DialogContent>
+                <EditForm Model="@_model" @ref="_form" Context="editFormContext">
+                    <DataAnnotationsValidator />
+
+                    <MudTextField @bind-Value="_model.CollectionTitle"
+                                  Label="Collection title"
+                                  Variant="Variant.Text"
+                                  Immediate="true"
+                                  Counter="100"
+                                  For="@(() => _model.CollectionTitle)"></MudTextField>
+
+                    <MudTextField @bind-Value="_model.Description"
+                                  Label="Description"
+                                  Lines="2"
+                                  AutoGrow="true"
+                                  MaxLines="10"
+                                  Variant="Variant.Text"
+                                  Counter="250"
+                                  Immediate="true"
+                                  For="@(() => _model.Description)"></MudTextField>
+
+                    <MudSwitch Class="ma-2"
+                               @bind-Value="_model.IsPrivate"
+                               LabelPlacement="Placement.Start"
+                               ThumbIcon="@(_model.IsPrivate ? Icons.Material.Filled.Lock : Icons.Material.Filled.LockOpen)"
+                               ThumbIconColor="@(_model.IsPrivate ? Color.Error : Color.Success)">
+                        @(_model.IsPrivate ? "Private" : "Public")
+                    </MudSwitch>
+                </EditForm>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="Cancel">Cancel</MudButton>
+                <MudButton Color="Color.Primary" OnClick="@Submit">OK</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    
+    private string _userId = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (_form.EditContext != null && _form.EditContext.Validate())
+        {
+            var visibility = _model.IsPrivate ? CollectionVisibility.Private : CollectionVisibility.Public;
+
+            var newCollection = await MovieCollectionSvc.CreateMovieCollection(_model.CollectionTitle, _model.Description, _userId, visibility);
+            MudDialog?.Close(DialogResult.Ok(newCollection));
+        }
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+
+    public required string CollectionTitle { get; set; } = null!;
+
+    public string Description { get; set; } = null!;
+
+    public CollectionVisibility Visibility { get; set; } = CollectionVisibility.Public;
+
+    public class VisibilityConverter : BoolConverter<CollectionVisibility>
+    {
+        public VisibilityConverter()
+        {
+            SetFunc = v => v == CollectionVisibility.Private;
+            GetFunc = b => b == true ? CollectionVisibility.Private : CollectionVisibility.Public;
+        }
+    }
+    
+    
+    private CreateCollectionForm _model = new();
+    private EditForm _form = null!;
+    public class CreateCollectionForm
+    {
+        [Required(ErrorMessage = "You must provide a title.")]
+        [StringLength(100, ErrorMessage = "Title is too long.")]
+        public string CollectionTitle { get; set; } = "";
+
+        [StringLength(250, ErrorMessage = "Description cannot exceed 250 characters.")]
+        public string Description { get; set; } = "";
+
+        public bool IsPrivate { get; set; }
+    }
+}

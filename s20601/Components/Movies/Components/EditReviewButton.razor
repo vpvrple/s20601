@@ -1,6 +1,10 @@
 ﻿@inject IDialogService DialogService
 
-<MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(OpenReviewEditConfirmationDialog)" />
+<AuthorizeView>
+    <Authorized>
+        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(OpenReviewEditConfirmationDialog)" />
+    </Authorized>
+</AuthorizeView>
 
 @code {
 
@@ -11,7 +15,7 @@
         var dialog = await DialogService.ShowAsync<ReviewEditConfirmationDialog>("Review Edit Confirmation");
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is bool and true)
+        if (!result.Canceled && result.Data is true)
         {
             await OnReviewEditConfirmed.InvokeAsync();
             StateHasChanged();

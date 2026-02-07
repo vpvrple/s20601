@@ -2,6 +2,7 @@
 
 @using System.Security.Claims
 @using Microsoft.AspNetCore.SignalR
+@using s20601.Components.Users.Components
 @using s20601.Data.Models
 @using s20601.Services
 @using Microsoft.AspNetCore.SignalR.Client
@@ -232,8 +233,8 @@
         {
             if (!string.IsNullOrEmpty(Username))
             {
-                var user = await UserSvc.GetUserByUsername(Username);
-                _friendId = user?.Id;
+                var userId = await UserSvc.GetUserIdByUsername(Username);
+                _friendId = userId;
                 _loadedFriendUsername = Username;
             }
             else

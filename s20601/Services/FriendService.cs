@@ -7,17 +7,17 @@ namespace s20601.Services;
 public class FriendService : IFriendService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    private readonly IUserService _userService;
-    public FriendService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IUserService userService)
+    private readonly ICurrentUserService _currentUserService;
+    public FriendService(IDbContextFactory<ApplicationDbContext> dbContextFactory, ICurrentUserService currentUserService)
     {
         _dbContextFactory = dbContextFactory;
-        _userService = userService;
+        _currentUserService = currentUserService;
     }
     
     public async Task<List<ApplicationUser>> GetFriendRequests()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         return await context.UserRelationships
             .Include(x => x.IdUserNavigation)
@@ -29,7 +29,7 @@ public class FriendService : IFriendService
     public async Task<List<ApplicationUser>> GetFriends()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         var friendsAsUser = await context.UserRelationships
             .Include(x => x.IdRelatedUserNavigation)
@@ -49,7 +49,7 @@ public class FriendService : IFriendService
     public async Task<RelationshipType?> GetUsersRelationshipType(string friendId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         var relationship = await context.UserRelationships.FirstOrDefaultAsync(ur =>
             (ur.IdUser == authenticatedUserId && ur.IdRelatedUser == friendId) ||
@@ -60,7 +60,7 @@ public class FriendService : IFriendService
 
     public async Task SendFriendRequest(string receiverId, string message)
     {
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         if (authenticatedUserId == receiverId)
         {
             return;
@@ -93,7 +93,7 @@ public class FriendService : IFriendService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         await context.UserRelationships
             .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == authenticatedUserId && ur.Type == RelationshipType.Pending)
@@ -104,7 +104,7 @@ public class FriendService : IFriendService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         await context.UserRelationships
             .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == authenticatedUserId && ur.Type == RelationshipType.Pending)
@@ -115,7 +115,7 @@ public class FriendService : IFriendService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         await context.UserRelationships
             .Where(ur => ((ur.IdUser == authenticatedUserId && ur.IdRelatedUser == friendId) ||
@@ -127,7 +127,7 @@ public class FriendService : IFriendService
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         var request = await context.UserRelationships
             .Where(ur => ur.IdUser == requesterId && ur.IdRelatedUser == authenticatedUserId && ur.Type == RelationshipType.Pending)

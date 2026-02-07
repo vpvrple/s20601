@@ -6,7 +6,6 @@ using s20601.Data.Models.DTOs;
 using s20601.Events.Commands;
 using s20601.Events.Queries;
 using s20601.Services.External.Azure;
-using System.Linq.Expressions;
 
 namespace s20601.Services;
 
@@ -248,14 +247,14 @@ public class MovieService : IMovieService
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<List<MovieUpdateRequest>> GetMovieUpdateRequests(Expression<Func<MovieUpdateRequest, bool>>? predicate = null)
+    public async Task<List<MovieUpdateRequest>> GetMovieUpdateRequests(MovieUpdateRequestStatus? status = null)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var query = context.MovieUpdateRequests.AsQueryable();
 
-        if (predicate != null)
+        if (status.HasValue)
         {
-            query = query.Where(predicate);
+            query = query.Where(x => x.Status == status.Value);
         }
 
         return await query.ToListAsync();
@@ -469,4 +468,67 @@ public class MovieService : IMovieService
         }
     }
 
+    public async Task<GetPersonaWithDetails?> GetPersonaWithDetails(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        var crew = await context.Crews
+            .Where(c => c.Id == id)
+            .Include(c => c.MovieCrews)
+            .ThenInclude(mc => mc.Movie)
+            .FirstOrDefaultAsync();
+
+        if (crew == null)
+        {
+            return null;
+        }
+
+        return new GetPersonaWithDetails
+        {
+            Id = crew.Id,
+            IMDBId = crew.IMDBId,
+            FirstName = crew.FirstName,
+            LastName = crew.LastName,
+            BirthYear = crew.BirthYear,
+            DeathYear = crew.DeathYear,
+            Movies = crew.MovieCrews.Select(mc => new PersonaMovieRole
+            {
+                MovieId = mc.Movie.Id,
+                MovieUrl = mc.Movie.GetUrl(),
+                Title = mc.Movie.Title,
+                StartYear = mc.Movie.StartYear,
+                Job = mc.Job,
+                CharacterName = mc.CharacterName
+            }).ToList()
+        };
+    }
+    
+    
+    public async Task<string?> GetPersonaImageById(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var persona = await context.Crews
+            .Where(x => x.Id == id)
+            .Select(x => x.IMDBId)
+            .FirstOrDefaultAsync();
+
+        if (persona is null)
+        {
+            return null;
+        }
+        
+        return await _mediator.Send(new GetTMDBPersonaImageQuery(persona));
+    }
+    
+    public async Task<string?> GetPersonaBiographyById(int id)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync();
+        var person = await context.Crews
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync();
+    
+        var image = await _mediator.Send(new GetTMDBPersonaBiographyQuery(person.IMDBId));
+    
+        return image;
+    }
 }

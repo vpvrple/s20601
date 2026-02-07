@@ -1,5 +1,4 @@
-﻿@using s20601.Components.MovieCollections.Components
-@using s20601.Services
+﻿@using s20601.Services
 
 @inject IMovieService MovieSvc
 
@@ -9,36 +8,36 @@
 }
 else
 {
-    if (string.IsNullOrEmpty(_poster))
+    <MudAvatar Class="d-flex align-center justify-center" Style="@Style" Rounded="false">
+    @if (string.IsNullOrEmpty(_image))
     {
         <MudPaper Class="d-flex align-center justify-center" Style="width: 100%; aspect-ratio: 2/3;">
-            <MudIcon Icon="@Icons.Material.Filled.LocalMovies" Style="font-size: 6rem;" />
+            <MudIcon Icon="@Icons.Material.Filled.Person" Style="font-size: 6rem;" />
         </MudPaper>
     }
     else
     {
-        <MudImage Src="@_poster"
+        <MudImage Src="@_image"
                   ObjectFit="ObjectFit.Cover"
                   Alt="Movie poster"
                   Elevation="1"
                   Style="width: 100%; height: auto;"
                   Class="align-content-center"/>
-        <MudPaper Elevation="0" Style="position: absolute; top: 8px; right: 8px;">
-            <BookmarkMovie MovieId="MovieId"/>
-        </MudPaper>
     }
+    
+    </MudAvatar>
 }
 
-
 @code {
-    [Parameter] public required int MovieId { get; set; }
-    private string? _poster;
+    [Parameter] public required int PersonaId { get; set; }
+    [Parameter] public string Style { get; set; }
+    private string? _image;
     private bool _loading;
 
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
-        _poster = await MovieSvc.GetMoviePosterByMovieId(MovieId);
+        _image = await MovieSvc.GetPersonaImageById(PersonaId);
         _loading = false;
     }
 }

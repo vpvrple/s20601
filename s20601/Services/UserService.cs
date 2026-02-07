@@ -2,8 +2,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
-using s20601.Data.Models;
 using s20601.Data;
+using s20601.Data.Models;
 using s20601.Events.Commands;
 using s20601.Events.Commands.UserAvatars;
 using s20601.Events.Queries;
@@ -16,34 +16,28 @@ namespace s20601.Services
         private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
         private readonly AuthenticationStateProvider _authenticationStateProvider;
         private readonly IMediator _mediator;
-        public UserService(IDbContextFactory<ApplicationDbContext> dbContextFactory, AuthenticationStateProvider authenticationStateProvider, IMediator mediator)
+        public UserService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IMediator mediator, AuthenticationStateProvider authenticationStateProvider)
         {
             _dbContextFactory = dbContextFactory;
-            _authenticationStateProvider = authenticationStateProvider;
             _mediator = mediator;
+            _authenticationStateProvider = authenticationStateProvider;
         }
 
-        public async Task<ApplicationUser?> GetUserByUsername(string username)
+        public async Task<ApplicationUser?> GetUserById(string id)
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
             return await context.Users
-                .FirstOrDefaultAsync(x => x.UserName == username);
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
         }
 
-        public async Task<string?> GetAuthenticatedUserId()
+        public async Task<string?> GetUserIdByUsername(string username)
         {
-            var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            var user = auth.User;
-
-            return user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-        }
-        
-        public async Task<ClaimsPrincipal?> GetAuthenticatedUser()
-        {
-            var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            var user = auth.User;
-
-            return user;
+            using var context = await _dbContextFactory.CreateDbContextAsync();
+            return await context.Users
+                .Where(x => x.UserName == username)
+                .Select(x => x.Id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<string?> GetUserAvatarByUserId(string userId)

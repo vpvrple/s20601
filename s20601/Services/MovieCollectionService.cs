@@ -9,24 +9,28 @@ namespace s20601.Services;
 public class MovieCollectionService : IMovieCollectionService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    public MovieCollectionService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
+    private readonly ICurrentUserService _currentUserService;
+    public MovieCollectionService(IDbContextFactory<ApplicationDbContext> dbContextFactory, ICurrentUserService currentUserService)
     {
         _dbContextFactory = dbContextFactory;
+        _currentUserService = currentUserService;
     }
 
-    public async Task<List<MovieCollection>> GetUserMovieCollections(string userId)
+    public async Task<List<MovieCollection>> GetUserMovieCollections()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
+        
         var collections = await context.MovieCollections
-            .Where(mc => mc.MovieCollectionUsers.Any(mu => mu.IdUser == userId))
+            .Where(mc => mc.MovieCollectionUsers.Any(mu => mu.IdUser == authenticatedUserId))
             .Include(mc => mc.MovieCollectionUsers)
             .ToListAsync();
 
         return collections;
     }
 
-    public async Task<List<GetMovieCollectionWithDetails>> GetMovieCollectionsWithDetails(Expression<Func<MovieCollection, bool>>? filter = null)
+    public async Task<List<GetMovieCollectionWithDetails>> GetMovieCollectionsWithDetails(string userId, MovieCollectionFilter filter = MovieCollectionFilter.All)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -35,9 +39,13 @@ public class MovieCollectionService : IMovieCollectionService
             .ThenInclude(mcu => mcu.IdUserNavigation)
             .AsQueryable();
 
-        if (filter != null)
+        if (filter == MovieCollectionFilter.PublicOnly)
         {
-            query = query.Where(filter);
+            query = query.Where(mc => mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId) && mc.Visibility == CollectionVisibility.Public);
+        }
+        else
+        {
+            query = query.Where(mc => mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId));
         }
 
         var collectionsFromDb = await query.ToListAsync();
@@ -238,7 +246,7 @@ public class MovieCollectionService : IMovieCollectionService
 
         if (movieExists)
         {
-            return; // Movie is already in the collection
+            return;
         }
 
         var collectionMovie = new MovieCollectionMovie
@@ -286,15 +294,13 @@ public class MovieCollectionService : IMovieCollectionService
 
         var existingUserIds = collectionUsers.Select(u => u.IdUser).ToHashSet();
         var incomingUserIds = membersRoles.Keys.Select(u => u.Id).ToHashSet();
-
-        // 1. Handle Removals
+        
         var usersToRemove = collectionUsers.Where(cu => !incomingUserIds.Contains(cu.IdUser)).ToList();
         if (usersToRemove.Any())
         {
             context.MovieCollectionUsers.RemoveRange(usersToRemove);
         }
-
-        // 2. Handle Additions
+        
         var usersToAddIds = incomingUserIds.Where(id => !existingUserIds.Contains(id)).ToList();
         if (usersToAddIds.Any())
         {
@@ -308,8 +314,7 @@ public class MovieCollectionService : IMovieCollectionService
                 });
             await context.MovieCollectionUsers.AddRangeAsync(usersToAdd);
         }
-
-        // 3. Handle Role Updates for existing users
+        
         var usersToUpdate = collectionUsers.Where(cu => incomingUserIds.Contains(cu.IdUser)).ToList();
         foreach (var user in usersToUpdate)
         {
@@ -360,17 +365,36 @@ public class MovieCollectionService : IMovieCollectionService
         }
     }
 
-    public async Task<List<MovieCollection>> GetTrendingMovieCollections(int n)
+    public async Task<List<GetMovieCollectionWithDetails>> GetCommunityMovieCollections()
     {
-        //needs to be revisited
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var movieCollections = await context.MovieCollections
             .Where(x => x.Visibility == CollectionVisibility.Public)
-            .Take(n)
-            .OrderBy(m => Guid.NewGuid())
+            .OrderBy(m => m.MovieCollectionUsers.Count)
+            .Include(mc => mc.MovieCollectionUsers)
+            .ThenInclude(mcu => mcu.IdUserNavigation)
             .ToListAsync();
 
-        return movieCollections ?? [];
+        var result = new List<GetMovieCollectionWithDetails>();
+
+        foreach (var mc in movieCollections)
+        {
+            var movieCount = await context.MovieCollectionMovies.CountAsync(mcm => mcm.IdMovieCollection == mc.Id);
+            
+            result.Add(new GetMovieCollectionWithDetails
+            {
+                Id = mc.Id,
+                Name = mc.Name,
+                Description = mc.Description,
+                CreatedAt = mc.CreatedAt,
+                Type = mc.Type,
+                Visibility = mc.Visibility,
+                Members = mc.MovieCollectionUsers.ToDictionary(mcu => mcu.IdUserNavigation, mcu => mcu.Role),
+                MovieCount = movieCount
+            });
+        }
+
+        return result;
     }
 }

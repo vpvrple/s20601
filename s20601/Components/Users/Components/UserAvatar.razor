@@ -18,31 +18,28 @@
 </MudAvatar>
 
     @code {
-    [Parameter]
-    public required string UserId { get; set; }
+    [Parameter] public required string UserId { get; set; }
     [Parameter] public string? Style { get; set; }
-    
-    [Parameter] public string? AvatarUrl { get; set; }
-    
+    [Parameter] public string? PreloadedAvatar { get; set; }
     private string? _userAvatar;
     private string? _previousUserId;
-    private string? _previousAvatarUrl;
+    private string? _previousPreloadedAvatar;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (UserId != _previousUserId || AvatarUrl != _previousAvatarUrl)
+        if (UserId != _previousUserId || PreloadedAvatar != _previousPreloadedAvatar)
         {
             _previousUserId = UserId;
-            _previousAvatarUrl = AvatarUrl;
+            _previousPreloadedAvatar = PreloadedAvatar;
             
-            // if (!string.IsNullOrEmpty(AvatarUrl))
-            // {
-            //     _userAvatar = AvatarUrl;
-            // }
-            // else
-            // {
+            if (!string.IsNullOrEmpty(PreloadedAvatar))
+            {
+                _userAvatar = PreloadedAvatar;
+            }
+            else
+            {
                 _userAvatar = await UserSvc.GetUserAvatarByUserId(UserId);
-            // }
+            }
         }
     }
 }

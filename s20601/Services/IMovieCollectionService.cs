@@ -6,7 +6,7 @@ namespace s20601.Services;
 
 public interface IMovieCollectionService
 {
-    Task<List<MovieCollection>> GetUserMovieCollections(string userId);
+    Task<List<MovieCollection>> GetUserMovieCollections();
     Task<GetMovieCollectionWithDetails> CreateMovieCollection(string name, string? description, string userId, CollectionVisibility visibility);
     Task DeleteMovieCollection(int collectionId);
     Task<MovieCollection?> GetMovieCollectionById(int collectionId);
@@ -18,13 +18,13 @@ public interface IMovieCollectionService
     Task<List<MovieCollection>> GetNRecentUserMovieColletions(string userId, int n);
     Task RemoveMovieFromMyRatingsCollection(int movieId, string userId);
     Task AddMovieToMyRatingsCollection(int movieId, string userId);
-    Task<List<GetMovieCollectionWithDetails>> GetMovieCollectionsWithDetails(Expression<Func<MovieCollection, bool>>? filter = null);
+    Task<List<GetMovieCollectionWithDetails>> GetMovieCollectionsWithDetails(string userId, MovieCollectionFilter filter = MovieCollectionFilter.All);
     Task<Dictionary<ApplicationUser, CollectionRole>> GetCollectionMembers(int collectionId);
     Task UpdateCollectionMembers(int collectionId, IDictionary<ApplicationUser, CollectionRole> membersRoles);
     Task AddMemberToCollectionAsync(int collectionId, string userId, CollectionRole role);
     Task<CollectionRole?> GetUserCollectionRole(int collectionId, string userId);
     Task<List<MovieCollection>> GetUserCollectionsContainingMovie(string userId, int movieId);
     Task LeaveCollectionAsync(int collectionId, string userId);
-    Task<List<MovieCollection>> GetTrendingMovieCollections(int n);
+    Task<List<GetMovieCollectionWithDetails>> GetCommunityMovieCollections();
 
 }

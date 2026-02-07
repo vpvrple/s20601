@@ -1,8 +1,12 @@
-﻿<MudIconButton Icon="@Icons.Material.Filled.PersonRemoveAlt1"
-               Variant="Variant.Filled"
-               Color="Color.Error"
-               OnClick="Unfriend"
-               Size="Size.Small"/>
+﻿<AuthorizeView>
+    <Authorized>
+        <MudIconButton Icon="@Icons.Material.Filled.PersonRemoveAlt1"
+                       Variant="Variant.Filled"
+                       Color="Color.Error"
+                       OnClick="Unfriend"
+                       Size="Size.Small" />
+        </Authorized>
+</AuthorizeView>
 
 @code {
 

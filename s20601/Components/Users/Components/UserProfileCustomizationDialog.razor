@@ -4,14 +4,16 @@
 @inject ISnackbar Snackbar
 @inject IUserService UserSvc
 
-<MudDialog>
-    <DialogContent>
-        <MudForm>
-            <MudCard Elevation="0">
-                <MudCardContent>
-                    <MudStack>
-                        <MudStack Row="true">
-                            <MudFileUpload T="IBrowserFile" FilesChanged="@(UploadAvatar)">
+<AuthorizeView>
+    <Authorized>
+        <MudDialog>
+            <DialogContent>
+                <MudForm>
+                    <MudCard Elevation="0">
+                        <MudCardContent>
+                            <MudStack>
+                                <MudStack Row="true">
+                                    <MudFileUpload T="IBrowserFile" FilesChanged="@(UploadAvatar)">
                                         <ActivatorContent>
                                             <MudButton Variant="Variant.Filled"
                                                        Color="Color.Primary">
@@ -19,37 +21,38 @@
                                             </MudButton>
                                         </ActivatorContent>
                                     </MudFileUpload>
-                            @if (_avatar is not null)
-                            {
-                                <MudChip T="string" Color="Color.Info" OnClose="@ClearAvatar">
-                                    @(_avatar?.Name)
-                                </MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string">No File</MudChip>
-                            }
-                        </MudStack>
+                                    @if (_avatar is not null)
+                                    {
+                                        <MudChip T="string" Color="Color.Info" OnClose="@ClearAvatar">
+                                            @(_avatar?.Name)
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string">No File</MudChip>
+                                    }
+                                </MudStack>
 
-                        <MudTextField @bind-Value="@_profileDescription" Label="Profile description"
-                                      HelperText="Tell something about yourself!" Variant="Variant.Outlined"/>
-                    </MudStack>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(Submit)">Update
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
+                                <MudTextField @bind-Value="@_profileDescription" Label="Profile description"
+                                              HelperText="Tell something about yourself!" Variant="Variant.Outlined" />
+                            </MudStack>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="@(Submit)">
+                                Update
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
 
-        </MudForm>
-    </DialogContent>
-</MudDialog>
-
+                </MudForm>
+            </DialogContent>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
 
 @code {
 
-    [Parameter] public ApplicationUser User { get; set; }
-    [Parameter] public EventCallback OnProfileUpdated { get; set; }
+    [Parameter] public required ApplicationUser User { get; set; }
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
     private string? _profileDescription;
@@ -134,7 +137,6 @@
         else
         {
             Snackbar.Add("Your profile was updated.", Severity.Info);
-            await OnProfileUpdated.InvokeAsync();
         }
 
         MudDialog.Close(DialogResult.Ok(true));

@@ -6,7 +6,6 @@
 @using s20601.Components.Common.Components
 @using s20601.Data.Models
 @using System.Linq.Expressions
-@using s20601.Components.Common.Components
 @using s20601.Data.Models.DTOs
 
 @inject IMovieCollectionService MovieCollectionSvc
@@ -33,9 +32,6 @@
                         movie
                         collection
                     </MudButton>
-                    <MudSpacer/>
-                    <MudButton StartIcon="@Icons.Material.Filled.FilterList">Filter</MudButton>
-                    <MudButton StartIcon="@Icons.Material.Filled.Sort">Sort</MudButton>
                 </MudStack>
                 
                 <MudStack Row="true" Class="mt-6">
@@ -70,7 +66,7 @@
                                                             var currentUserMemberInfo = collection.Members.FirstOrDefault(m => m.Key.Id == _processedUserId);
                                                         }
 
-                                                        @if (currentUserMemberInfo.Key != null) // Check if user is a member
+                                                        @if (currentUserMemberInfo.Key != null)
                                                         {
                                                             @if (currentUserMemberInfo.Value == CollectionRole.Owner)
                                                             {
@@ -97,12 +93,9 @@
                                             </MudCardHeader>
                                             <MudLink Href="@($"/movie-collection/{collection.Id}")"
                                                      Underline="Underline.None">
-                                                <MudImage Src="favicon.png"
-                                                          ObjectFit="ObjectFit.None"
-                                                          Alt="Movie poster"
-                                                          Elevation="0"
-                                                          Height="300"
-                                                          Width="280"/>
+                                                <MudPaper Class="d-flex align-center justify-center" Elevation="0" Style="width: 100%; aspect-ratio: 2/3;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.LocalMovies" Style="font-size: 6rem;" />
+                                                </MudPaper>
                                                 <MudCardContent>
                                                     <MudStack>
                                                         <MudText Typo="Typo.subtitle1" Align="Align.Center">
@@ -151,12 +144,9 @@
                                                 <MudLink Href="@($"/movie-collection/{collection.Id}")"
                                                          Underline="Underline.None">
                                                     <MudCard Style="height: 100%; width: 280px">
-                                                        <MudImage Src="favicon.png"
-                                                                  ObjectFit="ObjectFit.None"
-                                                                  Alt="Movie poster"
-                                                                  Elevation="0"
-                                                                  Height="300"
-                                                                  Width="280"/>
+                                                        <MudPaper Class="d-flex align-center justify-center" Elevation="0" Style="width: 100%; aspect-ratio: 2/3;">
+                                                            <MudIcon Icon="@Icons.Material.Filled.List" Style="font-size: 6rem;" />
+                                                        </MudPaper>
                                                         <MudCardContent>
                                                             <MudStack>
                                                                 <MudText Typo="Typo.subtitle1" Align="Align.Center">
@@ -219,7 +209,9 @@
         }
         else
         {
-            var userInfoByParameterUsername = await UserSvc.GetUserByUsername(Username);
+            var userId = await UserSvc.GetUserIdByUsername(Username);
+            var userInfoByParameterUsername = await UserSvc.GetUserById(userId);
+
             if (userInfoByParameterUsername == null)
             {
                 Navigation.NavigateTo("notfound");
@@ -239,18 +231,14 @@
 
         StateHasChanged();
         
-        Expression<Func<s20601.Data.Models.MovieCollection, bool>>? filter = null;
+        MovieCollectionFilter filter = MovieCollectionFilter.All;
 
-        if (_isLoggedInUser)
+        if (!_isLoggedInUser)
         {
-            filter = mc => mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId);
-        }
-        else
-        {
-            filter = mc => mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId) && mc.Visibility == CollectionVisibility.Public;
+            filter = MovieCollectionFilter.PublicOnly;
         }
 
-        _movieCollections = await MovieCollectionSvc.GetMovieCollectionsWithDetails(filter);
+        _movieCollections = await MovieCollectionSvc.GetMovieCollectionsWithDetails(userId, filter);
 
         _movieCounts.Clear();
         if (_movieCollections != null)

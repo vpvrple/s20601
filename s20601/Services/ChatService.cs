@@ -8,17 +8,17 @@ namespace s20601.Services;
 public class ChatService : IChatService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-    private readonly IUserService _userService;
+    private readonly ICurrentUserService _currentUserService;
     
-    public ChatService(IDbContextFactory<ApplicationDbContext> dbContextFactory, IUserService userService)
+    public ChatService(IDbContextFactory<ApplicationDbContext> dbContextFactory, ICurrentUserService currentCurrentUserService)
     {
         _dbContextFactory = dbContextFactory;
-        _userService = userService;
+        _currentUserService = currentCurrentUserService;
     }
-
+    
     public async Task<Message?> SaveMessage(string idRecipient, string message)
     {
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
 
         if (authenticatedUserId == null)
         {
@@ -44,7 +44,7 @@ public class ChatService : IChatService
 
     public async Task<List<ChatMessage>?> GetConversation(string friendId)
     {
-        var authenticatedUserId = await _userService.GetAuthenticatedUserId();
+        var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
         
         if (authenticatedUserId == null)
         {

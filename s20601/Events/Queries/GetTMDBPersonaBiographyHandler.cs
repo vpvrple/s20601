@@ -3,12 +3,12 @@ using s20601.Services.External.TMDB;
 
 namespace s20601.Events.Queries;
 
-public class GetTMDBPersonaImageHandler(ITmdbLibClient tmdbLibClient) : IRequestHandler<GetTMDBPersonaImageQuery, string?>
+public class GetTMDBPersonaBiographyHandler(ITmdbLibClient tmdbLibClient) : IRequestHandler<GetTMDBPersonaBiographyQuery, string?>
 {
-    public async Task<string?> Handle(GetTMDBPersonaImageQuery request, CancellationToken cancellationToken)
+    public async Task<string?> Handle(GetTMDBPersonaBiographyQuery request, CancellationToken cancellationToken)
     {
-        var imageUrl = await tmdbLibClient.GetPersonaImageUrlByImdbIdAsync(request.ImdbId);
+        var biography = await tmdbLibClient.GetPersonaBiographyByImdbIdAsync(request.ImdbId);
 
-        return imageUrl;
+        return biography;
     }
 }

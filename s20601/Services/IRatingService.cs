@@ -6,7 +6,7 @@ namespace s20601.Services;
 public interface IRatingService
 {
     Task RateMovieAsync(int movieId, int? rating);
-    Task<UserRatingSummary?> GetUserRatingSummaryAsync();
+    Task<UserRatingSummary?> GetUserRatingSummaryAsync(string? userId = null);
     Task<MovieRatingSummary?> GetMovieRatingSummaryByIdAsync(int id);
     Task<MovieRate?> GetUserMovieRating(int movieId);
     Task<List<MovieWithRating>> GetTopMoviesByRatingAsync(int n);

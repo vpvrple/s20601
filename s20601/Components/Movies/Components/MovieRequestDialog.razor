@@ -1,8 +1,8 @@
-﻿@using s20601.Data.Models
+﻿@using System.ComponentModel.DataAnnotations
+@using s20601.Data.Models
 @using s20601.Data.Models.DTOs
 @using s20601.Services
 @using System.Security.Claims
-@using System.IO
 
 @inject IMovieService MovieSvc
 @inject ISnackbar Snackbar
@@ -14,7 +14,8 @@
         }
         <MudDialog>
             <DialogContent>
-                <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors" Spacing="2">
+                <EditForm @ref="_form" Model="@_formModel" OnSubmit="@(() => Submit(authenticatedUserId))" Context="EditFormContext">
+                    <DataAnnotationsValidator />
                     <MudStepper @bind-ActiveIndex="_index" @ref="@_stepper">
                         <ChildContent>
                             <MudStep Title="Poster">
@@ -41,19 +42,39 @@
                                     }
                                 </MudStack>
                             </MudStep>
-                            
-                            
+
+
                             <MudStep Title="General movie information">
                                 <MudStack Spacing="2">
-                                    <MudTextField @bind-Value="_title" Label="Title"/>
-                                    <MudTextField @bind-Value="_originalTitle" Label="Original Title"/>
-                                    <MudNumericField @bind-Value="_startYear" Label="Start Year"/>
-                                    <MudNumericField @bind-Value="_endYear" Label="End Year"/>
-                                    <MudNumericField @bind-Value="_runtimeMinutes" Label="Runtime (minutes)"/>
-                                    <MudTextField @bind-Value="_titleType" Label="Type"/>
+                                    <MudTextField @bind-Value="_formModel.General.Title"
+                                                  Label="Title"
+                                                  For="@(() => _formModel.General.Title)"
+                                                  Immediate="true"
+                                                  Counter="1000"/>
+                                    <MudTextField @bind-Value="_formModel.General.OriginalTitle"
+                                                  Label="Original Title"
+                                                  For="@(() => _formModel.General.OriginalTitle)"
+                                                  Immediate="true"
+                                                  Counter="1000"/>
+                                    <MudNumericField @bind-Value="_formModel.General.StartYear"
+                                                     Label="Start Year"
+                                                     For="@(() => _formModel.General.StartYear)"/>
+                                    <MudNumericField @bind-Value="_formModel.General.EndYear"
+                                                     Label="End Year"
+                                                     For="@(() => _formModel.General.EndYear)"/>
+                                    <MudNumericField @bind-Value="_formModel.General.RuntimeMinutes"
+                                                     Label="Runtime (minutes)"
+                                                     For="@(() => _formModel.General.RuntimeMinutes)"/>
+                                    <MudTextField @bind-Value="_formModel.General.TitleType"
+                                                  Label="Type"
+                                                  For="@(() => _formModel.General.TitleType)"/>
 
-                                    <MudAutocomplete T="Genre" Label="Genres" @ref="_autocomplete" Value="_selectedGenreToAdd"
-                                                     ValueChanged="OnGenreSelected" SearchFunc="@SearchGenre"
+                                    <MudAutocomplete T="Genre"
+                                                     Label="Genres"
+                                                     @ref="_autocomplete"
+                                                     Value="_selectedGenreToAdd"
+                                                     ValueChanged="OnGenreSelected"
+                                                     SearchFunc="@SearchGenre"
                                                      ToStringFunc="@(g => g?.Name)"
                                                      ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
                                         <ItemTemplate Context="genre">
@@ -63,14 +84,25 @@
                                         </ItemTemplate>
                                     </MudAutocomplete>
                                     <div class="d-flex flex-wrap mt-2">
-                                        @foreach (var genre in _selectedGenres)
+                                        @foreach (var genre in _formModel.General.Genres)
                                         {
                                             <MudChip T="Genre" OnClose="@(() => RemoveGenre(genre))">@genre.Name</MudChip>
                                         }
                                     </div>
-                                    <MudTextField @bind-Value="_overview" Label="Overview" HelperText="What is this movie about? Remember - no spoilers!" Lines="3"/>
-                                    <MudTextField @bind-Value="_description" Lines="2" Label="Request description"
-                                                  HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"/>
+                                    <MudTextField @bind-Value="_formModel.General.Overview"
+                                                  Label="Overview"
+                                                  HelperText="What is this movie about? Remember - no spoilers!"
+                                                  Lines="3"
+                                                  For="@(() => _formModel.General.Overview)"
+                                                  Immediate="true"
+                                                  Counter="5000"/>
+                                    <MudTextField @bind-Value="_formModel.General.Description"
+                                                  Lines="2"
+                                                  Label="Request description"
+                                                  HelperText="Sources on which you base proposed changes. It will help us verify your request faster!"
+                                                  For="@(() => _formModel.General.Description)"
+                                                  Immediate="true"
+                                                  Counter="1000"/>
 
                                 </MudStack>
                             </MudStep>
@@ -78,12 +110,17 @@
                             <MudStep Title="Crew">
 
 
-                                <MudTable Items="@_crew" Hover="true" CanCancelEdit="true"
-                                          @bind-SelectedItem="@_selectedCrew" SortLabel="Sort By"
+                                <MudTable Items="@_formModel.Crew.Crew"
+                                          Hover="true"
+                                          CanCancelEdit="true"
+                                          @bind-SelectedItem="@_selectedCrew"
+                                          SortLabel="Sort By"
                                           CommitEditTooltip="Commit Edit"
                                           OnCommitEditClick="@(() => Snackbar.Add("Commit Edit Handler Invoked"))"
-                                          RowEditPreview="@BackupItem" RowEditCancel="@ResetItemToOriginalValues"
-                                          RowEditCommit="@ItemHasBeenCommitted" IsEditRowSwitchingBlocked="false"
+                                          RowEditPreview="@BackupItem"
+                                          RowEditCancel="@ResetItemToOriginalValues"
+                                          RowEditCommit="@ItemHasBeenCommitted"
+                                          IsEditRowSwitchingBlocked="false"
                                           ApplyButtonPosition="TableApplyButtonPosition.End"
                                           EditButtonPosition="TableEditButtonPosition.End"
                                           EditTrigger="@TableEditTrigger.EditButton"
@@ -92,11 +129,15 @@
 
                                         <MudStack Row="true" AlignItems="AlignItems.Baseline" Style="width: 100%">
                                             <MudText Typo="Typo.h6">Movie crew</MudText>
-                                            <MudAutocomplete T="GetMovieCrewMemberWithDetails" Label="Search existing crew"
+                                            <MudAutocomplete T="GetMovieCrewMemberWithDetails"
+                                                             Label="Search existing crew"
                                                              Value="_selectedCrewToAdd"
-                                                             ValueChanged="OnCrewSelected" SearchFunc="@SearchCrew"
+                                                             ValueChanged="OnCrewSelected"
+                                                             SearchFunc="@SearchCrew"
                                                              ToStringFunc="@(c => c == null ? null : $"{c.FirstName} {c.LastName} ({c.BirthYear})")"
-                                                             ResetValueOnEmptyText="true" CoerceText="true" CoerceValue="false">
+                                                             ResetValueOnEmptyText="true"
+                                                             CoerceText="true"
+                                                             CoerceValue="false">
                                                 <ItemTemplate Context="crew">
                                                     <MudText>
                                                         @($"{crew.FirstName} {crew.LastName} ({crew.BirthYear})")
@@ -112,35 +153,35 @@
                                     <HeaderContent>
                                         <MudTh>
                                             <MudTableSortLabel
-                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.FirstName)">
+                                                SortBy="new Func<CrewMemberModel, object>(x => x.FirstName)">
                                                 FirstName
                                             </MudTableSortLabel>
                                         </MudTh>
                                         <MudTh>
                                             <MudTableSortLabel
-                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.LastName)">LastName
+                                                SortBy="new Func<CrewMemberModel, object>(x => x.LastName)">LastName
                                             </MudTableSortLabel>
                                         </MudTh>
                                         <MudTh>
                                             <MudTableSortLabel
-                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.BirthYear)">
+                                                SortBy="new Func<CrewMemberModel, object>(x => x.BirthYear)">
                                                 BirthYear
                                             </MudTableSortLabel>
                                         </MudTh>
                                         <MudTh>
                                             <MudTableSortLabel
-                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.DeathYear)">
+                                                SortBy="new Func<CrewMemberModel, object>(x => x.DeathYear)">
                                                 DeathYear
                                             </MudTableSortLabel>
                                         </MudTh>
                                         <MudTh>
                                             <MudTableSortLabel
-                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.Job)">Job
+                                                SortBy="new Func<CrewMemberModel, object>(x => x.Job)">Job
                                             </MudTableSortLabel>
                                         </MudTh>
                                         <MudTh>
                                             <MudTableSortLabel
-                                                SortBy="new Func<GetMovieCrewMemberWithDetails, object>(x => x.CharacterName)">
+                                                SortBy="new Func<CrewMemberModel, object>(x => x.CharacterName)">
                                                 CharacterName
                                             </MudTableSortLabel>
                                         </MudTh>
@@ -155,33 +196,37 @@
                                     </RowTemplate>
                                     <RowEditingTemplate>
                                         <MudTd DataLabel="First Name">
-                                            <MudTextField @bind-Value="MudTableContext.FirstName"/>
+                                            <MudTextField @bind-Value="MudTableContext.FirstName" For="@(() => MudTableContext.FirstName)"/>
                                         </MudTd>
                                         <MudTd DataLabel="Last Name">
-                                            <MudTextField @bind-Value="MudTableContext.LastName"/>
+                                            <MudTextField @bind-Value="MudTableContext.LastName" For="@(() => MudTableContext.LastName)"/>
                                         </MudTd>
                                         <MudTd DataLabel="Birth Year">
-                                            <MudNumericField @bind-Value="MudTableContext.BirthYear"/>
+                                            <MudNumericField @bind-Value="MudTableContext.BirthYear" For="@(() => MudTableContext.BirthYear)"/>
                                         </MudTd>
                                         <MudTd DataLabel="Death Year">
-                                            <MudNumericField @bind-Value="MudTableContext.DeathYear"/>
+                                            <MudNumericField @bind-Value="MudTableContext.DeathYear" For="@(() => MudTableContext.DeathYear)"/>
                                         </MudTd>
                                         <MudTd DataLabel="Job">
-                                            <MudTextField @bind-Value="MudTableContext.Job"/>
+                                            <MudTextField @bind-Value="MudTableContext.Job" For="@(() => MudTableContext.Job)"/>
                                         </MudTd>
                                         <MudTd DataLabel="Character Name">
-                                            <MudTextField @bind-Value="MudTableContext.CharacterName"/>
+                                            <MudTextField @bind-Value="MudTableContext.CharacterName" For="@(() => MudTableContext.CharacterName)"/>
                                         </MudTd>
                                     </RowEditingTemplate>
                                     <PagerContent>
                                         <MudTablePager/>
                                     </PagerContent>
                                     <EditButtonContent Context="button">
-                                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" Class="pa-0"
-                                                       OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled"/>
-                                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Filled.DeleteOutline"
+                                        <MudIconButton Size="@Size.Small"
+                                                       Icon="@Icons.Material.Outlined.Edit"
                                                        Class="pa-0"
-                                                       OnClick="@(() => OnRemoveCrew((GetMovieCrewMemberWithDetails)button.Item))"
+                                                       OnClick="@button.ButtonAction"
+                                                       Disabled="@button.ButtonDisabled"/>
+                                        <MudIconButton Size="@Size.Small"
+                                                       Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Class="pa-0"
+                                                       OnClick="@(() => OnRemoveCrew((CrewMemberModel)button.Item))"
                                                        Disabled="@button.ButtonDisabled"/>
                                     </EditButtonContent>
                                 </MudTable>
@@ -191,7 +236,9 @@
                             <div class="mud-stepper-nav-connector">
                                 @{
                                     int value = step.Completed ? 100 : 0;
-                                    <MudProgressLinear Striped Value="value" Min="0" Max="100"
+                                    <MudProgressLinear Striped Value="value"
+                                                       Min="0"
+                                                       Max="100"
                                                        Color="Color.Primary"
                                                        Style="height: 2px; background-color: #d4ddeb; border-radius: 2px;"/>
                                 }
@@ -206,15 +253,16 @@
                         <ActionContent Context="stepper">
                             @if (!_completed)
                             {
-                                if (_index != 0)
+                                if (_index > 0)
                                 {
                                     <MudButton OnClick="@(() => stepper.PreviousStepAsync())"
                                                StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary">
                                         Previous
                                     </MudButton>
                                 }
+
                                 <MudSpacer/>
-                                @if (stepper.Steps[_index].Skippable == true)
+                                @if (_index >= 0 && _index < stepper.Steps.Count && stepper.Steps[_index].Skippable == true)
                                 {
                                     <MudButton OnClick="@(() => stepper.SkipCurrentStepAsync())"
                                                EndIcon="@stepper.SkipButtonIcon" Color="Color.Primary">Skip</MudButton>
@@ -228,7 +276,7 @@
                             }
                         </ActionContent>
                     </MudStepper>
-                </MudForm>
+                </EditForm>
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="@(Reset)">Reset</MudButton>
@@ -246,33 +294,22 @@
     
     private bool _success;
     private string[] _errors = [];
-    private MudForm _form;
     private MudStepper _stepper;
     private MudAutocomplete<Genre> _autocomplete;
     private int _index;
     private bool _completed;
 
-    private string _title = "";
-    private string _originalTitle = "";
-    private int? _startYear;
-    private int? _endYear;
-    private int? _runtimeMinutes;
-    private string _titleType = "";
-    private string _description = "";
-    private string _overview = "";
-
+    private MovieRequestFormModel _formModel = new();
 
     private List<Genre> _allGenres = new();
-    private HashSet<Genre> _selectedGenres = new();
     private List<Genre> _originalGenres = new();
     private Genre? _selectedGenreToAdd;
     
     
     private List<string> editEvents = new();
-    private List<GetMovieCrewMemberWithDetails> _crew;
-    private GetMovieCrewMemberWithDetails _selectedCrew;
-    private GetMovieCrewMemberWithDetails _selectedCrewBeforeEdit;
-    private MudTable<GetMovieCrewMemberWithDetails> _table;
+    private CrewMemberModel _selectedCrew;
+    private CrewMemberModel _selectedCrewBeforeEdit;
+    private MudTable<CrewMemberModel> _table;
 
 
     private GetMovieCrewMemberWithDetails? _selectedCrewToAdd;
@@ -280,7 +317,7 @@
     private IBrowserFile? _poster;
     private MudFileUpload<IBrowserFile>? _fileUpload;
     private MemoryStream? _uploadedFileStream;
-
+    
     protected override async Task OnInitializedAsync()
     {
         _allGenres = await MovieSvc.GetAllGenresAsync();
@@ -289,7 +326,7 @@
 
     private async Task Reset()
     {
-        await _form.ResetAsync();
+        _form = new EditForm();
         await _stepper.ResetAsync();
         await LoadMovieDataAsync();
     }
@@ -301,36 +338,64 @@
             Movie = new Movie();
         }
 
-        _title = Movie.Title;
-        _originalTitle = Movie.OriginalTitle;
-        _startYear = Movie.StartYear;
-        _endYear = Movie.EndYear;
-        _runtimeMinutes = Movie.RuntimeMinutes;
-        _titleType = Movie.TitleType;
-        _overview = Movie.Overview;
+        _formModel = new MovieRequestFormModel();
+        _formModel.General.Title = Movie.Title;
+        _formModel.General.OriginalTitle = Movie.OriginalTitle;
+        _formModel.General.StartYear = Movie.StartYear;
+        _formModel.General.EndYear = Movie.EndYear;
+        _formModel.General.RuntimeMinutes = Movie.RuntimeMinutes;
+        _formModel.General.TitleType = Movie.TitleType;
+        _formModel.General.Overview = Movie.Overview;
 
         if (Movie.Id != 0)
         {
             _originalGenres = await MovieSvc.GetMovieGenresByIdAsync(Movie.Id);
-            _selectedGenres = _allGenres.Where(g => _originalGenres.Any(og => og.Id == g.Id)).ToHashSet();
-            _crew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
+            _formModel.General.Genres = _allGenres.Where(g => _originalGenres.Any(og => og.Id == g.Id)).ToHashSet();
+            var crewDtos = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
+            _formModel.Crew.Crew = crewDtos.Select(c => new CrewMemberModel
+            {
+                Id = c.Id,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                BirthYear = c.BirthYear,
+                DeathYear = c.DeathYear,
+                Job = c.Job,
+                CharacterName = c.CharacterName ?? ""
+            }).ToList();
         }
         else
         {
-            _selectedGenres = new HashSet<Genre>();
-            _crew = new List<GetMovieCrewMemberWithDetails>();
+            _formModel.General.Genres = new HashSet<Genre>();
+            _formModel.Crew.Crew = new List<CrewMemberModel>();
             _originalGenres = new List<Genre>();
         }
 
         _poster = null;
         _uploadedFileStream = null;
-        _description = "";
+        _formModel.General.Description = "";
         _selectedGenreToAdd = null;
         _selectedCrewToAdd = null;
     }
     
     private async Task Submit(string userId)
     {
+        var validationResults = new List<ValidationResult>();
+        bool isValid = Validator.TryValidateObject(_formModel.General, new ValidationContext(_formModel.General), validationResults, true);
+
+        foreach (var crew in _formModel.Crew.Crew)
+        {
+            isValid &= Validator.TryValidateObject(crew, new ValidationContext(crew), validationResults, true);
+        }
+
+        if (!isValid)
+        {
+            foreach (var error in validationResults.DistinctBy(x => x.ErrorMessage))
+            {
+                Snackbar.Add(error.ErrorMessage, Severity.Error);
+            }
+            return;
+        }
+
         var request = new MovieUpdateRequest
         {
             Movie_Id = Movie.Id != 0 ? Movie.Id : null
@@ -339,66 +404,66 @@
         var changes = new List<string>();
         var hasChanges = false;
 
-        if (_title != Movie.Title)
+        if (_formModel.General.Title != Movie.Title)
         {
-            request.NewTitle = _title;
-            changes.Add($"Title: {_title}");
+            request.NewTitle = _formModel.General.Title;
+            changes.Add($"Title: {_formModel.General.Title}");
             hasChanges = true;
         }
 
-        if (_originalTitle != Movie.OriginalTitle)
+        if (_formModel.General.OriginalTitle != Movie.OriginalTitle)
         {
-            request.NewOriginalTitle = _originalTitle;
-            changes.Add($"OriginalTitle: {_originalTitle}");
+            request.NewOriginalTitle = _formModel.General.OriginalTitle;
+            changes.Add($"OriginalTitle: {_formModel.General.OriginalTitle}");
             hasChanges = true;
         }
 
-        if (_startYear != Movie.StartYear)
+        if (_formModel.General.StartYear != Movie.StartYear)
         {
-            request.NewStartYear = _startYear;
-            changes.Add($"StartYear: {_startYear}");
+            request.NewStartYear = _formModel.General.StartYear;
+            changes.Add($"StartYear: {_formModel.General.StartYear}");
             hasChanges = true;
         }
 
-        if (_endYear != Movie.EndYear)
+        if (_formModel.General.EndYear != Movie.EndYear)
         {
-            request.NewEndYear = _endYear;
-            changes.Add($"EndYear: {_endYear}");
+            request.NewEndYear = _formModel.General.EndYear;
+            changes.Add($"EndYear: {_formModel.General.EndYear}");
             hasChanges = true;
         }
 
-        if (_runtimeMinutes != Movie.RuntimeMinutes)
+        if (_formModel.General.RuntimeMinutes != Movie.RuntimeMinutes)
         {
-            request.NewRuntimeMinutes = _runtimeMinutes;
-            changes.Add($"RuntimeMinutes: {_runtimeMinutes}");
+            request.NewRuntimeMinutes = _formModel.General.RuntimeMinutes;
+            changes.Add($"RuntimeMinutes: {_formModel.General.RuntimeMinutes}");
             hasChanges = true;
         }
 
-        if (_titleType != Movie.TitleType)
+        if (_formModel.General.TitleType != Movie.TitleType)
         {
-            request.NewTitleType = _titleType;
-            changes.Add($"TitleType: {_titleType}");
+            request.NewTitleType = _formModel.General.TitleType;
+            changes.Add($"TitleType: {_formModel.General.TitleType}");
             hasChanges = true;
         }
 
-        if (_overview != Movie.Overview)
+        if (_formModel.General.Overview != Movie.Overview)
         {
-            request.NewOverview = _overview;
-            changes.Add($"Overview: {_overview}");
+            request.NewOverview = _formModel.General.Overview;
+            changes.Add($"Overview: {_formModel.General.Overview}");
             hasChanges = true;
         }
 
-        var selectedGenreIds = _selectedGenres.Select(g => g.Id).OrderBy(id => id).ToList();
+        var selectedGenreIds = _formModel.General.Genres.Select(g => g.Id).OrderBy(id => id).ToList();
         var originalGenreIds = _originalGenres.Select(g => g.Id).OrderBy(id => id).ToList();
 
         if (!selectedGenreIds.SequenceEqual(originalGenreIds))
         {
-            request.NewGenres = _selectedGenres.ToList();
+            request.NewGenres = _formModel.General.Genres.ToList();
             changes.Add("Genres updated");
             hasChanges = true;
         }
 
-        var newCrewList = _crew.Select(c => new MovieUpdateRequestCrew
+        var newCrewList = _formModel.Crew.Crew.Select(c => new MovieUpdateRequestCrew
         {
             FirstName = c.FirstName,
             LastName = c.LastName,
@@ -412,16 +477,23 @@
         var originalCrew = await MovieSvc.GetMovieCrewByMovieIdAsync(Movie.Id);
 
         bool crewChanged = false;
-        if (_crew.Count != originalCrew.Count)
+        if (_formModel.Crew.Crew.Count != originalCrew.Count)
         {
             crewChanged = true;
         }
         else
         {
-            for (int i = 0; i < _crew.Count; i++)
+            for (int i = 0; i < _formModel.Crew.Crew.Count; i++)
             {
-                var c1 = _crew[i];
-                var match = originalCrew.FirstOrDefault(oc => oc.Id == c1.Id && oc.FirstName == c1.FirstName && oc.LastName == c1.LastName && oc.BirthYear == c1.BirthYear && oc.DeathYear == c1.DeathYear && oc.Job == c1.Job && oc.CharacterName == c1.CharacterName);
+                var c1 = _formModel.Crew.Crew[i];
+                var match = originalCrew.FirstOrDefault(oc => 
+                    oc.Id == c1.Id && 
+                    oc.FirstName == c1.FirstName && 
+                    oc.LastName == c1.LastName && 
+                    oc.BirthYear == c1.BirthYear && 
+                    oc.DeathYear == c1.DeathYear && 
+                    oc.Job == c1.Job && 
+                    (oc.CharacterName ?? "") == c1.CharacterName);
                 if (match == null)
                 {
                     crewChanged = true;
@@ -462,7 +534,7 @@
             return;
         }
 
-        request.Description = _description;
+        request.Description = _formModel.General.Description;
 
         if (userId != null)
         {
@@ -477,9 +549,9 @@
     {
         if (genre == null) return;
 
-        if (_selectedGenres.All(g => g.Id != genre.Id))
+        if (_formModel.General.Genres.All(g => g.Id != genre.Id))
         {
-            _selectedGenres.Add(genre);
+            _formModel.General.Genres.Add(genre);
         }
 
         _selectedGenreToAdd = null;
@@ -488,12 +560,12 @@
 
     private void RemoveGenre(Genre genre)
     {
-        _selectedGenres.Remove(genre);
+        _formModel.General.Genres.Remove(genre);
     }
 
     private Task<IEnumerable<Genre>> SearchGenre(string genre, CancellationToken token)
     {
-        var availableGenres = _allGenres.Where(z => _selectedGenres.All(y => y.Id != z.Id));
+        var availableGenres = _allGenres.Where(z => _formModel.General.Genres.All(y => y.Id != z.Id));
 
         if (string.IsNullOrEmpty(genre))
         {
@@ -519,7 +591,7 @@
     {
         if (crew == null) return;
 
-        var newItem = new GetMovieCrewMemberWithDetails
+        var newItem = new CrewMemberModel
         {
             Id = crew.Id,
             FirstName = crew.FirstName,
@@ -530,7 +602,7 @@
             CharacterName = crew.CharacterName ?? ""
         };
 
-        _crew.Add(newItem);
+        _formModel.Crew.Crew.Add(newItem);
 
         _selectedCrewToAdd = null;
         BackupItem(newItem);
@@ -574,12 +646,12 @@
 
     private void OnAddCrewMember()
     {
-        _crew.Add(new GetMovieCrewMemberWithDetails());
+        _formModel.Crew.Crew.Add(new CrewMemberModel());
     }
 
-    private void OnRemoveCrew(GetMovieCrewMemberWithDetails crew)
+    private void OnRemoveCrew(CrewMemberModel crew)
     {
-        _crew.Remove(crew);
+        _formModel.Crew.Crew.Remove(crew);
         StateHasChanged();
     }
 
@@ -591,32 +663,120 @@
 
     private void ItemHasBeenCommitted(object element)
     {
-        AddEditionEvent($"RowEditCommit event: Changes to Element {((GetMovieCrewMemberWithDetails)element).FirstName + " " + ((GetMovieCrewMemberWithDetails)element).LastName} committed");
+        AddEditionEvent($"RowEditCommit event: Changes to Element {((CrewMemberModel)element).FirstName + " " + ((CrewMemberModel)element).LastName} committed");
     }
 
     private void BackupItem(object element)
     {
         _selectedCrewBeforeEdit = new()
         {
-            FirstName = ((GetMovieCrewMemberWithDetails)element).FirstName,
-            LastName = ((GetMovieCrewMemberWithDetails)element).LastName,
-            BirthYear = ((GetMovieCrewMemberWithDetails)element).BirthYear,
-            DeathYear = ((GetMovieCrewMemberWithDetails)element).DeathYear,
-            Job = ((GetMovieCrewMemberWithDetails)element).Job,
-            CharacterName = ((GetMovieCrewMemberWithDetails)element).CharacterName
+            FirstName = ((CrewMemberModel)element).FirstName,
+            LastName = ((CrewMemberModel)element).LastName,
+            BirthYear = ((CrewMemberModel)element).BirthYear,
+            DeathYear = ((CrewMemberModel)element).DeathYear,
+            Job = ((CrewMemberModel)element).Job,
+            CharacterName = ((CrewMemberModel)element).CharacterName
         };
-        AddEditionEvent($"RowEditPreview event: made a backup of Element {((GetMovieCrewMemberWithDetails)element).FirstName + " " + ((GetMovieCrewMemberWithDetails)element).LastName}");
+        AddEditionEvent($"RowEditPreview event: made a backup of Element {((CrewMemberModel)element).FirstName + " " + ((CrewMemberModel)element).LastName}");
     }
 
     private void ResetItemToOriginalValues(object element)
     {
-        ((GetMovieCrewMemberWithDetails)element).FirstName = _selectedCrewBeforeEdit.FirstName;
-        ((GetMovieCrewMemberWithDetails)element).LastName = _selectedCrewBeforeEdit.LastName;
-        ((GetMovieCrewMemberWithDetails)element).BirthYear = _selectedCrewBeforeEdit.BirthYear;
-        ((GetMovieCrewMemberWithDetails)element).DeathYear = _selectedCrewBeforeEdit.DeathYear;
-        ((GetMovieCrewMemberWithDetails)element).Job = _selectedCrewBeforeEdit.Job;
-        ((GetMovieCrewMemberWithDetails)element).CharacterName = _selectedCrewBeforeEdit.CharacterName;
-        AddEditionEvent($"RowEditCancel event: Editing of Element {((GetMovieCrewMemberWithDetails)element).FirstName + " " + ((GetMovieCrewMemberWithDetails)element).LastName} canceled");
+        ((CrewMemberModel)element).FirstName = _selectedCrewBeforeEdit.FirstName;
+        ((CrewMemberModel)element).LastName = _selectedCrewBeforeEdit.LastName;
+        ((CrewMemberModel)element).BirthYear = _selectedCrewBeforeEdit.BirthYear;
+        ((CrewMemberModel)element).DeathYear = _selectedCrewBeforeEdit.DeathYear;
+        ((CrewMemberModel)element).Job = _selectedCrewBeforeEdit.Job;
+        ((CrewMemberModel)element).CharacterName = _selectedCrewBeforeEdit.CharacterName;
+        AddEditionEvent($"RowEditCancel event: Editing of Element {((CrewMemberModel)element).FirstName + " " + ((CrewMemberModel)element).LastName} canceled");
     }
 
+    private EditForm _form = null!;
+    
+    public class MovieRequestFormModel
+    {
+        public GeneralMovieInfoModel General { get; set; } = new();
+        public CrewInfoModel Crew { get; set; } = new();
+    }
+
+    public class GeneralMovieInfoModel
+    {
+        [Required(ErrorMessage = "Title is required")]
+        [StringLength(1000, ErrorMessage = "Title cannot exceed 1000 characters")]
+        public string Title { get; set; } = "";
+
+        [StringLength(1000, ErrorMessage = "Original Title cannot exceed 1000 characters")]
+        public string OriginalTitle { get; set; } = "";
+
+        [Range(1880, 2100, ErrorMessage = "Start Year must be between 1880 and 2100")]
+        [StartYearSmallerThanEndYearAttribute]
+        public int? StartYear { get; set; }
+
+        [Range(1880, 2100, ErrorMessage = "End Year must be between 1880 and 2100")]
+        [StartYearSmallerThanEndYearAttribute]
+        public int? EndYear { get; set; }
+
+        [Required(ErrorMessage = "Runtime is required")]
+        [Range(1, 10000, ErrorMessage = "Runtime must be between 1 and 10000 minutes")]
+        public int? RuntimeMinutes { get; set; }
+
+        [StringLength(50, ErrorMessage = "Type cannot exceed 50 characters")]
+        public string TitleType { get; set; } = "";
+
+        [Required(ErrorMessage = "Overview is required")]
+        [StringLength(5000, ErrorMessage = "Overview cannot exceed 5000 characters")]
+        public string Overview { get; set; } = "";
+
+        [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
+        public string Description { get; set; } = "";
+
+        public HashSet<Genre> Genres { get; set; } = new();
+    }
+
+    public class CrewInfoModel
+    {
+        public List<CrewMemberModel> Crew { get; set; } = new();
+    }
+
+    public class CrewMemberModel
+    {
+        public int Id { get; set; }
+        [Required(ErrorMessage = "First Name is required")]
+        public string FirstName { get; set; } = "";
+        [Required(ErrorMessage = "Last Name is required")]
+        public string LastName { get; set; } = "";
+        [BirthYearSmallerThanDeathYearAttribute]
+        public int? BirthYear { get; set; }
+        [BirthYearSmallerThanDeathYearAttribute]
+        public int? DeathYear { get; set; }
+        [Required(ErrorMessage = "Job is required")]
+        public string Job { get; set; } = "";
+        public string CharacterName { get; set; } = "";
+    }
+
+    public class StartYearSmallerThanEndYearAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        {
+            var model = (GeneralMovieInfoModel)validationContext.ObjectInstance;
+            if (model.StartYear.HasValue && model.EndYear.HasValue && model.EndYear < model.StartYear)
+            {
+                return new ValidationResult("End year must be equal or bigger than start year");
+            }
+            return ValidationResult.Success;
+        }
+    }
+    
+    public class BirthYearSmallerThanDeathYearAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        {
+            var model = (CrewMemberModel)validationContext.ObjectInstance;
+            if (model.BirthYear.HasValue && model.DeathYear.HasValue && model.DeathYear < model.BirthYear)
+            {
+                return new ValidationResult("Death year must be bigger than Birth year");
+            }
+            return ValidationResult.Success;
+        }
+    }
 }

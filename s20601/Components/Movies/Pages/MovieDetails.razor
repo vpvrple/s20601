@@ -13,7 +13,6 @@
 }
 else
 {
-
     <MudGrid>
         <MudItem xs="4">
             <MudPaper Elevation="0">
@@ -99,7 +98,6 @@ else
 @code
 {
     [Parameter] public required int MovieId { get; set; }
-    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
     private Movie _movie = null!;
     private List<Genre> _movieGenres = null!;

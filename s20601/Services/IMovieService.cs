@@ -1,7 +1,6 @@
 ﻿using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
 using s20601.Services.External.Azure;
-using System.Linq.Expressions;
 
 namespace s20601.Services;
 
@@ -19,7 +18,7 @@ public interface IMovieService
     Task AddMovieUpdateRequest(MovieUpdateRequest request);
     Task<MovieUpdateRequest?> GetMovieUpdateRequest(int id);
     Task<List<GetMovieCrewMemberWithDetails>> SearchCrewAsync(string query, int? movieId = null);
-    Task<List<MovieUpdateRequest>> GetMovieUpdateRequests(Expression<Func<MovieUpdateRequest, bool>>? predicate = null);
+    Task<List<MovieUpdateRequest>> GetMovieUpdateRequests(MovieUpdateRequestStatus? status = null);
     
     Task ApproveMovieUpdateRequest(int requestId);
     Task RejectMovieUpdateRequest(int requestId);
@@ -31,4 +30,8 @@ public interface IMovieService
     Task<string?> UploadMoviePoster(int movieId, Stream fileStream, string fileName);
 
     Task<SentimentType> GetMovieSentimentByMovieId(int Id);
+    Task<GetPersonaWithDetails?> GetPersonaWithDetails(int id);
+
+    Task<string?> GetPersonaImageById(int id);
+    Task<string?> GetPersonaBiographyById(int id);
 }
