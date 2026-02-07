@@ -28,10 +28,11 @@ builder.Services
     .AddInteractiveServerComponents();
 
 builder.Services
-    .AddMediatR(cfg => {
-    // Scan project to find Handlers
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-});
+    .AddMediatR(cfg =>
+    {
+        // Scan project to find Handlers
+        cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    });
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -76,10 +77,10 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("PointsAtLeast1", policy =>
         policy.Requirements.Add(new MinimumPointsRequirement(1)));
-    
+
     options.AddPolicy("PointsAtLeast21", policy =>
         policy.Requirements.Add(new MinimumPointsRequirement(21)));
-    
+
     options.AddPolicy("CanPostReview", policy =>
     {
         policy.Requirements.Add(new MinimumPointsRequirement(1));
@@ -163,7 +164,7 @@ builder.Services.AddSignalR();
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        [ "application/octet-stream" ]);
+        ["application/octet-stream"]);
 });
 
 builder.Services

@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using s20601.Data;
@@ -8,6 +7,7 @@ using s20601.Events.Commands;
 using s20601.Events.Commands.UserAvatars;
 using s20601.Events.Queries;
 using s20601.Services.External.Azure;
+using System.Security.Claims;
 
 namespace s20601.Services
 {
@@ -47,7 +47,7 @@ namespace s20601.Services
             var user = await context.Users
                 .Where(x => userId == x.Id)
                 .FirstOrDefaultAsync();
-            
+
             if (user.Avatar == null)
             {
                 return null;
@@ -62,18 +62,18 @@ namespace s20601.Services
             var user = auth.User;
 
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            
+
             var userFromDb = await context.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();
 
             if (userFromDb == null)
             {
                 return null;
             }
-            
+
             userFromDb.ProfileDescription = profileDescription;
 
             await context.SaveChangesAsync();
-            
+
             return userFromDb.ProfileDescription;
         }
 
@@ -86,12 +86,12 @@ namespace s20601.Services
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
             var userFromDb = await context.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();
-            
+
             if (userFromDb == null)
             {
                 return null;
             }
-            
+
             if (userFromDb.Avatar != null)
             {
                 await _mediator.Send(new UserAvatarUpdatedCommand(AzureBlobType.UserAvatars, userFromDb.Avatar));

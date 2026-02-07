@@ -25,6 +25,6 @@ public class ReviewUnratedEventHandler
         {
             await _rankingService.IncrementPoints(command.userId, command.points);
         }
-        
+
     }
 }

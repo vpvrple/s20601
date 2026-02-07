@@ -24,7 +24,7 @@ namespace s20601.Migrations
             // Message
             migrationBuilder.DropPrimaryKey(name: "Message_pk", table: "Message");
             migrationBuilder.DropColumn(name: "Id", table: "Message");
-            
+
             // SocialActivityLog
             migrationBuilder.DropPrimaryKey(name: "SocialActivityLog_pk", table: "SocialActivityLog");
             migrationBuilder.DropColumn(name: "Id", table: "SocialActivityLog");
@@ -68,7 +68,7 @@ namespace s20601.Migrations
             // 3. Add Columns with Identity
             migrationBuilder.AddColumn<int>(name: "Id", table: "Message", type: "int", nullable: false)
                 .Annotation("SqlServer:Identity", "1, 1");
-            
+
             migrationBuilder.AddColumn<int>(name: "Id", table: "SocialActivityLog", type: "int", nullable: false)
                 .Annotation("SqlServer:Identity", "1, 1");
 
@@ -174,7 +174,7 @@ namespace s20601.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             // Reverse of Up
-            
+
             // 1. Drop Foreign Keys
             migrationBuilder.DropForeignKey(name: "ActivityLog_ActivityType", table: "SocialActivityLog");
             migrationBuilder.DropForeignKey(name: "MovieCrew_Crew", table: "MovieCrew");
@@ -188,7 +188,7 @@ namespace s20601.Migrations
             // 2. Drop Primary Keys and Columns
             migrationBuilder.DropPrimaryKey(name: "Message_pk", table: "Message");
             migrationBuilder.DropColumn(name: "Id", table: "Message");
-            
+
             migrationBuilder.DropPrimaryKey(name: "SocialActivityLog_pk", table: "SocialActivityLog");
             migrationBuilder.DropColumn(name: "Id", table: "SocialActivityLog");
 

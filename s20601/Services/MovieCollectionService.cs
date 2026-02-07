@@ -2,7 +2,6 @@
 using s20601.Data;
 using s20601.Data.Models;
 using s20601.Data.Models.DTOs;
-using System.Linq.Expressions;
 
 namespace s20601.Services;
 
@@ -21,7 +20,7 @@ public class MovieCollectionService : IMovieCollectionService
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var authenticatedUserId = await _currentUserService.GetAuthenticatedUserId();
-        
+
         var collections = await context.MovieCollections
             .Where(mc => mc.MovieCollectionUsers.Any(mu => mu.IdUser == authenticatedUserId))
             .Include(mc => mc.MovieCollectionUsers)
@@ -51,15 +50,15 @@ public class MovieCollectionService : IMovieCollectionService
         var collectionsFromDb = await query.ToListAsync();
 
         var collections = collectionsFromDb.Select(mc => new GetMovieCollectionWithDetails
-            {
-                Id = mc.Id,
-                Name = mc.Name,
-                Description = mc.Description,
-                CreatedAt = mc.CreatedAt,
-                Type = mc.Type,
-                Visibility = mc.Visibility,
-                Members = mc.MovieCollectionUsers.ToDictionary(mcu => mcu.IdUserNavigation, mcu => mcu.Role)
-            })
+        {
+            Id = mc.Id,
+            Name = mc.Name,
+            Description = mc.Description,
+            CreatedAt = mc.CreatedAt,
+            Type = mc.Type,
+            Visibility = mc.Visibility,
+            Members = mc.MovieCollectionUsers.ToDictionary(mcu => mcu.IdUserNavigation, mcu => mcu.Role)
+        })
             .ToList();
 
         return collections;
@@ -77,7 +76,7 @@ public class MovieCollectionService : IMovieCollectionService
 
         return collections;
     }
-    
+
 
     public async Task<GetMovieCollectionWithDetails> CreateMovieCollection(string name, string? description, string userId, CollectionVisibility visibility)
     {
@@ -96,7 +95,7 @@ public class MovieCollectionService : IMovieCollectionService
         };
         context.MovieCollections.Add(newMovieCollection);
         await context.SaveChangesAsync();
-        
+
         var user = await context.Users.FindAsync(userId);
 
         return new GetMovieCollectionWithDetails
@@ -124,7 +123,7 @@ public class MovieCollectionService : IMovieCollectionService
         {
             throw new InvalidOperationException("You cannot delete system collections.");
         }
-        
+
         if (collection != null)
         {
             context.MovieCollections.Remove(collection);
@@ -168,12 +167,12 @@ public class MovieCollectionService : IMovieCollectionService
                 Title = mcm.Movie.Title,
                 StartYear = mcm.Movie.StartYear,
                 Runtime = mcm.Movie.RuntimeMinutes,
-                MovieRatingSummary = mcm.Movie.MovieRates.Any() 
+                MovieRatingSummary = mcm.Movie.MovieRates.Any()
                 ? new MovieRatingSummary
                 {
                     AvgRating = mcm.Movie.MovieRates.Average(mr => mr.Rating),
                     RateCount = mcm.Movie.MovieRates.Count()
-                } 
+                }
                 : new MovieRatingSummary { AvgRating = 0, RateCount = 0 }
             })
             .ToListAsync();
@@ -216,24 +215,24 @@ public class MovieCollectionService : IMovieCollectionService
         context.MovieCollectionMovies.Add(collectionMovie);
         await context.SaveChangesAsync();
     }
-    
+
     public async Task RemoveMovieFromMyRatingsCollection(int movieId, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
- 
+
         var myRatingsCollection = await context.MovieCollections
             .FirstOrDefaultAsync(mc => mc.Type == CollectionType.MyRatings && mc.MovieCollectionUsers.Any(mcu => mcu.IdUser == userId));
- 
+
         var movieToRemove = await context.MovieCollectionMovies
             .FirstOrDefaultAsync(mcm => mcm.IdMovieCollection == myRatingsCollection.Id && mcm.Movie_Id == movieId);
- 
+
         if (movieToRemove != null)
         {
             context.MovieCollectionMovies.Remove(movieToRemove);
             await context.SaveChangesAsync();
         }
     }
-    
+
     public async Task AddMovieToMyRatingsCollection(int movieId, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -294,13 +293,13 @@ public class MovieCollectionService : IMovieCollectionService
 
         var existingUserIds = collectionUsers.Select(u => u.IdUser).ToHashSet();
         var incomingUserIds = membersRoles.Keys.Select(u => u.Id).ToHashSet();
-        
+
         var usersToRemove = collectionUsers.Where(cu => !incomingUserIds.Contains(cu.IdUser)).ToList();
         if (usersToRemove.Any())
         {
             context.MovieCollectionUsers.RemoveRange(usersToRemove);
         }
-        
+
         var usersToAddIds = incomingUserIds.Where(id => !existingUserIds.Contains(id)).ToList();
         if (usersToAddIds.Any())
         {
@@ -314,7 +313,7 @@ public class MovieCollectionService : IMovieCollectionService
                 });
             await context.MovieCollectionUsers.AddRangeAsync(usersToAdd);
         }
-        
+
         var usersToUpdate = collectionUsers.Where(cu => incomingUserIds.Contains(cu.IdUser)).ToList();
         foreach (var user in usersToUpdate)
         {
@@ -351,7 +350,7 @@ public class MovieCollectionService : IMovieCollectionService
 
         return collections;
     }
-    
+
     public async Task LeaveCollectionAsync(int collectionId, string userId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -381,7 +380,7 @@ public class MovieCollectionService : IMovieCollectionService
         foreach (var mc in movieCollections)
         {
             var movieCount = await context.MovieCollectionMovies.CountAsync(mcm => mcm.IdMovieCollection == mc.Id);
-            
+
             result.Add(new GetMovieCollectionWithDetails
             {
                 Id = mc.Id,

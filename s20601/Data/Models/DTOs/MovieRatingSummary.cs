@@ -1,6 +1,4 @@
-﻿using s20601.Services.External.Azure;
-
-namespace s20601.Data.Models.DTOs;
+﻿namespace s20601.Data.Models.DTOs;
 
 public class MovieRatingSummary
 {

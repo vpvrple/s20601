@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using s20601.Data.Models;
 using s20601.Events.Commands;
 using s20601.Services;
 

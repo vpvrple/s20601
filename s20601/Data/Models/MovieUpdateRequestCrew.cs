@@ -11,6 +11,6 @@ public class MovieUpdateRequestCrew
     public string? Job { get; set; } = null!;
     public string? CharacterName { get; set; }
     public int? CrewId { get; set; }
-    
+
     public virtual MovieUpdateRequest MovieUpdateRequest { get; set; } = null!;
 }

@@ -19,7 +19,7 @@ public interface IMovieService
     Task<MovieUpdateRequest?> GetMovieUpdateRequest(int id);
     Task<List<GetMovieCrewMemberWithDetails>> SearchCrewAsync(string query, int? movieId = null);
     Task<List<MovieUpdateRequest>> GetMovieUpdateRequests(MovieUpdateRequestStatus? status = null);
-    
+
     Task ApproveMovieUpdateRequest(int requestId);
     Task RejectMovieUpdateRequest(int requestId);
 

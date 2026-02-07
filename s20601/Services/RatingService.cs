@@ -1,8 +1,8 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using s20601.Data;
-using s20601.Data.Models.DTOs;
 using s20601.Data.Models;
+using s20601.Data.Models.DTOs;
 using s20601.Events.Commands;
 
 
@@ -28,9 +28,9 @@ public class RatingService : IRatingService
         {
             return null;
         }
-        
+
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        
+
         var ratings = await context.MovieRates
             .Where(x => x.IdUser == targetUserId)
             .ToListAsync();
@@ -93,7 +93,7 @@ public class RatingService : IRatingService
         {
             return;
         }
-        
+
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var currentRating = await context.MovieRates
@@ -160,7 +160,7 @@ public class RatingService : IRatingService
         {
             return null;
         }
-        
+
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
         return await context.MovieRates.FirstOrDefaultAsync(x => x.IdUser == authenticatedUserId && x.Movie_Id == movieId);

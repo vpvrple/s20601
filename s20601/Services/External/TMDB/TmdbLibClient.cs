@@ -13,8 +13,8 @@ public class TmdbLibClient : ITmdbLibClient
         _apiKey = config["Tmdb:ApiKey"];
     }
 
-    
-    
+
+
     public async Task<string?> GetPosterUrlByImdbIdAsync(string imdbId)
     {
         var response = await _httpClient.GetFromJsonAsync<TmdbResponse>(
@@ -34,7 +34,7 @@ public class TmdbLibClient : ITmdbLibClient
 
         return string.IsNullOrEmpty(movie?.Overview) ? null : movie.Overview;
     }
-    
+
     public async Task<string?> GetPersonaImageUrlByImdbIdAsync(string imdbId)
     {
         var response = await _httpClient.GetFromJsonAsync<TmdbResponse>(

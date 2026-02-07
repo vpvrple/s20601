@@ -31,7 +31,7 @@ namespace s20601.Migrations
             migrationBuilder.DropPrimaryKey(
                 name: "MovieCollection_pk",
                 table: "MovieCollection");
-                        
+
             migrationBuilder.DropColumn(
                 name: "Id",
                 table: "MovieCollection")

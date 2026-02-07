@@ -1,6 +1,7 @@
 ﻿using s20601.Data.Models;
 
 namespace s20601.Services;
+
 public interface IUserService
 {
     Task<ApplicationUser?> GetUserById(string id);

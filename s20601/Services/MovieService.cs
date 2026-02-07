@@ -95,7 +95,7 @@ public class MovieService : IMovieService
         {
             return null;
         }
-        
+
         return await _mediator.Send(new GetAzureMovieImageQuery(AzureBlobType.MovieImages, posterPath));
     }
 
@@ -347,7 +347,7 @@ public class MovieService : IMovieService
                         });
                     }
                 }
-                
+
                 if (request.NewPosterPath != null)
                 {
                     if (!string.IsNullOrEmpty(movie.PosterPath))
@@ -356,7 +356,7 @@ public class MovieService : IMovieService
                     }
                     movie.PosterPath = request.NewPosterPath;
                 }
-                
+
                 if (request.NewCrew.Count != 0)
                 {
                     context.MovieCrews.RemoveRange(movie.MovieCrews);
@@ -381,7 +381,7 @@ public class MovieService : IMovieService
                                 BirthYear = crewRequest.BirthYear ?? 0,
                                 DeathYear = crewRequest.DeathYear
                             };
-                            
+
                             context.MovieCrews.Add(new MovieCrew
                             {
                                 Movie_Id = movie.Id,
@@ -417,7 +417,7 @@ public class MovieService : IMovieService
                     Genre_Id = genre.Id
                 });
             }
-            
+
             foreach (var crewRequest in request.NewCrew)
             {
                 if (crewRequest.CrewId.HasValue)
@@ -471,7 +471,7 @@ public class MovieService : IMovieService
     public async Task<GetPersonaWithDetails?> GetPersonaWithDetails(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        
+
         var crew = await context.Crews
             .Where(c => c.Id == id)
             .Include(c => c.MovieCrews)
@@ -502,8 +502,8 @@ public class MovieService : IMovieService
             }).ToList()
         };
     }
-    
-    
+
+
     public async Task<string?> GetPersonaImageById(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -516,19 +516,19 @@ public class MovieService : IMovieService
         {
             return null;
         }
-        
+
         return await _mediator.Send(new GetTMDBPersonaImageQuery(persona));
     }
-    
+
     public async Task<string?> GetPersonaBiographyById(int id)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var person = await context.Crews
             .Where(x => x.Id == id)
             .FirstOrDefaultAsync();
-    
+
         var image = await _mediator.Send(new GetTMDBPersonaBiographyQuery(person.IMDBId));
-    
+
         return image;
     }
 }

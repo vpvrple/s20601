@@ -1,5 +1,5 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using System.Security.Claims;
 
 namespace s20601.Services
 {
@@ -10,7 +10,7 @@ namespace s20601.Services
         {
             _authenticationStateProvider = authenticationStateProvider;
         }
-        
+
         public async Task<string?> GetAuthenticatedUserId()
         {
             var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
@@ -18,7 +18,7 @@ namespace s20601.Services
 
             return user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
         }
-        
+
         public async Task<ClaimsPrincipal?> GetAuthenticatedUser()
         {
             var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();

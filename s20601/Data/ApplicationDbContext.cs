@@ -59,11 +59,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(e => e.IdRecipient, "IX_Message_IdRecipient");
 
             entity.HasIndex(e => e.IdSender, "IX_Message_IdSender");
-            
+
             entity.Property(e => e.Content)
                 .HasMaxLength(2500)
                 .IsUnicode(false);
-            
+
             entity.HasOne(d => d.IdRecipientNavigation).WithMany(p => p.MessageIdRecipientNavigations)
                 .HasForeignKey(d => d.IdRecipient)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -280,12 +280,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                         j.HasIndex(new[] { "GenreId" }, "IX_MovieUpdateRequestGenre_GenreId");
                     });
         });
-        
+
         modelBuilder.Entity<MovieUpdateRequestCrew>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("MovieUpdateRequestCrew_pk");
             entity.ToTable("MovieUpdateRequestCrew");
-            
+
             entity.Property(e => e.FirstName).HasMaxLength(100).IsUnicode(false);
             entity.Property(e => e.LastName).HasMaxLength(100).IsUnicode(false);
             entity.Property(e => e.Job).HasMaxLength(100).IsUnicode(false);
@@ -297,7 +297,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("MovieUpdateRequestCrew_MovieUpdateRequest");
         });
-        
+
 
         modelBuilder.Entity<Review>(entity =>
         {

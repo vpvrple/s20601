@@ -3,7 +3,7 @@ using s20601.Services;
 
 namespace s20601.Events.Commands;
 
-public class ReviewLikedEventHandler 
+public class ReviewLikedEventHandler
     : INotificationHandler<ReviewLikedCommand>
 
 {

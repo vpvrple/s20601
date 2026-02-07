@@ -3,7 +3,7 @@ using s20601.Services;
 
 namespace s20601.Events.Commands;
 
-public class MovieRatingsEventsHandler 
+public class MovieRatingsEventsHandler
     : INotificationHandler<MovieRatedCommand>,
         INotificationHandler<MovieUnratedCommand>
 
@@ -19,7 +19,7 @@ public class MovieRatingsEventsHandler
     {
         await _movieCollectionService.AddMovieToMyRatingsCollection(command.movieId, command.userId);
     }
-    
+
     public async Task Handle(MovieUnratedCommand command, CancellationToken cancellationToken)
     {
         await _movieCollectionService.RemoveMovieFromMyRatingsCollection(command.movieId, command.userId);

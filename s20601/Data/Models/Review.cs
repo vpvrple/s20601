@@ -1,4 +1,5 @@
 ﻿namespace s20601.Data.Models;
+
 public partial class Review
 {
     public int Id { get; set; }

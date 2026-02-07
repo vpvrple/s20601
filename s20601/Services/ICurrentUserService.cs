@@ -1,6 +1,7 @@
-﻿﻿using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace s20601.Services;
+
 public interface ICurrentUserService
 {
     Task<string?> GetAuthenticatedUserId();

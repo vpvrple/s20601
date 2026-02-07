@@ -1,7 +1,7 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using s20601.Data;
+using System.Security.Claims;
 
 namespace s20601.Components.Account.Policies;
 
