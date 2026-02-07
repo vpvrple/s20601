@@ -33,22 +33,22 @@ Projekt zawiera:
 
 - Paczki NuGet, które powinny być zainstalowane do uruchomienia projektu:
 
-Id                                                   Versions  ProjectName
---                                                   --------  -----------
-CurrieTechnologies.Razor.Clipboard                   {1.6.0}   s20601     
-Azure.AI.TextAnalytics                               {5.3.0}   s20601     
-Microsoft.EntityFrameworkCore.SqlServer              {9.0.10}  s20601     
-Extensions.MudBlazor.StaticInput                     {3.2.1}   s20601     
-Microsoft.Extensions.Azure                           {1.13.1}  s20601     
-MudBlazor                                            {8.9.0}   s20601     
-Microsoft.AspNetCore.Identity.EntityFrameworkCore    {9.0.10}  s20601     
-Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore {9.0.10}  s20601     
-Microsoft.AspNetCore.SignalR.Client                  {9.0.11}  s20601     
-Azure.Storage.Blobs                                  {12.27.0} s20601     
-MediatR                                              {14.0.0}  s20601     
-Microsoft.Extensions.Configuration.UserSecrets       {9.0.11}  ETL        
-Microsoft.EntityFrameworkCore                        {9.0.11}  ETL        
-CsvHelper                                            {33.1.0}  ETL        
+| Id                                                   | Versions  | ProjectName |
+|------------------------------------------------------|-----------|-------------|
+| CsvHelper                                            | {33.1.0}  | ETL         |
+| Microsoft.EntityFrameworkCore                        | {9.0.11}  | ETL         |
+| Microsoft.Extensions.Configuration.UserSecrets       | {9.0.11}  | ETL         |
+| Azure.AI.TextAnalytics                               | {5.3.0}   | s20601      |
+| Azure.Storage.Blobs                                  | {12.27.0} | s20601      |
+| CurrieTechnologies.Razor.Clipboard                   | {1.6.0}   | s20601      |
+| Extensions.MudBlazor.StaticInput                     | {3.2.1}   | s20601      |
+| MediatR                                              | {14.0.0}  | s20601      |
+| Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore | {9.0.10}  | s20601      |
+| Microsoft.AspNetCore.Identity.EntityFrameworkCore    | {9.0.10}  | s20601      |
+| Microsoft.AspNetCore.SignalR.Client                  | {9.0.11}  | s20601      |
+| Microsoft.EntityFrameworkCore.SqlServer              | {9.0.10}  | s20601      |
+| Microsoft.Extensions.Azure                           | {1.13.1}  | s20601      |
+| MudBlazor                                            | {8.9.0}   | s20601      |       
 
 2. Sklonuj repozytorium
 ```bash
