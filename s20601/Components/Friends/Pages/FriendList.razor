@@ -101,7 +101,7 @@
 
                             <MudPaper Elevation="0" Class="pa-2">
                                 <MudStack Row="true" AlignItems="AlignItems.Center">
-                                    <MudTextField @bind-Value="_inputMessage" Variant="Variant.Outlined" Placeholder="Message..." Margin="Margin.Dense" FullWidth="true" Immediate="true" OnKeyDown="@HandleEnter" />
+                                    <MudTextField @ref="_messageInput" TextUpdateSuppression="true" @bind-Value="_inputMessage" Variant="Variant.Outlined" Placeholder="Message..." Margin="Margin.Dense" FullWidth="true" Immediate="true" OnKeyUp="@HandleEnter" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Send" Color="Color.Primary" OnClick="@SendClick" />
                                 </MudStack>
                             </MudPaper>
@@ -150,6 +150,7 @@
     private List<ApplicationUser> _friends = [];
     private List<ChatMessage>? _conversation = [];
     private string? _inputMessage;
+    private MudTextField<string> _messageInput;
     private string? _friendId;
     private string? _loadedFriendUsername;
     private string? _selectedRequestMessage;
@@ -263,6 +264,7 @@
         if (!string.IsNullOrWhiteSpace(messageToSend) && !string.IsNullOrWhiteSpace(_friendId))
         {
             _inputMessage = string.Empty;
+            await _messageInput.SetText("");
 
             var msg = await ChatSvc.SaveMessage(_friendId, messageToSend);
 
