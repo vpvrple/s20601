@@ -56,8 +56,13 @@ git clone https://github.com/vpvrple/s20601.git
 ```
 
 3. Uruchom skrypt s20601-praca-dyplomowa_create.sql na instancji SQL w celu stworzenia wymaganych tabel baz danych.
+3.1. Uprawnenia administratora w aplikacji
+   Aby nadać uprawnienia administratora w aplikacji należy:
+   1. Zarejestrować konto przez formularz w aplikacji
+   2. Uruchomić polecenie SQL na bazie z poprawnym ID użytkownika 
+   `INSERT INTO [dbo].[AspNetUserRoles] VALUES ('user_id' 1);`
 
-4. Otwórz plik solution (`s20601.sln`) przy użyciu Visual Studio lub Jetbrains Rider
+5. Otwórz plik solution (`s20601.sln`) przy użyciu Visual Studio lub Jetbrains Rider
 
 4. Inicjalne załadowanie danych do bazy (opcjonalnie)
 - Pobierz [datasety IMDb](https://developer.imdb.com/non-commercial-datasets/) i umieść rozpakowane foldery w lokalizacji `s20601\ETL\bin\Debug\net9.0`
