@@ -55,12 +55,13 @@ Projekt zawiera:
 git clone https://github.com/vpvrple/s20601.git
 ```
 
-3. Otwórz plik solution (`s20601.sln`) przy użyciu Visual Studio lub Jetbrains Rider
+3. Uruchom skrypt s20601-praca-dyplomowa_create.sql na instancji SQL w celu stworzenia wymaganych tabel baz danych.
+
+4. Otwórz plik solution (`s20601.sln`) przy użyciu Visual Studio lub Jetbrains Rider
 
 4. Inicjalne załadowanie danych do bazy (opcjonalnie)
 - Pobierz [datasety IMDb](https://developer.imdb.com/non-commercial-datasets/) i umieść rozpakowane foldery w lokalizacji `s20601\ETL\bin\Debug\net9.0`
-- Utwórz instancję serwera SQL Server,
-- Dostosuj Connection String w User Secrets projektu ETL
+- Dostosuj Connection String do bazy danych w User Secrets projektu ETL
     - Przykładowa struktura pliku
     ```json
     {
