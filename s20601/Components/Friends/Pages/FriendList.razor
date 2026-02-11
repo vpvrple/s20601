@@ -101,7 +101,7 @@
 
                             <MudPaper Elevation="0" Class="pa-2">
                                 <MudStack Row="true" AlignItems="AlignItems.Center">
-                                    <MudTextField TextUpdateSuppression="false" @bind-Value="_inputMessage" Variant="Variant.Outlined" Placeholder="Message..." Margin="Margin.Dense" FullWidth="true" Immediate="true" OnKeyDown="@HandleEnter" />
+                                    <MudTextField @bind-Value="_inputMessage" Variant="Variant.Outlined" Placeholder="Message..." Margin="Margin.Dense" FullWidth="true" Immediate="true" OnKeyDown="@HandleEnter" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Send" Color="Color.Primary" OnClick="@SendClick" />
                                 </MudStack>
                             </MudPaper>
@@ -289,7 +289,6 @@
     private async Task HandleEnter(KeyboardEventArgs e)
     {
         if (e.Key == "Enter") await SendClick();
-        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
